@@ -1,0 +1,111 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Validate image files
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size < 10 * 1024 * 1024; // 10MB max
+    }
+
+    // Validate video files
+    function isValidVideo() {
+      return request.resource.contentType.matches('video/.*')
+        && request.resource.size < 500 * 1024 * 1024; // 500MB max
+    }
+
+    // ============================================================
+    // USER UPLOADS
+    // ============================================================
+
+    // Profile photos
+    match /users/{userId}/profile/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) && isValidImage();
+    }
+
+    // User cover photos (trainers)
+    match /users/{userId}/cover/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId) && isValidImage();
+    }
+
+    // ============================================================
+    // PROGRAM MEDIA
+    // ============================================================
+
+    // Program cover images
+    match /programs/{programId}/cover/{fileName} {
+      allow read: if true; // Public for marketplace
+      allow write: if isAuthenticated() && isValidImage();
+    }
+
+    // Program preview videos
+    match /programs/{programId}/preview/{fileName} {
+      allow read: if true; // Public for marketplace
+      allow write: if isAuthenticated() && isValidVideo();
+    }
+
+    // ============================================================
+    // EXERCISE MEDIA
+    // ============================================================
+
+    // Exercise thumbnails
+    match /exercises/{exerciseId}/thumbnail/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isValidImage();
+    }
+
+    // Exercise videos/GIFs
+    match /exercises/{exerciseId}/media/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isValidVideo() || isValidImage());
+    }
+
+    // ============================================================
+    // PROGRESS PHOTOS (Private)
+    // ============================================================
+
+    // Student progress photos - only student and their trainer can access
+    match /progress/{progressId}/photos/{fileName} {
+      allow read: if isAuthenticated();
+      // In production, add check for student/trainer ownership
+      allow write: if isAuthenticated() && isValidImage();
+    }
+
+    // Check-in photos
+    match /check-ins/{checkInId}/photos/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isValidImage();
+    }
+
+    // ============================================================
+    // CHAT MEDIA
+    // ============================================================
+
+    // Chat attachments
+    match /chats/{chatId}/attachments/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isValidImage() || isValidVideo());
+    }
+
+    // ============================================================
+    // CONTENT MEDIA
+    // ============================================================
+
+    // Tips and articles media
+    match /content/{contentId}/media/{fileName} {
+      allow read: if true; // Public content
+      allow write: if isAuthenticated() && (isValidImage() || isValidVideo());
+    }
+  }
+}

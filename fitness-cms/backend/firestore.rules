@@ -1,0 +1,352 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ============================================================
+    // HELPER FUNCTIONS
+    // ============================================================
+
+    // Verifica se o usuário está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Verifica se é o próprio usuário
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Obtém o documento do usuário
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Verifica se é um Personal Trainer
+    function isTrainer() {
+      return isAuthenticated() && getUserData().role == 'trainer';
+    }
+
+    // Verifica se é um Aluno
+    function isStudent() {
+      return isAuthenticated() && getUserData().role == 'student';
+    }
+
+    // Verifica se o trainer é dono do programa
+    function isProgramOwner(programId) {
+      return isTrainer() &&
+        get(/databases/$(database)/documents/programs/$(programId)).data.trainerId == request.auth.uid;
+    }
+
+    // Verifica se o aluno tem acesso ao programa (comprou/assinou)
+    function hasAccessToProgram(programId) {
+      return isStudent() &&
+        programId in getUserData().purchases.purchasedPrograms ||
+        programId in getUserData().purchases.activeSubscriptions;
+    }
+
+    // Verifica se é participante de uma assinatura
+    function isSubscriptionParticipant(subscriptionData) {
+      return request.auth.uid == subscriptionData.studentId ||
+             request.auth.uid == subscriptionData.trainerId;
+    }
+
+    // ============================================================
+    // USERS COLLECTION
+    // ============================================================
+
+    match /users/{userId} {
+      // Qualquer um pode ler perfis públicos de trainers
+      allow read: if isAuthenticated();
+
+      // Apenas o próprio usuário pode criar/atualizar seu perfil
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+
+      // Não permitir deleção (soft delete via isActive)
+      allow delete: if false;
+
+      // Notificações do usuário
+      match /notifications/{notificationId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // ============================================================
+    // PROGRAMS COLLECTION
+    // ============================================================
+
+    match /programs/{programId} {
+      // Programas públicos podem ser lidos por qualquer usuário autenticado
+      // Programas privados/unlisted apenas pelo dono ou assinantes
+      allow read: if isAuthenticated() && (
+        resource.data.visibility == 'public' ||
+        resource.data.trainerId == request.auth.uid ||
+        hasAccessToProgram(programId)
+      );
+
+      // Apenas trainers podem criar programas
+      allow create: if isTrainer() &&
+        request.resource.data.trainerId == request.auth.uid;
+
+      // Apenas o trainer dono pode atualizar
+      allow update: if isProgramOwner(programId);
+
+      // Não permitir deleção (usar status: 'archived')
+      allow delete: if false;
+
+      // Semanas do programa
+      match /weeks/{weekId} {
+        allow read: if isAuthenticated() && (
+          get(/databases/$(database)/documents/programs/$(programId)).data.trainerId == request.auth.uid ||
+          hasAccessToProgram(programId)
+        );
+        allow write: if isProgramOwner(programId);
+      }
+
+      // Reviews do programa
+      match /reviews/{reviewId} {
+        // Qualquer um pode ler reviews de programas públicos
+        allow read: if isAuthenticated();
+
+        // Apenas alunos que compraram podem escrever reviews
+        allow create: if isStudent() &&
+          hasAccessToProgram(programId) &&
+          request.resource.data.studentId == request.auth.uid;
+
+        // Aluno pode atualizar sua própria review
+        allow update: if isOwner(resource.data.studentId) ||
+          // Trainer pode adicionar resposta
+          (isProgramOwner(programId) &&
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['trainerResponse']));
+
+        allow delete: if false;
+      }
+    }
+
+    // ============================================================
+    // EXERCISES COLLECTION
+    // ============================================================
+
+    match /exercises/{exerciseId} {
+      // Exercícios do sistema podem ser lidos por todos
+      // Exercícios de trainers apenas por eles e seus alunos
+      allow read: if isAuthenticated() && (
+        resource.data.source == 'system' ||
+        resource.data.trainerId == request.auth.uid ||
+        // Aluno tem acesso a exercícios do trainer se tiver programa dele
+        (isStudent() && exists(/databases/$(database)/documents/subscriptions/$(request.auth.uid + '_' + resource.data.trainerId)))
+      );
+
+      // Trainers podem criar exercícios personalizados
+      allow create: if isTrainer() &&
+        request.resource.data.trainerId == request.auth.uid;
+
+      // Apenas o criador pode atualizar
+      allow update: if resource.data.trainerId == request.auth.uid;
+
+      allow delete: if false;
+    }
+
+    // ============================================================
+    // SUBSCRIPTIONS COLLECTION
+    // ============================================================
+
+    match /subscriptions/{subscriptionId} {
+      // Apenas participantes podem ler
+      allow read: if isAuthenticated() &&
+        isSubscriptionParticipant(resource.data);
+
+      // Criação via Cloud Function (após pagamento)
+      allow create: if false;
+
+      // Aluno pode cancelar, trainer pode atualizar status
+      allow update: if isSubscriptionParticipant(resource.data) && (
+        // Aluno só pode alterar campos de cancelamento
+        (resource.data.studentId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'canceledAt', 'cancelReason'])) ||
+        // Trainer tem mais permissões
+        resource.data.trainerId == request.auth.uid
+      );
+
+      allow delete: if false;
+    }
+
+    // ============================================================
+    // TRANSACTIONS COLLECTION
+    // ============================================================
+
+    match /transactions/{transactionId} {
+      // Participantes podem ler suas transações
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid ||
+        resource.data.trainerId == request.auth.uid
+      );
+
+      // Apenas Cloud Functions podem criar/atualizar
+      allow write: if false;
+    }
+
+    // ============================================================
+    // PROGRESS COLLECTION
+    // ============================================================
+
+    match /progress/{progressId} {
+      // Aluno e trainer podem ler
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid ||
+        resource.data.trainerId == request.auth.uid
+      );
+
+      // Criação via Cloud Function (ao assinar)
+      allow create: if isStudent() &&
+        request.resource.data.studentId == request.auth.uid;
+
+      // Aluno pode atualizar seu progresso
+      allow update: if resource.data.studentId == request.auth.uid ||
+        // Trainer pode adicionar feedback
+        resource.data.trainerId == request.auth.uid;
+
+      allow delete: if false;
+
+      // Treinos completados
+      match /workouts/{workoutId} {
+        allow read: if isAuthenticated() && (
+          get(/databases/$(database)/documents/progress/$(progressId)).data.studentId == request.auth.uid ||
+          get(/databases/$(database)/documents/progress/$(progressId)).data.trainerId == request.auth.uid
+        );
+
+        allow create, update: if
+          get(/databases/$(database)/documents/progress/$(progressId)).data.studentId == request.auth.uid;
+
+        allow delete: if false;
+      }
+
+      // Métricas corporais
+      match /metrics/{metricId} {
+        allow read: if isAuthenticated() && (
+          get(/databases/$(database)/documents/progress/$(progressId)).data.studentId == request.auth.uid ||
+          get(/databases/$(database)/documents/progress/$(progressId)).data.trainerId == request.auth.uid
+        );
+
+        allow create, update: if
+          get(/databases/$(database)/documents/progress/$(progressId)).data.studentId == request.auth.uid;
+
+        allow delete: if false;
+      }
+    }
+
+    // ============================================================
+    // CHATS COLLECTION
+    // ============================================================
+
+    match /chats/{chatId} {
+      // Apenas participantes podem acessar
+      allow read: if isAuthenticated() && (
+        resource.data.trainerId == request.auth.uid ||
+        resource.data.studentId == request.auth.uid
+      );
+
+      // Criação permitida para ambos
+      allow create: if isAuthenticated() && (
+        request.resource.data.trainerId == request.auth.uid ||
+        request.resource.data.studentId == request.auth.uid
+      );
+
+      // Atualização para marcar como lido, etc.
+      allow update: if isAuthenticated() && (
+        resource.data.trainerId == request.auth.uid ||
+        resource.data.studentId == request.auth.uid
+      );
+
+      allow delete: if false;
+
+      // Mensagens do chat
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && (
+          get(/databases/$(database)/documents/chats/$(chatId)).data.trainerId == request.auth.uid ||
+          get(/databases/$(database)/documents/chats/$(chatId)).data.studentId == request.auth.uid
+        );
+
+        allow create: if isAuthenticated() &&
+          request.resource.data.senderId == request.auth.uid && (
+            get(/databases/$(database)/documents/chats/$(chatId)).data.trainerId == request.auth.uid ||
+            get(/databases/$(database)/documents/chats/$(chatId)).data.studentId == request.auth.uid
+          );
+
+        // Apenas atualização de status (read)
+        allow update: if isAuthenticated() &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'readAt']);
+
+        allow delete: if false;
+      }
+    }
+
+    // ============================================================
+    // CHECK-INS COLLECTION
+    // ============================================================
+
+    match /check-ins/{checkInId} {
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid ||
+        resource.data.trainerId == request.auth.uid
+      );
+
+      // Aluno pode criar e submeter
+      allow create: if isStudent() &&
+        request.resource.data.studentId == request.auth.uid;
+
+      // Aluno pode atualizar respostas, trainer pode adicionar feedback
+      allow update: if isAuthenticated() && (
+        (resource.data.studentId == request.auth.uid &&
+         !request.resource.data.keys().hasAny(['trainerFeedback'])) ||
+        (resource.data.trainerId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['trainerFeedback', 'status']))
+      );
+
+      allow delete: if false;
+    }
+
+    // ============================================================
+    // TIPS & CONTENT COLLECTIONS
+    // ============================================================
+
+    match /tips/{tipId} {
+      // Dicas públicas ou de programas que o usuário tem acesso
+      allow read: if isAuthenticated() && (
+        resource.data.programId == null || // Dica geral
+        resource.data.trainerId == request.auth.uid || // É o trainer
+        hasAccessToProgram(resource.data.programId) // Tem acesso ao programa
+      );
+
+      allow create, update: if isTrainer() &&
+        request.resource.data.trainerId == request.auth.uid;
+
+      allow delete: if isTrainer() &&
+        resource.data.trainerId == request.auth.uid;
+    }
+
+    match /content/{contentId} {
+      // Conteúdo gratuito ou de trainers que o usuário segue
+      allow read: if isAuthenticated() && (
+        resource.data.accessLevel == 'free' ||
+        resource.data.trainerId == request.auth.uid
+        // Adicionar lógica de assinatura premium aqui
+      );
+
+      allow create, update: if isTrainer() &&
+        request.resource.data.trainerId == request.auth.uid;
+
+      allow delete: if isTrainer() &&
+        resource.data.trainerId == request.auth.uid;
+    }
+
+    // ============================================================
+    // ANALYTICS COLLECTION (Read-only para trainers)
+    // ============================================================
+
+    match /analytics/{trainerId}/{period}/{date} {
+      allow read: if isTrainer() && trainerId == request.auth.uid;
+      allow write: if false; // Apenas Cloud Functions
+    }
+  }
+}
