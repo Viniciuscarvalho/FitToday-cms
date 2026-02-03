@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   DollarSign,
   TrendingUp,
@@ -11,12 +12,12 @@ import {
   Calendar,
   Download,
   ExternalLink,
-  ChevronRight,
   AlertCircle,
   CheckCircle2,
   Clock,
   Loader2,
   RefreshCw,
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import {
@@ -27,6 +28,8 @@ import {
   orderBy,
   limit,
   Firestore,
+  doc,
+  setDoc,
 } from 'firebase/firestore';
 
 interface Transaction {
@@ -60,9 +63,26 @@ interface PayoutHistory {
   arrivalDate: Date;
 }
 
+interface StripeAccountStatus {
+  connected: boolean;
+  onboardingComplete: boolean;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  accountId?: string;
+  email?: string;
+}
+
 export default function FinancesPage() {
   const { user, trainer } = useAuth();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
+  const [connectingStripe, setConnectingStripe] = useState(false);
+  const [stripeStatus, setStripeStatus] = useState<StripeAccountStatus>({
+    connected: false,
+    onboardingComplete: false,
+    chargesEnabled: false,
+    payoutsEnabled: false,
+  });
   const [stats, setStats] = useState<FinanceStats>({
     balance: 0,
     pendingBalance: 0,
@@ -74,24 +94,47 @@ export default function FinancesPage() {
   });
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [payouts, setPayouts] = useState<PayoutHistory[]>([]);
-  const [stripeConnected, setStripeConnected] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
-  useEffect(() => {
-    loadFinanceData();
-  }, [user]);
-
-  const loadFinanceData = async () => {
-    if (!user) return;
+  const loadFinanceData = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
+
+      // Check Stripe status if trainer has account
+      if (trainer?.financial?.stripeAccountId) {
+        try {
+          const response = await fetch(
+            `/api/stripe/connect?accountId=${trainer.financial.stripeAccountId}`
+          );
+          const data = await response.json();
+
+          if (!data.error) {
+            setStripeStatus({
+              connected: data.connected,
+              onboardingComplete: data.onboardingComplete,
+              chargesEnabled: data.chargesEnabled,
+              payoutsEnabled: data.payoutsEnabled,
+              accountId: data.accountId,
+              email: data.email,
+            });
+          }
+        } catch (error) {
+          console.error('Error checking Stripe status:', error);
+        }
+      }
+
       const { db } = await import('@/lib/firebase');
-      if (!db) return;
+      if (!db) {
+        setLoading(false);
+        return;
+      }
 
-      // Check if Stripe is connected (from trainer profile)
-      setStripeConnected(!!trainer?.stripeAccountId);
-
-      // Load subscriptions as transactions
+      // Load subscriptions from Firestore
       const subsRef = collection(db as Firestore, 'subscriptions');
       const subsQuery = query(
         subsRef,
@@ -99,7 +142,15 @@ export default function FinancesPage() {
         orderBy('createdAt', 'desc'),
         limit(50)
       );
-      const subsSnapshot = await getDocs(subsQuery);
+
+      let subsSnapshot;
+      try {
+        subsSnapshot = await getDocs(subsQuery);
+      } catch (error) {
+        console.error('Error loading subscriptions:', error);
+        setLoading(false);
+        return;
+      }
 
       const now = new Date();
       const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -111,8 +162,8 @@ export default function FinancesPage() {
       let lastMonthRevenue = 0;
       const transactionsList: Transaction[] = [];
 
-      subsSnapshot.docs.forEach((doc) => {
-        const data = doc.data();
+      subsSnapshot.docs.forEach((docSnap) => {
+        const data = docSnap.data();
         const amount = data.price || 0;
         const createdAt = data.createdAt?.toDate?.() || new Date(data.createdAt);
 
@@ -125,11 +176,11 @@ export default function FinancesPage() {
         }
 
         transactionsList.push({
-          id: doc.id,
+          id: docSnap.id,
           type: 'sale',
           amount,
           status: data.status === 'active' ? 'completed' : 'pending',
-          description: `Venda de programa`,
+          description: 'Venda de programa',
           programName: data.programName || 'Programa',
           studentName: data.studentName || 'Aluno',
           createdAt,
@@ -140,8 +191,7 @@ export default function FinancesPage() {
         ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
         : 0;
 
-      // Simulate balance (in production, this would come from Stripe)
-      const platformFee = 0.1; // 10% platform fee
+      const platformFee = 0.1;
       const balance = totalEarnings * (1 - platformFee);
       const pendingBalance = thisMonthRevenue * (1 - platformFee);
 
@@ -152,34 +202,115 @@ export default function FinancesPage() {
         lastMonthRevenue,
         revenueGrowth,
         totalEarnings,
-        totalPayouts: 0, // Would come from Stripe
+        totalPayouts: 0,
         nextPayoutDate: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
         nextPayoutAmount: pendingBalance,
       });
 
       setTransactions(transactionsList);
-
-      // Simulate payout history
-      setPayouts([
-        {
-          id: '1',
-          amount: 2500,
-          status: 'paid',
-          paidAt: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000),
-          arrivalDate: new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000),
-        },
-        {
-          id: '2',
-          amount: 1800,
-          status: 'paid',
-          paidAt: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000),
-          arrivalDate: new Date(now.getTime() - 58 * 24 * 60 * 60 * 1000),
-        },
-      ]);
+      setPayouts([]);
+      setDataLoaded(true);
     } catch (error) {
       console.error('Error loading finance data:', error);
     } finally {
       setLoading(false);
+    }
+  }, [user, trainer?.financial?.stripeAccountId]);
+
+  // Initial load
+  useEffect(() => {
+    if (user !== undefined) {
+      loadFinanceData();
+    }
+  }, [user?.uid]);
+
+  // Check if returning from Stripe onboarding
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const refresh = searchParams.get('refresh');
+
+    if ((success === 'true' || refresh === 'true') && dataLoaded) {
+      loadFinanceData();
+    }
+  }, [searchParams, dataLoaded]);
+
+  const handleConnectStripe = async () => {
+    if (!user) return;
+
+    try {
+      setConnectingStripe(true);
+
+      const response = await fetch('/api/stripe/connect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          trainerId: user.uid,
+          email: user.email,
+          existingAccountId: trainer?.financial?.stripeAccountId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        alert(`Erro: ${data.error}`);
+        return;
+      }
+
+      // Save Stripe account ID to Firestore
+      if (data.accountId) {
+        const { db } = await import('@/lib/firebase');
+        if (db) {
+          // Use setDoc with merge to create or update the trainer document
+          await setDoc(
+            doc(db as Firestore, 'trainers', user.uid),
+            {
+              stripeAccountId: data.accountId,
+              updatedAt: new Date(),
+              ...(trainer ? {} : { createdAt: new Date(), email: user.email }),
+            },
+            { merge: true }
+          );
+        }
+      }
+
+      // Redirect to Stripe onboarding
+      window.location.href = data.url;
+    } catch (error) {
+      console.error('Error connecting Stripe:', error);
+      alert('Erro ao conectar com Stripe. Tente novamente.');
+    } finally {
+      setConnectingStripe(false);
+    }
+  };
+
+  const handleOpenStripeDashboard = async () => {
+    if (!trainer?.financial?.stripeAccountId) return;
+
+    try {
+      const response = await fetch('/api/stripe/account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accountId: trainer.financial.stripeAccountId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        alert(`Erro: ${data.error}`);
+        return;
+      }
+
+      window.open(data.url, '_blank');
+    } catch (error) {
+      console.error('Error opening Stripe dashboard:', error);
+      alert('Erro ao abrir dashboard do Stripe.');
     }
   };
 
@@ -219,7 +350,7 @@ export default function FinancesPage() {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'Concluído';
+        return 'Concluido';
       case 'paid':
         return 'Pago';
       case 'pending':
@@ -257,7 +388,7 @@ export default function FinancesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Finanças</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Financas</h1>
           <p className="text-gray-500 mt-1">
             Gerencie seus ganhos e pagamentos
           </p>
@@ -270,6 +401,15 @@ export default function FinancesPage() {
             <RefreshCw className="h-4 w-4" />
             Atualizar
           </button>
+          {stripeStatus.onboardingComplete && (
+            <button
+              onClick={handleOpenStripeDashboard}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+            >
+              <Settings className="h-4 w-4" />
+              Dashboard Stripe
+            </button>
+          )}
           <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
             <Download className="h-4 w-4" />
             Exportar
@@ -278,23 +418,74 @@ export default function FinancesPage() {
       </div>
 
       {/* Stripe Connect Banner */}
-      {!stripeConnected && (
+      {!stripeStatus.onboardingComplete && (
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 <CreditCard className="h-6 w-6" />
-                <h3 className="text-lg font-semibold">Configure seus pagamentos</h3>
+                <h3 className="text-lg font-semibold">
+                  {stripeStatus.connected
+                    ? 'Complete sua configuracao'
+                    : 'Configure seus pagamentos'}
+                </h3>
               </div>
               <p className="text-indigo-100">
-                Conecte sua conta Stripe para receber pagamentos diretamente na sua conta
-                bancária.
+                {stripeStatus.connected
+                  ? 'Sua conta Stripe esta conectada, mas precisa completar a verificacao para receber pagamentos.'
+                  : 'Conecte sua conta Stripe para receber pagamentos diretamente na sua conta bancaria.'}
+              </p>
+              {stripeStatus.connected && (
+                <div className="mt-2 flex items-center gap-4 text-sm">
+                  <span className="flex items-center gap-1">
+                    {stripeStatus.chargesEnabled ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-300" />
+                    ) : (
+                      <Clock className="h-4 w-4 text-yellow-300" />
+                    )}
+                    Cobrancas
+                  </span>
+                  <span className="flex items-center gap-1">
+                    {stripeStatus.payoutsEnabled ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-300" />
+                    ) : (
+                      <Clock className="h-4 w-4 text-yellow-300" />
+                    )}
+                    Saques
+                  </span>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={handleConnectStripe}
+              disabled={connectingStripe}
+              className="flex items-center gap-2 px-6 py-3 bg-white text-indigo-600 rounded-lg font-medium hover:bg-indigo-50 transition-colors disabled:opacity-50"
+            >
+              {connectingStripe ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  {stripeStatus.connected ? 'Completar Verificacao' : 'Conectar Stripe'}
+                  <ExternalLink className="h-4 w-4" />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Stripe Connected Success */}
+      {stripeStatus.onboardingComplete && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="h-6 w-6 text-green-600" />
+            <div>
+              <h4 className="font-medium text-green-900">Stripe Conectado</h4>
+              <p className="text-sm text-green-700">
+                Sua conta esta configurada e pronta para receber pagamentos.
+                {stripeStatus.email && ` (${stripeStatus.email})`}
               </p>
             </div>
-            <button className="flex items-center gap-2 px-6 py-3 bg-white text-indigo-600 rounded-lg font-medium hover:bg-indigo-50 transition-colors">
-              Conectar Stripe
-              <ExternalLink className="h-4 w-4" />
-            </button>
           </div>
         </div>
       )}
@@ -312,7 +503,7 @@ export default function FinancesPage() {
           <h3 className="text-2xl font-bold text-gray-900">
             {formatCurrency(stats.balance)}
           </h3>
-          <p className="text-sm text-gray-500 mt-1">Saldo disponível</p>
+          <p className="text-sm text-gray-500 mt-1">Saldo disponivel</p>
         </div>
 
         {/* Pending Balance */}
@@ -350,7 +541,7 @@ export default function FinancesPage() {
           <h3 className="text-2xl font-bold text-gray-900">
             {formatCurrency(stats.thisMonthRevenue)}
           </h3>
-          <p className="text-sm text-gray-500 mt-1">Receita este mês</p>
+          <p className="text-sm text-gray-500 mt-1">Receita este mes</p>
         </div>
 
         {/* Total Earnings */}
@@ -376,7 +567,7 @@ export default function FinancesPage() {
                 <Calendar className="h-8 w-8 text-primary-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Próximo pagamento</h3>
+                <h3 className="font-semibold text-gray-900">Proximo pagamento</h3>
                 <p className="text-gray-500">
                   Estimado para {formatDate(stats.nextPayoutDate)}
                 </p>
@@ -396,12 +587,12 @@ export default function FinancesPage() {
         {/* Recent Transactions */}
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="p-6 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-900">Transações Recentes</h3>
+            <h3 className="font-semibold text-gray-900">Transacoes Recentes</h3>
           </div>
           {transactions.length === 0 ? (
             <div className="p-12 text-center">
               <DollarSign className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Nenhuma transação encontrada</p>
+              <p className="text-gray-500">Nenhuma transacao encontrada</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-50">
@@ -438,7 +629,7 @@ export default function FinancesPage() {
                           {getTypeLabel(transaction.type)} - {transaction.programName}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {transaction.studentName} · {formatDate(transaction.createdAt)}
+                          {transaction.studentName} - {formatDate(transaction.createdAt)}
                         </p>
                       </div>
                     </div>
@@ -469,7 +660,7 @@ export default function FinancesPage() {
           {transactions.length > 10 && (
             <div className="p-4 border-t border-gray-100">
               <button className="w-full text-center text-primary-600 hover:text-primary-700 font-medium text-sm">
-                Ver todas as transações
+                Ver todas as transacoes
               </button>
             </div>
           )}
@@ -478,7 +669,7 @@ export default function FinancesPage() {
         {/* Payout History */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="p-6 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-900">Histórico de Saques</h3>
+            <h3 className="font-semibold text-gray-900">Historico de Saques</h3>
           </div>
           {payouts.length === 0 ? (
             <div className="p-12 text-center">
@@ -524,9 +715,9 @@ export default function FinancesPage() {
           <div>
             <h4 className="font-semibold text-blue-900 mb-1">Sobre seus pagamentos</h4>
             <p className="text-blue-700 text-sm">
-              Os pagamentos são processados automaticamente a cada 7 dias. A taxa da
-              plataforma é de 10% sobre cada venda. Pagamentos podem levar até 2 dias
-              úteis para aparecer na sua conta bancária após a liberação.
+              Os pagamentos sao processados automaticamente a cada 7 dias. A taxa da
+              plataforma e de 10% sobre cada venda. Pagamentos podem levar ate 2 dias
+              uteis para aparecer na sua conta bancaria apos a liberacao.
             </p>
           </div>
         </div>

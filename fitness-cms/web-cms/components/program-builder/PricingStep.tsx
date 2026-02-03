@@ -2,6 +2,7 @@
 
 import { ProgramFormData } from '@/app/(dashboard)/programs/new/page';
 import { DollarSign, Percent, AlertCircle, CheckCircle } from 'lucide-react';
+import { PLATFORM_FEE_PERCENT } from '@/lib/stripe';
 
 interface PricingStepProps {
   data: ProgramFormData;
@@ -12,7 +13,7 @@ interface PricingStepProps {
 const suggestedPrices = [49.9, 97, 147, 197, 297, 497];
 
 export function PricingStep({ data, onChange, errors }: PricingStepProps) {
-  const platformFee = 0.15; // 15%
+  const platformFee = PLATFORM_FEE_PERCENT / 100; // 10%
   const trainerShare = 1 - platformFee;
   const trainerEarnings = data.price * trainerShare;
   const platformEarnings = data.price * platformFee;
@@ -129,7 +130,7 @@ export function PricingStep({ data, onChange, errors }: PricingStepProps) {
           <div className="flex items-center justify-between text-green-600">
             <span className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4" />
-              Você recebe (85%)
+              Você recebe ({100 - PLATFORM_FEE_PERCENT}%)
             </span>
             <span className="font-bold text-lg">
               R$ {trainerEarnings.toFixed(2).replace('.', ',')}
@@ -137,7 +138,7 @@ export function PricingStep({ data, onChange, errors }: PricingStepProps) {
           </div>
 
           <div className="flex items-center justify-between text-gray-500 text-sm">
-            <span>Taxa da plataforma (15%)</span>
+            <span>Taxa da plataforma ({PLATFORM_FEE_PERCENT}%)</span>
             <span>R$ {platformEarnings.toFixed(2).replace('.', ',')}</span>
           </div>
         </div>

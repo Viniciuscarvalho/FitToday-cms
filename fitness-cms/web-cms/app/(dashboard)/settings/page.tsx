@@ -583,8 +583,8 @@ export default function SettingsPage() {
           Taxa da Plataforma
         </h3>
         <p className="text-blue-700">
-          A taxa atual da plataforma é de <strong>15%</strong> sobre cada venda.
-          Você recebe 85% do valor de cada programa vendido.
+          A taxa atual da plataforma é de <strong>10%</strong> sobre cada venda.
+          Você recebe 90% do valor de cada programa vendido.
         </p>
       </div>
     </div>
