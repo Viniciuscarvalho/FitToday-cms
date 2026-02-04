@@ -19,7 +19,9 @@ import {
   Award,
   ChevronRight,
   Loader2,
+  FileText,
 } from 'lucide-react';
+import { WorkoutsList } from '@/components/workouts/WorkoutsList';
 import { useAuth } from '@/providers/AuthProvider';
 import {
   collection,
@@ -456,6 +458,18 @@ export default function StudentDetailPage() {
                 Nenhum programa inscrito
               </p>
             )}
+          </div>
+
+          {/* PDF Workouts (sent by trainer) */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <WorkoutsList
+              trainerId={user?.uid || ''}
+              student={{
+                id: studentId,
+                displayName: student.displayName,
+                email: student.email,
+              }}
+            />
           </div>
 
           {/* Workout History */}
