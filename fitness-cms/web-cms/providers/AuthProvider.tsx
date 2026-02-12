@@ -19,19 +19,24 @@ import {
   updateProfile,
   Auth,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, Firestore } from 'firebase/firestore';
-import { PersonalTrainer } from '@/types';
+import { doc, getDoc, setDoc, Firestore, serverTimestamp } from 'firebase/firestore';
+import { PersonalTrainer, AdminUser, UserRole, TrainerStatus } from '@/types';
+import { AUTH_COOKIES, setRoleCookies, clearAuthCookies } from '@/lib/auth-utils';
 
 interface AuthContextType {
   user: User | null;
   trainer: PersonalTrainer | null;
+  admin: AdminUser | null;
+  userRole: UserRole | null;
+  trainerStatus: TrainerStatus | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUpAsTrainer: (email: string, password: string, name: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInWithApple: () => Promise<void>;
   signOut: () => Promise<void>;
-  refreshTrainer: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,6 +44,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [trainer, setTrainer] = useState<PersonalTrainer | null>(null);
+  const [admin, setAdmin] = useState<AdminUser | null>(null);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
+  const [trainerStatus, setTrainerStatus] = useState<TrainerStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [auth, setAuth] = useState<Auth | null>(null);
   const [db, setDb] = useState<Firestore | null>(null);
@@ -66,9 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Helper to manage auth cookie for middleware
   const setAuthCookie = (token: string | null) => {
     if (token) {
-      document.cookie = `auth-token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      document.cookie = `${AUTH_COOKIES.TOKEN}=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
     } else {
-      document.cookie = 'auth-token=; path=/; max-age=0';
+      document.cookie = `${AUTH_COOKIES.TOKEN}=; path=/; max-age=0`;
     }
   };
 
@@ -82,10 +90,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Set auth cookie for middleware
         const token = await firebaseUser.getIdToken();
         setAuthCookie(token);
-        await fetchTrainerData(firebaseUser.uid);
+        await fetchUserData(firebaseUser.uid);
       } else {
-        setAuthCookie(null);
+        clearAuthCookies();
         setTrainer(null);
+        setAdmin(null);
+        setUserRole(null);
+        setTrainerStatus(null);
       }
       setLoading(false);
     });
@@ -93,25 +104,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => unsubscribe();
   }, [auth, db]);
 
-  const fetchTrainerData = async (uid: string) => {
+  const fetchUserData = async (uid: string) => {
     if (!db) return;
     try {
-      const trainerDoc = await getDoc(doc(db, 'users', uid));
-      if (trainerDoc.exists()) {
-        const data = trainerDoc.data() as PersonalTrainer;
-        if (data.role === 'trainer') {
-          setTrainer(data);
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        const role = data.role as UserRole;
+        setUserRole(role);
+
+        if (role === 'trainer') {
+          const trainerData = data as PersonalTrainer;
+          setTrainer(trainerData);
+          setTrainerStatus(trainerData.status || 'pending');
+          setRoleCookies('trainer', trainerData.status || 'pending');
+          setAdmin(null);
+        } else if (role === 'admin') {
+          const adminData = data as AdminUser;
+          setAdmin(adminData);
+          setRoleCookies('admin', null);
+          setTrainer(null);
+          setTrainerStatus(null);
+        } else {
+          // Student or other role
+          setRoleCookies(role, null);
+          setTrainer(null);
+          setAdmin(null);
+          setTrainerStatus(null);
         }
       }
     } catch (error) {
-      console.error('Error fetching trainer data:', error);
+      console.error('Error fetching user data:', error);
     }
   };
 
   const signIn = async (email: string, password: string) => {
     if (!auth) throw new Error('Firebase not initialized');
     const result = await signInWithEmailAndPassword(auth, email, password);
-    await fetchTrainerData(result.user.uid);
+    await fetchUserData(result.user.uid);
   };
 
   const signUp = async (email: string, password: string, name: string) => {
@@ -119,17 +149,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const result = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(result.user, { displayName: name });
 
-    // Create initial user document
+    // Create initial user document as student
     await setDoc(doc(db, 'users', result.user.uid), {
       uid: result.user.uid,
       email: result.user.email,
       displayName: name,
       photoURL: result.user.photoURL || '',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
       isActive: true,
-      role: 'student', // Will be upgraded to trainer later
+      role: 'student',
     });
+
+    await fetchUserData(result.user.uid);
+  };
+
+  const signUpAsTrainer = async (email: string, password: string, name: string) => {
+    if (!auth || !db) throw new Error('Firebase not initialized');
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(result.user, { displayName: name });
+
+    // Create trainer document with pending status
+    const trainerData: Partial<PersonalTrainer> = {
+      uid: result.user.uid,
+      email: result.user.email || '',
+      displayName: name,
+      photoURL: result.user.photoURL || '',
+      createdAt: serverTimestamp() as any,
+      updatedAt: serverTimestamp() as any,
+      isActive: true,
+      role: 'trainer',
+      status: 'pending',
+      profile: {
+        bio: '',
+        specialties: [],
+        certifications: [],
+        experience: 0,
+      },
+      store: {
+        slug: '',
+        isVerified: false,
+        rating: 0,
+        totalReviews: 0,
+        totalSales: 0,
+        totalStudents: 0,
+      },
+      financial: {
+        totalEarnings: 0,
+        pendingBalance: 0,
+        availableBalance: 0,
+      },
+      subscription: {
+        plan: 'free',
+        status: 'active',
+        features: {
+          maxPrograms: 3,
+          maxStudents: 10,
+          customBranding: false,
+          analyticsAdvanced: false,
+          prioritySupport: false,
+          commissionRate: 15,
+        },
+      },
+    };
+
+    await setDoc(doc(db, 'users', result.user.uid), trainerData);
+    await fetchUserData(result.user.uid);
   };
 
   const signInWithGoogle = async () => {
@@ -137,22 +222,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
 
-    // Check if user exists, if not create document
+    // Check if user exists, if not create as trainer with pending status
     const userDoc = await getDoc(doc(db, 'users', result.user.uid));
     if (!userDoc.exists()) {
-      await setDoc(doc(db, 'users', result.user.uid), {
+      const trainerData: Partial<PersonalTrainer> = {
         uid: result.user.uid,
-        email: result.user.email,
+        email: result.user.email || '',
         displayName: result.user.displayName || '',
         photoURL: result.user.photoURL || '',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: serverTimestamp() as any,
+        updatedAt: serverTimestamp() as any,
         isActive: true,
-        role: 'student',
-      });
+        role: 'trainer',
+        status: 'pending',
+        profile: {
+          bio: '',
+          specialties: [],
+          certifications: [],
+          experience: 0,
+        },
+        store: {
+          slug: '',
+          isVerified: false,
+          rating: 0,
+          totalReviews: 0,
+          totalSales: 0,
+          totalStudents: 0,
+        },
+        financial: {
+          totalEarnings: 0,
+          pendingBalance: 0,
+          availableBalance: 0,
+        },
+        subscription: {
+          plan: 'free',
+          status: 'active',
+          features: {
+            maxPrograms: 3,
+            maxStudents: 10,
+            customBranding: false,
+            analyticsAdvanced: false,
+            prioritySupport: false,
+            commissionRate: 15,
+          },
+        },
+      };
+      await setDoc(doc(db, 'users', result.user.uid), trainerData);
     }
 
-    await fetchTrainerData(result.user.uid);
+    await fetchUserData(result.user.uid);
   };
 
   const signInWithApple = async () => {
@@ -163,34 +281,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const result = await signInWithPopup(auth, provider);
 
-    // Check if user exists, if not create document
+    // Check if user exists, if not create as trainer with pending status
     const userDoc = await getDoc(doc(db, 'users', result.user.uid));
     if (!userDoc.exists()) {
-      await setDoc(doc(db, 'users', result.user.uid), {
+      const trainerData: Partial<PersonalTrainer> = {
         uid: result.user.uid,
-        email: result.user.email,
+        email: result.user.email || '',
         displayName: result.user.displayName || '',
         photoURL: result.user.photoURL || '',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: serverTimestamp() as any,
+        updatedAt: serverTimestamp() as any,
         isActive: true,
-        role: 'student',
-      });
+        role: 'trainer',
+        status: 'pending',
+        profile: {
+          bio: '',
+          specialties: [],
+          certifications: [],
+          experience: 0,
+        },
+        store: {
+          slug: '',
+          isVerified: false,
+          rating: 0,
+          totalReviews: 0,
+          totalSales: 0,
+          totalStudents: 0,
+        },
+        financial: {
+          totalEarnings: 0,
+          pendingBalance: 0,
+          availableBalance: 0,
+        },
+        subscription: {
+          plan: 'free',
+          status: 'active',
+          features: {
+            maxPrograms: 3,
+            maxStudents: 10,
+            customBranding: false,
+            analyticsAdvanced: false,
+            prioritySupport: false,
+            commissionRate: 15,
+          },
+        },
+      };
+      await setDoc(doc(db, 'users', result.user.uid), trainerData);
     }
 
-    await fetchTrainerData(result.user.uid);
+    await fetchUserData(result.user.uid);
   };
 
   const signOut = async () => {
     if (!auth) throw new Error('Firebase not initialized');
-    setAuthCookie(null);
+    clearAuthCookies();
     await firebaseSignOut(auth);
     setTrainer(null);
+    setAdmin(null);
+    setUserRole(null);
+    setTrainerStatus(null);
   };
 
-  const refreshTrainer = async () => {
+  const refreshUser = async () => {
     if (user) {
-      await fetchTrainerData(user.uid);
+      await fetchUserData(user.uid);
     }
   };
 
@@ -199,13 +353,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         trainer,
+        admin,
+        userRole,
+        trainerStatus,
         loading,
         signIn,
         signUp,
+        signUpAsTrainer,
         signInWithGoogle,
         signInWithApple,
         signOut,
-        refreshTrainer,
+        refreshUser,
       }}
     >
       {children}

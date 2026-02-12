@@ -1,9 +1,12 @@
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
+import { getAuth, Auth } from 'firebase-admin/auth';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getStorage, Storage } from 'firebase-admin/storage';
 import { getMessaging, Messaging } from 'firebase-admin/messaging';
+import { UserRole, AdminUser } from '@/types';
 
 let adminApp: App | undefined;
+let adminAuth: Auth | undefined;
 let adminDb: Firestore | undefined;
 let adminStorage: Storage | undefined;
 let adminMessaging: Messaging | undefined;
@@ -20,6 +23,7 @@ if (serviceAccount && getApps().length === 0) {
       projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     });
+    adminAuth = getAuth(adminApp);
     adminDb = getFirestore(adminApp);
     adminStorage = getStorage(adminApp);
     adminMessaging = getMessaging(adminApp);
@@ -28,7 +32,66 @@ if (serviceAccount && getApps().length === 0) {
   }
 }
 
-export { adminDb, adminStorage, adminMessaging };
+export { adminAuth, adminDb, adminStorage, adminMessaging };
+
+// ============================================================
+// ADMIN VERIFICATION UTILITIES
+// ============================================================
+
+export interface AdminVerificationResult {
+  isAdmin: boolean;
+  admin: AdminUser | null;
+  uid: string | null;
+  error?: string;
+}
+
+/**
+ * Verify if the request is from an admin user
+ * Extracts token from Authorization header and verifies admin role
+ */
+export async function verifyAdminRequest(
+  authHeader: string | null
+): Promise<AdminVerificationResult> {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { isAdmin: false, admin: null, uid: null, error: 'Missing or invalid authorization header' };
+  }
+
+  if (!adminAuth || !adminDb) {
+    return { isAdmin: false, admin: null, uid: null, error: 'Firebase Admin not initialized' };
+  }
+
+  try {
+    const token = authHeader.split('Bearer ')[1];
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    const uid = decodedToken.uid;
+
+    // Get user document and verify admin role
+    const userDoc = await adminDb.collection('users').doc(uid).get();
+
+    if (!userDoc.exists) {
+      return { isAdmin: false, admin: null, uid, error: 'User not found' };
+    }
+
+    const userData = userDoc.data();
+
+    if (userData?.role !== 'admin') {
+      return { isAdmin: false, admin: null, uid, error: 'User is not an admin' };
+    }
+
+    return {
+      isAdmin: true,
+      admin: { ...userData, uid } as AdminUser,
+      uid,
+    };
+  } catch (error: any) {
+    return {
+      isAdmin: false,
+      admin: null,
+      uid: null,
+      error: error.message || 'Failed to verify token',
+    };
+  }
+}
 
 // ============================================================
 // STORAGE UTILITIES

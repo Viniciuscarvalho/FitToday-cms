@@ -18,7 +18,18 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, signInWithGoogle, signInWithApple } = useAuth();
+  const { signIn, signInWithGoogle, signInWithApple, userRole, trainerStatus } = useAuth();
+
+  // Helper to determine redirect URL based on user role and status
+  const getRedirectUrl = () => {
+    if (userRole === 'admin') {
+      return '/admin';
+    }
+    if (userRole === 'trainer' && trainerStatus !== 'active') {
+      return '/pending-approval';
+    }
+    return '/';
+  };
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -37,7 +48,10 @@ export default function LoginPage() {
       setIsLoading(true);
       setError(null);
       await signIn(data.email, data.password);
-      router.push('/');
+      // Small delay to allow state to update before redirect
+      setTimeout(() => {
+        router.push(getRedirectUrl());
+      }, 100);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro ao fazer login';
       if (message.includes('invalid-credential')) {
@@ -57,7 +71,9 @@ export default function LoginPage() {
       setIsGoogleLoading(true);
       setError(null);
       await signInWithGoogle();
-      router.push('/');
+      setTimeout(() => {
+        router.push(getRedirectUrl());
+      }, 100);
     } catch (err) {
       setError('Erro ao fazer login com Google');
     } finally {
@@ -70,7 +86,9 @@ export default function LoginPage() {
       setIsAppleLoading(true);
       setError(null);
       await signInWithApple();
-      router.push('/');
+      setTimeout(() => {
+        router.push(getRedirectUrl());
+      }, 100);
     } catch (err) {
       setError('Erro ao fazer login com Apple');
     } finally {

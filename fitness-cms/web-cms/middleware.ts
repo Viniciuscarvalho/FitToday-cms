@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { UserRole, TrainerStatus } from '@/types';
 
-// Routes that require authentication
-const protectedRoutes = [
+// Cookie names
+const AUTH_TOKEN = 'auth-token';
+const USER_ROLE = 'user-role';
+const TRAINER_STATUS = 'trainer-status';
+
+// Route definitions
+const ADMIN_ROUTES = ['/admin'];
+const TRAINER_ROUTES = [
   '/',
   '/programs',
-  '/programs/new',
   '/students',
   '/exercises',
   '/messages',
@@ -13,35 +19,72 @@ const protectedRoutes = [
   '/finances',
   '/settings',
 ];
+const AUTH_ROUTES = ['/login', '/register'];
+const PENDING_ROUTE = '/pending-approval';
 
-// Routes that should redirect to dashboard if authenticated
-const authRoutes = ['/login', '/register'];
+function isAdminRoute(pathname: string): boolean {
+  return ADMIN_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
+
+function isTrainerRoute(pathname: string): boolean {
+  return TRAINER_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
+
+function isAuthRoute(pathname: string): boolean {
+  return AUTH_ROUTES.includes(pathname);
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check for Firebase auth session cookie
-  // Note: Firebase Auth uses localStorage/IndexedDB on client-side,
-  // so we use a custom cookie set by the client after login
-  const authToken = request.cookies.get('auth-token')?.value;
+  // Get cookies
+  const authToken = request.cookies.get(AUTH_TOKEN)?.value;
+  const userRole = request.cookies.get(USER_ROLE)?.value as UserRole | undefined;
+  const trainerStatus = request.cookies.get(TRAINER_STATUS)?.value as TrainerStatus | undefined;
 
-  // Check if trying to access protected route without auth
-  const isProtectedRoute = protectedRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-
-  // Check if trying to access auth route while authenticated
-  const isAuthRoute = authRoutes.includes(pathname);
-
-  if (isProtectedRoute && !authToken) {
-    // Redirect to login if not authenticated
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
+  // Not authenticated
+  if (!authToken) {
+    // Trying to access protected routes without auth
+    if (isAdminRoute(pathname) || isTrainerRoute(pathname)) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    // Allow access to auth routes and pending-approval
+    return NextResponse.next();
   }
 
-  if (isAuthRoute && authToken) {
-    // Redirect to dashboard if already authenticated
+  // Authenticated - check role-based access
+
+  // Redirect away from auth routes if authenticated
+  if (isAuthRoute(pathname)) {
+    if (userRole === 'admin') {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  // Admin can access everything
+  if (userRole === 'admin') {
+    return NextResponse.next();
+  }
+
+  // Trainer trying to access admin routes
+  if (userRole === 'trainer' && isAdminRoute(pathname)) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  // Trainer with non-active status trying to access trainer routes
+  if (userRole === 'trainer' && trainerStatus !== 'active' && isTrainerRoute(pathname)) {
+    return NextResponse.redirect(new URL(PENDING_ROUTE, request.url));
+  }
+
+  // Active trainer trying to access pending page - redirect to dashboard
+  if (userRole === 'trainer' && trainerStatus === 'active' && pathname === PENDING_ROUTE) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 

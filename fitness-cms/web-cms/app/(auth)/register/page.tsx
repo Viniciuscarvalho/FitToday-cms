@@ -31,7 +31,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { signUp, signInWithGoogle, signInWithApple } = useAuth();
+  const { signUpAsTrainer, signInWithGoogle, signInWithApple } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -49,8 +49,8 @@ export default function RegisterPage() {
     try {
       setIsLoading(true);
       setError(null);
-      await signUp(data.email, data.password, data.name);
-      router.push('/');
+      await signUpAsTrainer(data.email, data.password, data.name);
+      router.push('/pending-approval');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro ao criar conta';
       if (message.includes('email-already-in-use')) {
@@ -68,7 +68,8 @@ export default function RegisterPage() {
       setIsGoogleLoading(true);
       setError(null);
       await signInWithGoogle();
-      router.push('/');
+      // Redirect based on trainer status (middleware will handle this)
+      router.push('/pending-approval');
     } catch (err) {
       setError('Erro ao fazer login com Google');
     } finally {
@@ -81,7 +82,8 @@ export default function RegisterPage() {
       setIsAppleLoading(true);
       setError(null);
       await signInWithApple();
-      router.push('/');
+      // Redirect based on trainer status (middleware will handle this)
+      router.push('/pending-approval');
     } catch (err) {
       setError('Erro ao fazer login com Apple');
     } finally {

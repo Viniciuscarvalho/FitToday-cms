@@ -4,6 +4,9 @@ import { Timestamp } from 'firebase/firestore';
 // USER TYPES
 // ============================================================
 
+export type UserRole = 'student' | 'trainer' | 'admin';
+export type TrainerStatus = 'pending' | 'active' | 'suspended' | 'rejected';
+
 export interface BaseUser {
   uid: string;
   email: string;
@@ -17,6 +20,10 @@ export interface BaseUser {
 
 export interface PersonalTrainer extends BaseUser {
   role: 'trainer';
+  status: TrainerStatus;
+  statusUpdatedAt?: Timestamp;
+  statusUpdatedBy?: string;
+  rejectionReason?: string;
   profile: {
     bio: string;
     specialties: string[];
@@ -90,6 +97,17 @@ export interface Student extends BaseUser {
     totalSpent: number;
   };
 }
+
+export interface AdminUser extends BaseUser {
+  role: 'admin';
+  permissions: {
+    canApproveTrainers: boolean;
+    canSuspendTrainers: boolean;
+    canViewMetrics: boolean;
+  };
+}
+
+export type AppUser = PersonalTrainer | Student | AdminUser;
 
 // ============================================================
 // PROGRAM TYPES

@@ -61,7 +61,7 @@ const specialtiesOptions = [
 ];
 
 export default function SettingsPage() {
-  const { user, trainer, refreshTrainer } = useAuth();
+  const { user, trainer, refreshUser } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -141,7 +141,7 @@ export default function SettingsPage() {
         updatedAt: new Date(),
       });
 
-      await refreshTrainer();
+      await refreshUser();
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
