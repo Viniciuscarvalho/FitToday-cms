@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/workouts - List workouts for a trainer
+// GET /api/workouts - List workouts for a trainer or student
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -161,26 +161,41 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    if (!trainerId) {
-      return NextResponse.json({ error: 'trainerId is required' }, { status: 400 });
+    // Require at least one of trainerId or studentId
+    if (!trainerId && !studentId) {
+      return NextResponse.json(
+        { error: 'trainerId or studentId is required' },
+        { status: 400 }
+      );
     }
 
     if (!adminDb) {
       return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
     }
 
-    // Build query
-    let query = adminDb
-      .collection('workouts')
-      .where('trainerId', '==', trainerId)
-      .orderBy('createdAt', 'desc')
-      .limit(limit);
+    // Build query based on provided parameters
+    let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData>;
 
-    if (studentId) {
+    if (trainerId && studentId) {
+      // Both provided: filter by trainer AND student (CMS student detail view)
       query = adminDb
         .collection('workouts')
         .where('trainerId', '==', trainerId)
         .where('studentId', '==', studentId)
+        .orderBy('createdAt', 'desc')
+        .limit(limit);
+    } else if (studentId) {
+      // Only studentId: list all workouts for a student (mobile app "Personal" tab)
+      query = adminDb
+        .collection('workouts')
+        .where('studentId', '==', studentId)
+        .orderBy('createdAt', 'desc')
+        .limit(limit);
+    } else {
+      // Only trainerId: list all workouts sent by a trainer (CMS overview)
+      query = adminDb
+        .collection('workouts')
+        .where('trainerId', '==', trainerId)
         .orderBy('createdAt', 'desc')
         .limit(limit);
     }
