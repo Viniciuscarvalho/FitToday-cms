@@ -17,3 +17,8 @@ The data layer underlying FitToday. Workouts, exercises, users, trainers, studen
 - How are workout templates vs assigned workouts structured?
 - What's the relationship between exercises and workout plans?
 - How does the PDF sharing feature affect workout data models?
+
+---
+
+Areas:
+- [[index]]

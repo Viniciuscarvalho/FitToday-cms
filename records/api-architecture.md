@@ -17,3 +17,8 @@ The API layer connects the FitToday CMS to the iOS app (and future Android app).
 - How will API versioning work when Android launches?
 - What caching strategy should the mobile apps use?
 - How should pagination work for large workout lists?
+
+---
+
+Areas:
+- [[index]]

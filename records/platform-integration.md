@@ -17,3 +17,8 @@ How the mobile apps communicate with the FitToday CMS. Currently iOS only, with 
 - What shared code patterns can be reused when Android launches?
 - How should the iOS app handle offline workout viewing?
 - What push notification strategy supports real-time workout updates?
+
+---
+
+Areas:
+- [[index]]

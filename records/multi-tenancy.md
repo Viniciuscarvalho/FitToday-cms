@@ -17,3 +17,8 @@ FitToday serves multiple personal trainers, each with their own students. This m
 - Can a student belong to multiple trainers?
 - How is trainer data isolated at the database level?
 - What happens to student data when a trainer churns?
+
+---
+
+Areas:
+- [[index]]

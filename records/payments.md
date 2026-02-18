@@ -17,3 +17,8 @@ Stripe Connect powers the payment infrastructure for FitToday. Each trainer has 
 - How should failed subscription payments be handled?
 - What's the platform fee structure for trainers?
 - How do refunds flow through connected accounts?
+
+---
+
+Areas:
+- [[index]]
