@@ -74,8 +74,16 @@ export default function LoginPage() {
       setTimeout(() => {
         router.push(getRedirectUrl());
       }, 100);
-    } catch (err) {
-      setError('Erro ao fazer login com Google');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Google sign-in error:', err);
+      if (message.includes('popup-closed-by-user')) {
+        setError('Login cancelado. Tente novamente.');
+      } else if (message.includes('unauthorized-domain')) {
+        setError('Domínio não autorizado no Firebase. Verifique as configurações.');
+      } else {
+        setError(`Erro ao fazer login com Google: ${message}`);
+      }
     } finally {
       setIsGoogleLoading(false);
     }
@@ -89,8 +97,16 @@ export default function LoginPage() {
       setTimeout(() => {
         router.push(getRedirectUrl());
       }, 100);
-    } catch (err) {
-      setError('Erro ao fazer login com Apple');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Apple sign-in error:', err);
+      if (message.includes('popup-closed-by-user')) {
+        setError('Login cancelado. Tente novamente.');
+      } else if (message.includes('unauthorized-domain')) {
+        setError('Domínio não autorizado no Firebase. Verifique as configurações.');
+      } else {
+        setError(`Erro ao fazer login com Apple: ${message}`);
+      }
     } finally {
       setIsAppleLoading(false);
     }

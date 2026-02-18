@@ -12,7 +12,6 @@ const nextConfig = {
       },
     ],
   },
-  // Fix for Firebase + undici private class fields
   experimental: {
     serverComponentsExternalPackages: ['undici'],
   },
