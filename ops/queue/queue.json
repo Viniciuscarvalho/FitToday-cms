@@ -1,0 +1,14 @@
+{
+  "schema_version": 3,
+  "tasks": [],
+  "maintenance_conditions": {
+    "orphan_records": { "threshold": "any", "consequence_speed": "session" },
+    "dangling_links": { "threshold": "any", "consequence_speed": "session" },
+    "inbox_pressure": { "threshold": "3_days", "consequence_speed": "session" },
+    "design_map_size": { "threshold": 40, "consequence_speed": "slow" },
+    "observations_pending": { "threshold": 10, "consequence_speed": "slow" },
+    "tensions_pending": { "threshold": 5, "consequence_speed": "slow" },
+    "stale_batch": { "threshold": "2_sessions", "consequence_speed": "multi_session" },
+    "schema_violations": { "threshold": "any", "consequence_speed": "session" }
+  }
+}
