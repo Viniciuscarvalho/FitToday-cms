@@ -1,0 +1,10 @@
+# Ars Contexta Knowledge Vault
+records/
+inbox/
+archived/
+self/
+ops/
+templates/
+manual/
+.arscontexta
+.gitignore_vault
