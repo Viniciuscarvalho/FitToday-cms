@@ -15,7 +15,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
-import { collection, addDoc, Firestore } from 'firebase/firestore';
+import { apiRequest } from '@/lib/api-client';
 
 // Step Components
 import { BasicInfoStep } from '@/components/program-builder/BasicInfoStep';
@@ -35,6 +35,7 @@ export interface ProgramFormData {
 
   // Media
   coverImage: string;
+  coverImageFile: File | null;
   previewVideo: string;
 
   // Schedule
@@ -82,6 +83,7 @@ const initialFormData: ProgramFormData = {
   targetAudience: '',
   goals: [],
   coverImage: '',
+  coverImageFile: null,
   previewVideo: '',
   durationWeeks: 8,
   workoutsPerWeek: 4,
@@ -162,9 +164,8 @@ export default function NewProgramPage() {
     }
   };
 
-  // Convert form data to Firestore WorkoutProgram format
-  const formToFirestore = (status: 'draft' | 'published') => ({
-    trainerId: user?.uid,
+  // Convert form data to API request body
+  const formToApiBody = (status: 'draft' | 'published') => ({
     title: formData.name,
     description: formData.description,
     coverImageURL: formData.coverImage,
@@ -195,39 +196,50 @@ export default function NewProgramPage() {
     pricing: {
       type: 'one_time' as const,
       price: formData.price,
-      currency: formData.currency as 'BRL' | 'USD',
-      originalPrice: formData.originalPrice || undefined,
-    },
-    stats: {
-      totalSales: 0,
-      activeStudents: 0,
-      completionRate: 0,
-      averageRating: 0,
-      totalReviews: 0,
+      currency: formData.currency,
+      ...(formData.originalPrice ? { originalPrice: formData.originalPrice } : {}),
     },
     weeks: formData.weeks,
     status,
-    visibility: 'public' as const,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...(status === 'published' ? { publishedAt: new Date() } : {}),
+    visibility: 'public',
   });
 
-  const handleSaveDraft = async () => {
+  const saveProgram = async (status: 'draft' | 'published') => {
     if (!user) return;
 
     try {
       setSaving(true);
-      const { db } = await import('@/lib/firebase');
-      if (!db) throw new Error('Firebase not configured');
-      await addDoc(collection(db as Firestore, 'programs'), formToFirestore('draft'));
+
+      const body = formToApiBody(status);
+
+      // If there's a cover image file, use multipart form data
+      if (formData.coverImageFile) {
+        const fd = new FormData();
+        fd.append('data', JSON.stringify(body));
+        fd.append('cover', formData.coverImageFile);
+
+        await apiRequest('/api/programs', {
+          method: 'POST',
+          body: fd,
+        });
+      } else {
+        await apiRequest('/api/programs', {
+          method: 'POST',
+          body: JSON.stringify(body),
+        });
+      }
+
       router.push('/programs');
-    } catch (error) {
-      console.error('Error saving draft:', error);
-      alert('Erro ao salvar rascunho');
+    } catch (error: any) {
+      console.error('Error saving program:', error);
+      alert(error.message || 'Erro ao salvar programa');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSaveDraft = async () => {
+    await saveProgram('draft');
   };
 
   const handlePublish = async () => {
@@ -241,18 +253,7 @@ export default function NewProgramPage() {
       }
     }
 
-    try {
-      setSaving(true);
-      const { db } = await import('@/lib/firebase');
-      if (!db) throw new Error('Firebase not configured');
-      await addDoc(collection(db as Firestore, 'programs'), formToFirestore('published'));
-      router.push('/programs');
-    } catch (error) {
-      console.error('Error publishing program:', error);
-      alert('Erro ao publicar programa');
-    } finally {
-      setSaving(false);
-    }
+    await saveProgram('published');
   };
 
   const renderStepContent = () => {
