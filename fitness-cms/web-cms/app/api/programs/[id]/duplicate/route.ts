@@ -43,8 +43,9 @@ export async function POST(
 
     // Create duplicate
     const newProgramRef = adminDb.collection('programs').doc();
+    const { publishedAt, ...dataWithoutPublished } = originalData;
     const duplicateData = {
-      ...originalData,
+      ...dataWithoutPublished,
       title: `${originalData.title} (Cópia)`,
       status: 'draft',
       visibility: 'private',
@@ -58,9 +59,6 @@ export async function POST(
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     };
-
-    // Remove publishedAt from duplicate
-    delete duplicateData.publishedAt;
 
     await newProgramRef.set(duplicateData);
 
