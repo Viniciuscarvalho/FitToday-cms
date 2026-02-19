@@ -94,6 +94,117 @@ export async function verifyAdminRequest(
 }
 
 // ============================================================
+// TRAINER VERIFICATION UTILITIES
+// ============================================================
+
+export interface TrainerVerificationResult {
+  isTrainer: boolean;
+  uid: string | null;
+  error?: string;
+}
+
+/**
+ * Verify if the request is from an authenticated trainer
+ * Extracts token from Authorization header and verifies trainer role
+ */
+export async function verifyTrainerRequest(
+  authHeader: string | null
+): Promise<TrainerVerificationResult> {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { isTrainer: false, uid: null, error: 'Missing or invalid authorization header' };
+  }
+
+  if (!adminAuth || !adminDb) {
+    return { isTrainer: false, uid: null, error: 'Firebase Admin not initialized' };
+  }
+
+  try {
+    const token = authHeader.split('Bearer ')[1];
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    const uid = decodedToken.uid;
+
+    const userDoc = await adminDb.collection('users').doc(uid).get();
+
+    if (!userDoc.exists) {
+      return { isTrainer: false, uid, error: 'User not found' };
+    }
+
+    const userData = userDoc.data();
+
+    if (userData?.role !== 'trainer') {
+      return { isTrainer: false, uid, error: 'User is not a trainer' };
+    }
+
+    return { isTrainer: true, uid };
+  } catch (error: any) {
+    return {
+      isTrainer: false,
+      uid: null,
+      error: error.message || 'Failed to verify token',
+    };
+  }
+}
+
+// ============================================================
+// PROGRAM COVER IMAGE UTILITIES
+// ============================================================
+
+/**
+ * Upload a program cover image to Firebase Storage
+ */
+export async function uploadProgramCover(
+  programId: string,
+  fileBuffer: Buffer,
+  contentType: string
+): Promise<UploadResult> {
+  if (!adminStorage) {
+    throw new Error('Firebase Storage not initialized');
+  }
+
+  const ext = contentType.split('/')[1] || 'jpg';
+  const bucket = adminStorage.bucket();
+  const filePath = `programs/${programId}/cover/cover.${ext}`;
+  const file = bucket.file(filePath);
+
+  await file.save(fileBuffer, {
+    metadata: {
+      contentType,
+      metadata: {
+        programId,
+        uploadedAt: new Date().toISOString(),
+      },
+    },
+  });
+
+  // Make cover publicly readable
+  await file.makePublic();
+  const url = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+
+  return { path: filePath, url };
+}
+
+/**
+ * Delete a program cover image from Storage
+ */
+export async function deleteProgramCover(programId: string): Promise<void> {
+  if (!adminStorage) {
+    throw new Error('Firebase Storage not initialized');
+  }
+
+  const bucket = adminStorage.bucket();
+  const prefix = `programs/${programId}/cover/`;
+
+  try {
+    const [files] = await bucket.getFiles({ prefix });
+    await Promise.all(files.map((file) => file.delete()));
+  } catch (error: any) {
+    if (error.code !== 404) {
+      throw error;
+    }
+  }
+}
+
+// ============================================================
 // STORAGE UTILITIES
 // ============================================================
 
