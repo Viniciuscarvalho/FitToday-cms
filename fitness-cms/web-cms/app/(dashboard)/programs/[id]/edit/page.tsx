@@ -13,12 +13,12 @@ import {
   DollarSign,
   Save,
   Loader2,
-  Trash2,
+  Archive,
   Eye,
   EyeOff,
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
-import { doc, getDoc, updateDoc, deleteDoc, Firestore } from 'firebase/firestore';
+import { apiRequest } from '@/lib/api-client';
 
 // Step Components
 import { BasicInfoStep } from '@/components/program-builder/BasicInfoStep';
@@ -44,6 +44,7 @@ const initialFormData: ProgramFormData = {
   targetAudience: '',
   goals: [],
   coverImage: '',
+  coverImageFile: null,
   previewVideo: '',
   durationWeeks: 8,
   workoutsPerWeek: 4,
@@ -68,24 +69,13 @@ export default function EditProgramPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // Load program data
+  // Load program data via API
   useEffect(() => {
     const loadProgram = async () => {
       if (!programId || !user) return;
 
       try {
-        const { db } = await import('@/lib/firebase');
-        if (!db) throw new Error('Firebase not configured');
-
-        const programDoc = await getDoc(doc(db as Firestore, 'programs', programId));
-
-        if (!programDoc.exists()) {
-          alert('Programa não encontrado');
-          router.push('/programs');
-          return;
-        }
-
-        const data = programDoc.data();
+        const data = await apiRequest(`/api/programs/${programId}`);
 
         // Verify ownership
         if (data.trainerId !== user.uid) {
@@ -95,7 +85,7 @@ export default function EditProgramPage() {
         }
 
         setOriginalStatus(data.status || 'draft');
-        // Convert Firestore WorkoutProgram format to form data
+        // Convert API response to form data
         setFormData({
           name: data.title || data.name || '',
           description: data.description || '',
@@ -104,6 +94,7 @@ export default function EditProgramPage() {
           targetAudience: data.requirements?.prerequisites || data.targetAudience || '',
           goals: data.tags || data.goals || [],
           coverImage: data.coverImageURL || data.coverImage || '',
+          coverImageFile: null,
           previewVideo: data.previewVideoURL || data.previewVideo || '',
           durationWeeks: data.duration?.weeks || data.durationWeeks || 8,
           workoutsPerWeek: data.duration?.daysPerWeek || data.workoutsPerWeek || 4,
@@ -113,9 +104,9 @@ export default function EditProgramPage() {
           originalPrice: data.pricing?.originalPrice || data.originalPrice || 0,
           currency: data.pricing?.currency || data.currency || 'BRL',
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error loading program:', error);
-        alert('Erro ao carregar programa');
+        alert(error.message || 'Erro ao carregar programa');
         router.push('/programs');
       } finally {
         setLoading(false);
@@ -180,8 +171,8 @@ export default function EditProgramPage() {
     }
   };
 
-  // Convert form data to Firestore WorkoutProgram format
-  const formToFirestore = (status: string) => ({
+  // Convert form data to API request body
+  const formToApiBody = (status: string) => ({
     title: formData.name,
     description: formData.description,
     coverImageURL: formData.coverImage,
@@ -213,14 +204,10 @@ export default function EditProgramPage() {
       type: 'one_time' as const,
       price: formData.price,
       currency: formData.currency as 'BRL' | 'USD',
-      originalPrice: formData.originalPrice || undefined,
+      ...(formData.originalPrice ? { originalPrice: formData.originalPrice } : {}),
     },
     weeks: formData.weeks,
     status,
-    updatedAt: new Date(),
-    ...(status === 'published' && originalStatus !== 'published'
-      ? { publishedAt: new Date() }
-      : {}),
   });
 
   const handleSave = async (newStatus?: string) => {
@@ -228,18 +215,30 @@ export default function EditProgramPage() {
 
     try {
       setSaving(true);
-      const { db } = await import('@/lib/firebase');
-      if (!db) throw new Error('Firebase not configured');
 
-      await updateDoc(
-        doc(db as Firestore, 'programs', programId),
-        formToFirestore(newStatus || originalStatus)
-      );
+      const body = formToApiBody(newStatus || originalStatus);
+
+      // If there's a new cover image file, use multipart form data
+      if (formData.coverImageFile) {
+        const fd = new FormData();
+        fd.append('data', JSON.stringify(body));
+        fd.append('cover', formData.coverImageFile);
+
+        await apiRequest(`/api/programs/${programId}`, {
+          method: 'PUT',
+          body: fd,
+        });
+      } else {
+        await apiRequest(`/api/programs/${programId}`, {
+          method: 'PUT',
+          body: JSON.stringify(body),
+        });
+      }
 
       router.push('/programs');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving program:', error);
-      alert('Erro ao salvar programa');
+      alert(error.message || 'Erro ao salvar programa');
     } finally {
       setSaving(false);
     }
@@ -266,14 +265,11 @@ export default function EditProgramPage() {
 
     try {
       setDeleting(true);
-      const { db } = await import('@/lib/firebase');
-      if (!db) throw new Error('Firebase not configured');
-
-      await deleteDoc(doc(db as Firestore, 'programs', programId));
+      await apiRequest(`/api/programs/${programId}`, { method: 'DELETE' });
       router.push('/programs');
-    } catch (error) {
-      console.error('Error deleting program:', error);
-      alert('Erro ao excluir programa');
+    } catch (error: any) {
+      console.error('Error archiving program:', error);
+      alert(error.message || 'Erro ao arquivar programa');
     } finally {
       setDeleting(false);
       setShowDeleteModal(false);
@@ -435,8 +431,8 @@ export default function EditProgramPage() {
             onClick={() => setShowDeleteModal(true)}
             className="flex items-center gap-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg"
           >
-            <Trash2 className="h-4 w-4" />
-            Excluir
+            <Archive className="h-4 w-4" />
+            Arquivar
           </button>
         </div>
 
@@ -485,16 +481,16 @@ export default function EditProgramPage() {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Archive Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Excluir programa?
+              Arquivar programa?
             </h3>
             <p className="text-gray-500 mb-6">
-              Esta ação não pode ser desfeita. Todos os dados do programa serão
-              permanentemente removidos.
+              O programa será arquivado e não ficará mais visível para alunos.
+              Você pode reativá-lo posteriormente.
             </p>
             <div className="flex items-center justify-end gap-3">
               <button
@@ -511,9 +507,9 @@ export default function EditProgramPage() {
                 {deleting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Trash2 className="h-4 w-4" />
+                  <Archive className="h-4 w-4" />
                 )}
-                Excluir
+                Arquivar
               </button>
             </div>
           </div>
