@@ -15,9 +15,11 @@ import {
   Calendar,
   Clock,
   FileText,
+  Archive,
+  Loader2,
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
-import { collection, query, where, getDocs, deleteDoc, doc, updateDoc, Firestore } from 'firebase/firestore';
+import { apiRequest } from '@/lib/api-client';
 import { WorkoutProgram } from '@/types';
 
 type ProgramStatus = 'all' | 'draft' | 'published' | 'archived';
@@ -29,6 +31,7 @@ export default function ProgramsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ProgramStatus>('all');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchPrograms() {
@@ -38,24 +41,10 @@ export default function ProgramsPage() {
       }
 
       try {
-        const { db } = await import('@/lib/firebase');
-        if (!db) {
-          console.warn('Firebase not configured');
-          setLoading(false);
-          return;
-        }
-
-        const programsQuery = query(
-          collection(db as Firestore, 'programs'),
-          where('trainerId', '==', user.uid)
+        const data = await apiRequest<{ programs: WorkoutProgram[]; total: number }>(
+          `/api/programs?trainerId=${user.uid}`
         );
-        const snapshot = await getDocs(programsQuery);
-        const programsData = snapshot.docs.map((docSnap) => ({
-          id: docSnap.id,
-          ...docSnap.data(),
-        })) as WorkoutProgram[];
-
-        setPrograms(programsData);
+        setPrograms(data.programs);
       } catch (error) {
         console.error('Error fetching programs:', error);
       } finally {
@@ -76,34 +65,43 @@ export default function ProgramsPage() {
   });
 
   const handleDeleteProgram = async (programId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este programa?')) return;
+    if (!confirm('Tem certeza que deseja arquivar este programa? Ele não ficará mais visível para alunos.')) return;
 
     try {
-      const { db } = await import('@/lib/firebase');
-      if (!db) throw new Error('Firebase not configured');
-      await deleteDoc(doc(db as Firestore, 'programs', programId));
-      setPrograms(programs.filter((p) => p.id !== programId));
-    } catch (error) {
-      console.error('Error deleting program:', error);
-      alert('Erro ao excluir programa');
+      setActionLoading(programId);
+      await apiRequest(`/api/programs/${programId}`, { method: 'DELETE' });
+      setPrograms(programs.map((p) =>
+        p.id === programId ? { ...p, status: 'archived' as const } : p
+      ));
+      setOpenMenuId(null);
+    } catch (error: any) {
+      console.error('Error archiving program:', error);
+      alert(error.message || 'Erro ao arquivar programa');
+    } finally {
+      setActionLoading(null);
     }
   };
 
   const handleDuplicateProgram = async (program: WorkoutProgram) => {
     try {
-      const newProgram = {
-        ...program,
-        title: `${program.title} (Cópia)`,
-        status: 'draft' as const,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      delete (newProgram as { id?: string }).id;
+      setActionLoading(program.id);
+      const data = await apiRequest(`/api/programs/${program.id}/duplicate`, {
+        method: 'POST',
+      });
 
-      // For now, just show a message - full implementation would create in Firestore
-      alert('Funcionalidade de duplicação será implementada em breve');
-    } catch (error) {
+      // Refetch programs to get the new duplicate
+      if (user) {
+        const refreshed = await apiRequest<{ programs: WorkoutProgram[]; total: number }>(
+          `/api/programs?trainerId=${user.uid}`
+        );
+        setPrograms(refreshed.programs);
+      }
+      setOpenMenuId(null);
+    } catch (error: any) {
       console.error('Error duplicating program:', error);
+      alert(error.message || 'Erro ao duplicar programa');
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -111,20 +109,22 @@ export default function ProgramsPage() {
     const newStatus = program.status === 'published' ? 'draft' : 'published';
 
     try {
-      const { db } = await import('@/lib/firebase');
-      if (!db) throw new Error('Firebase not configured');
-      await updateDoc(doc(db as Firestore, 'programs', program.id), {
-        status: newStatus,
-        updatedAt: new Date(),
+      setActionLoading(program.id);
+      await apiRequest(`/api/programs/${program.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: newStatus }),
       });
       setPrograms(
         programs.map((p) =>
           p.id === program.id ? { ...p, status: newStatus } : p
         )
       );
-    } catch (error) {
+      setOpenMenuId(null);
+    } catch (error: any) {
       console.error('Error updating program status:', error);
-      alert('Erro ao atualizar status do programa');
+      alert(error.message || 'Erro ao atualizar status do programa');
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -255,13 +255,6 @@ export default function ProgramsPage() {
                     {openMenuId === program.id && (
                       <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
                         <Link
-                          href={`/programs/${program.id}`}
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                        >
-                          <Eye className="h-4 w-4" />
-                          Visualizar
-                        </Link>
-                        <Link
                           href={`/programs/${program.id}/edit`}
                           className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                         >
@@ -270,26 +263,45 @@ export default function ProgramsPage() {
                         </Link>
                         <button
                           onClick={() => handleDuplicateProgram(program)}
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full"
+                          disabled={actionLoading === program.id}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full disabled:opacity-50"
                         >
-                          <Copy className="h-4 w-4" />
+                          {actionLoading === program.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
                           Duplicar
                         </button>
                         <button
                           onClick={() => handleToggleStatus(program)}
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full"
+                          disabled={actionLoading === program.id}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 w-full disabled:opacity-50"
                         >
-                          {program.status === 'published'
-                            ? 'Despublicar'
-                            : 'Publicar'}
+                          {program.status === 'published' ? (
+                            <>
+                              <Eye className="h-4 w-4" />
+                              Despublicar
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="h-4 w-4" />
+                              Publicar
+                            </>
+                          )}
                         </button>
                         <hr className="my-1" />
                         <button
                           onClick={() => handleDeleteProgram(program.id)}
-                          className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full"
+                          disabled={actionLoading === program.id}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full disabled:opacity-50"
                         >
-                          <Trash2 className="h-4 w-4" />
-                          Excluir
+                          {actionLoading === program.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Archive className="h-4 w-4" />
+                          )}
+                          Arquivar
                         </button>
                       </div>
                     )}
@@ -310,11 +322,11 @@ export default function ProgramsPage() {
                 <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    {program.duration.weeks} semanas
+                    {program.duration?.weeks || 0} semanas
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    {program.duration.daysPerWeek}x/semana
+                    {program.duration?.daysPerWeek || 0}x/semana
                   </div>
                 </div>
 
@@ -322,10 +334,10 @@ export default function ProgramsPage() {
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-1 text-sm text-gray-500">
                     <Users className="h-4 w-4" />
-                    <span>{program.stats.activeStudents} alunos</span>
+                    <span>{program.stats?.activeStudents || 0} alunos</span>
                   </div>
                   <span className="font-semibold text-primary-600">
-                    {formatCurrency(program.pricing.price)}
+                    {formatCurrency(program.pricing?.price || 0)}
                   </span>
                 </div>
               </div>
