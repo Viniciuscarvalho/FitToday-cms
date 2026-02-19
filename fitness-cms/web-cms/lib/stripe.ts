@@ -17,8 +17,9 @@ export const getStripe = () => {
   return stripePromise;
 };
 
-// Platform fee percentage (10%)
-export const PLATFORM_FEE_PERCENT = 10;
+// Re-export from constants so existing server-side imports continue to work
+import { PLATFORM_FEE_PERCENT } from './constants';
+export { PLATFORM_FEE_PERCENT };
 
 // Calculate platform fee
 export const calculatePlatformFee = (amount: number) => {

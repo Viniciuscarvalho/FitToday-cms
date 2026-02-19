@@ -2,7 +2,7 @@
 
 import { ProgramFormData } from '@/app/(dashboard)/programs/new/page';
 import { DollarSign, Percent, AlertCircle, CheckCircle } from 'lucide-react';
-import { PLATFORM_FEE_PERCENT } from '@/lib/stripe';
+import { PLATFORM_FEE_PERCENT } from '@/lib/constants';
 
 interface PricingStepProps {
   data: ProgramFormData;
