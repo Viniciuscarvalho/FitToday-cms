@@ -10,13 +10,15 @@ interface MediaStepProps {
   errors: Record<string, string>;
 }
 
+const MAX_COVER_SIZE = 10 * 1024 * 1024; // 10MB
+
 export function MediaStep({ data, onChange, errors }: MediaStepProps) {
   const [coverUrlInput, setCoverUrlInput] = useState('');
   const [videoUrlInput, setVideoUrlInput] = useState('');
 
   const handleCoverUrlSubmit = () => {
     if (coverUrlInput.trim()) {
-      onChange({ coverImage: coverUrlInput.trim() });
+      onChange({ coverImage: coverUrlInput.trim(), coverImageFile: null });
       setCoverUrlInput('');
     }
   };
@@ -26,6 +28,21 @@ export function MediaStep({ data, onChange, errors }: MediaStepProps) {
       onChange({ previewVideo: videoUrlInput.trim() });
       setVideoUrlInput('');
     }
+  };
+
+  const handleFileSelect = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Apenas imagens são permitidas (JPEG, PNG, WebP)');
+      return;
+    }
+    if (file.size > MAX_COVER_SIZE) {
+      alert('Imagem muito grande. Máximo 10MB');
+      return;
+    }
+
+    // Create a local preview URL and store the file for upload
+    const previewUrl = URL.createObjectURL(file);
+    onChange({ coverImage: previewUrl, coverImageFile: file });
   };
 
   return (
@@ -53,20 +70,44 @@ export function MediaStep({ data, onChange, errors }: MediaStepProps) {
                 className="w-full h-48 object-cover"
               />
               <button
-                onClick={() => onChange({ coverImage: '' })}
+                onClick={() => onChange({ coverImage: '', coverImageFile: null })}
                 className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
               >
                 <X className="h-4 w-4" />
               </button>
+              {data.coverImageFile && (
+                <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white text-xs rounded">
+                  {data.coverImageFile.name} ({(data.coverImageFile.size / (1024 * 1024)).toFixed(1)}MB)
+                </div>
+              )}
             </div>
           ) : (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+            <div
+              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-primary-400 transition-colors"
+              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const file = e.dataTransfer.files[0];
+                if (file) handleFileSelect(file);
+              }}
+              onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/jpeg,image/png,image/webp';
+                input.onchange = (e) => {
+                  const file = (e.target as HTMLInputElement).files?.[0];
+                  if (file) handleFileSelect(file);
+                };
+                input.click();
+              }}
+            >
               <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-sm text-gray-500 mb-2">
-                Arraste uma imagem ou cole uma URL
+                Clique ou arraste uma imagem
               </p>
               <p className="text-xs text-gray-400">
-                PNG, JPG ou WEBP (Recomendado: 1200x630px)
+                PNG, JPG ou WEBP - Máximo 10MB (Recomendado: 1200x630px)
               </p>
             </div>
           )}
@@ -76,8 +117,9 @@ export function MediaStep({ data, onChange, errors }: MediaStepProps) {
               type="text"
               value={coverUrlInput}
               onChange={(e) => setCoverUrlInput(e.target.value)}
-              placeholder="Cole a URL da imagem"
+              placeholder="Ou cole a URL da imagem"
               className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none text-sm"
+              onKeyDown={(e) => e.key === 'Enter' && handleCoverUrlSubmit()}
             />
             <button
               onClick={handleCoverUrlSubmit}
@@ -86,29 +128,6 @@ export function MediaStep({ data, onChange, errors }: MediaStepProps) {
             >
               <LinkIcon className="h-4 w-4" />
             </button>
-          </div>
-
-          <div className="flex items-center justify-center">
-            <label className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
-              <Upload className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-600">Upload de arquivo</span>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  // In a real app, you'd upload to Firebase Storage here
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      onChange({ coverImage: reader.result as string });
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
-              />
-            </label>
           </div>
         </div>
       </div>
@@ -152,6 +171,7 @@ export function MediaStep({ data, onChange, errors }: MediaStepProps) {
               onChange={(e) => setVideoUrlInput(e.target.value)}
               placeholder="Cole a URL do vídeo (YouTube, Vimeo, etc)"
               className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none text-sm"
+              onKeyDown={(e) => e.key === 'Enter' && handleVideoUrlSubmit()}
             />
             <button
               onClick={handleVideoUrlSubmit}
@@ -168,9 +188,9 @@ export function MediaStep({ data, onChange, errors }: MediaStepProps) {
       <div className="bg-blue-50 rounded-lg p-4">
         <h4 className="font-medium text-blue-900 mb-2">Dicas para boas imagens:</h4>
         <ul className="text-sm text-blue-700 space-y-1">
-          <li>• Use imagens de alta qualidade que representem o programa</li>
-          <li>• Evite textos pequenos na imagem de capa</li>
-          <li>• Vídeos de apresentação aumentam conversões em até 80%</li>
+          <li>- Use imagens de alta qualidade que representem o programa</li>
+          <li>- Evite textos pequenos na imagem de capa</li>
+          <li>- Vídeos de apresentação aumentam conversões em até 80%</li>
         </ul>
       </div>
     </div>
