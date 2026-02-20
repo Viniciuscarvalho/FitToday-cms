@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, uploadWorkoutPDF, sendWorkoutNotification, verifyTrainerRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { Workout, WorkoutProgress, CreateWorkoutResponse, WorkoutListResponse } from '@/types/workout';
+import { isWithinStudentLimit, PLANS, PlanId } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,6 +68,34 @@ export async function POST(request: NextRequest) {
 
     if (!adminDb) {
       return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+    }
+
+    // Check student limit based on trainer's plan
+    const trainerDoc = await adminDb.collection('users').doc(trainerId).get();
+    const trainerData = trainerDoc.data();
+    const planId = (trainerData?.subscription?.plan || 'starter') as PlanId;
+    const maxStudents = PLANS[planId]?.features.maxStudents ?? PLANS.starter.features.maxStudents;
+
+    if (maxStudents !== -1) {
+      // Count distinct students this trainer already has
+      const existingWorkouts = await adminDb
+        .collection('workouts')
+        .where('trainerId', '==', trainerId)
+        .select('studentId')
+        .get();
+
+      const uniqueStudents = new Set(existingWorkouts.docs.map((d) => d.data().studentId));
+
+      // If this is a NEW student (not already in the set), check the limit
+      if (!uniqueStudents.has(studentId) && !isWithinStudentLimit(maxStudents, uniqueStudents.size)) {
+        return NextResponse.json(
+          {
+            error: `Limite de alunos atingido. Seu plano ${PLANS[planId]?.name || 'Starter'} permite ate ${maxStudents} alunos. Faca upgrade para adicionar mais.`,
+            code: 'STUDENT_LIMIT_REACHED',
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Generate workout ID

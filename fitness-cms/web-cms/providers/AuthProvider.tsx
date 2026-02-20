@@ -22,6 +22,7 @@ import {
 import { doc, getDoc, setDoc, Firestore, serverTimestamp } from 'firebase/firestore';
 import { PersonalTrainer, AdminUser, UserRole, TrainerStatus } from '@/types';
 import { AUTH_COOKIES, setRoleCookies, clearAuthCookies } from '@/lib/auth-utils';
+import { PLANS } from '@/lib/constants';
 
 interface AuthContextType {
   user: User | null;
@@ -226,16 +227,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         availableBalance: 0,
       },
       subscription: {
-        plan: 'free',
+        plan: 'starter',
         status: 'active',
-        features: {
-          maxPrograms: 3,
-          maxStudents: 10,
-          customBranding: false,
-          analyticsAdvanced: false,
-          prioritySupport: false,
-          commissionRate: 15,
-        },
+        features: PLANS.starter.features,
       },
     };
 
@@ -281,16 +275,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           availableBalance: 0,
         },
         subscription: {
-          plan: 'free',
+          plan: 'starter',
           status: 'active',
-          features: {
-            maxPrograms: 3,
-            maxStudents: 10,
-            customBranding: false,
-            analyticsAdvanced: false,
-            prioritySupport: false,
-            commissionRate: 15,
-          },
+          features: PLANS.starter.features,
         },
       };
       await setDoc(doc(db, 'users', result.user.uid), trainerData);
@@ -340,16 +327,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           availableBalance: 0,
         },
         subscription: {
-          plan: 'free',
+          plan: 'starter',
           status: 'active',
-          features: {
-            maxPrograms: 3,
-            maxStudents: 10,
-            customBranding: false,
-            analyticsAdvanced: false,
-            prioritySupport: false,
-            commissionRate: 15,
-          },
+          features: PLANS.starter.features,
         },
       };
       await setDoc(doc(db, 'users', result.user.uid), trainerData);

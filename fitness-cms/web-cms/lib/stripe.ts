@@ -21,7 +21,8 @@ export const getStripe = () => {
 import { PLATFORM_FEE_PERCENT } from './constants';
 export { PLATFORM_FEE_PERCENT };
 
-// Calculate platform fee
-export const calculatePlatformFee = (amount: number) => {
-  return Math.round(amount * (PLATFORM_FEE_PERCENT / 100));
+// Calculate platform fee (optionally uses a trainer-specific commission rate)
+export const calculatePlatformFee = (amount: number, commissionRate?: number) => {
+  const rate = commissionRate ?? PLATFORM_FEE_PERCENT;
+  return Math.round(amount * (rate / 100));
 };

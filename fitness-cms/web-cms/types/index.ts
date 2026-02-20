@@ -56,7 +56,7 @@ export interface PersonalTrainer extends BaseUser {
     availableBalance: number;
   };
   subscription: {
-    plan: 'free' | 'pro' | 'premium';
+    plan: 'starter' | 'pro' | 'elite';
     status: 'active' | 'canceled' | 'past_due';
     features: PlanFeatures;
   };

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyTrainerRequest, uploadProgramCover } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { isWithinProgramLimit, PLANS, PlanId } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -112,6 +113,30 @@ export async function POST(request: NextRequest) {
 
     if (!body.description?.trim()) {
       return NextResponse.json({ error: 'Description is required' }, { status: 400 });
+    }
+
+    // Check program limit based on trainer's plan
+    const trainerDoc = await adminDb.collection('users').doc(authResult.uid).get();
+    const trainerData = trainerDoc.data();
+    const planId = (trainerData?.subscription?.plan || 'starter') as PlanId;
+    const maxPrograms = PLANS[planId]?.features.maxPrograms ?? PLANS.starter.features.maxPrograms;
+
+    if (maxPrograms !== -1) {
+      const existingPrograms = await adminDb
+        .collection('programs')
+        .where('trainerId', '==', authResult.uid)
+        .count()
+        .get();
+
+      if (!isWithinProgramLimit(maxPrograms, existingPrograms.data().count)) {
+        return NextResponse.json(
+          {
+            error: `Limite de programas atingido. Seu plano ${PLANS[planId]?.name || 'Starter'} permite ate ${maxPrograms} programas. Faca upgrade para criar mais.`,
+            code: 'PROGRAM_LIMIT_REACHED',
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Generate program ID
