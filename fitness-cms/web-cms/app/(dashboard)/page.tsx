@@ -364,20 +364,6 @@ export default function DashboardPage() {
               </div>
             </Link>
             <Link
-              href="/exercises/new"
-              className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50 transition-all group"
-            >
-              <div className="p-2 rounded-lg bg-orange-100 group-hover:bg-orange-200">
-                <Activity className="h-5 w-5 text-orange-600" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Adicionar Exercício</p>
-                <p className="text-xs text-gray-500">
-                  Cadastre um novo exercício
-                </p>
-              </div>
-            </Link>
-            <Link
               href="/messages"
               className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50 transition-all group"
             >

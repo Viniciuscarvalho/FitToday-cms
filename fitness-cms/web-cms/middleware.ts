@@ -13,7 +13,6 @@ const TRAINER_ROUTES = [
   '/',
   '/programs',
   '/students',
-  '/exercises',
   '/messages',
   '/analytics',
   '/finances',
