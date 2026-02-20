@@ -10,13 +10,13 @@ const TRAINER_STATUS = 'trainer-status';
 // Route definitions
 const ADMIN_ROUTES = ['/admin'];
 const TRAINER_ROUTES = [
-  '/',
-  '/programs',
-  '/students',
-  '/messages',
-  '/analytics',
-  '/finances',
-  '/settings',
+  '/cms',
+  '/cms/programs',
+  '/cms/students',
+  '/cms/messages',
+  '/cms/analytics',
+  '/cms/finances',
+  '/cms/settings',
 ];
 const AUTH_ROUTES = ['/login', '/register'];
 const PENDING_ROUTE = '/pending-approval';
@@ -64,7 +64,7 @@ export function middleware(request: NextRequest) {
     if (userRole === 'admin') {
       return NextResponse.redirect(new URL('/admin', request.url));
     }
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL('/cms', request.url));
   }
 
   // Admin can access everything
@@ -74,7 +74,7 @@ export function middleware(request: NextRequest) {
 
   // Trainer trying to access admin routes
   if (userRole === 'trainer' && isAdminRoute(pathname)) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL('/cms', request.url));
   }
 
   // Trainer with non-active status trying to access trainer routes
@@ -84,7 +84,7 @@ export function middleware(request: NextRequest) {
 
   // Active trainer trying to access pending page - redirect to dashboard
   if (userRole === 'trainer' && trainerStatus === 'active' && pathname === PENDING_ROUTE) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL('/cms', request.url));
   }
 
   return NextResponse.next();

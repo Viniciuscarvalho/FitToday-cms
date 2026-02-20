@@ -28,7 +28,7 @@ export default function LoginPage() {
     if (userRole === 'trainer' && trainerStatus !== 'active') {
       return '/pending-approval';
     }
-    return '/';
+    return '/cms';
   };
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);

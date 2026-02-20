@@ -20,7 +20,7 @@ export default function AdminLayout({
       if (!user) {
         router.push('/login');
       } else if (userRole !== 'admin') {
-        router.push('/');
+        router.push('/cms');
       }
     }
   }, [user, userRole, loading, router]);

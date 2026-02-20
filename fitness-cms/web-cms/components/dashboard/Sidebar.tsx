@@ -19,13 +19,13 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useState } from 'react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Programas', href: '/programs', icon: FileText },
-  { name: 'Alunos', href: '/students', icon: Users },
-  { name: 'Mensagens', href: '/messages', icon: MessageSquare },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-  { name: 'Financeiro', href: '/finances', icon: Wallet },
-  { name: 'Configurações', href: '/settings', icon: Settings },
+  { name: 'Dashboard', href: '/cms', icon: LayoutDashboard },
+  { name: 'Programas', href: '/cms/programs', icon: FileText },
+  { name: 'Alunos', href: '/cms/students', icon: Users },
+  { name: 'Mensagens', href: '/cms/messages', icon: MessageSquare },
+  { name: 'Analytics', href: '/cms/analytics', icon: BarChart3 },
+  { name: 'Financeiro', href: '/cms/finances', icon: Wallet },
+  { name: 'Configurações', href: '/cms/settings', icon: Settings },
 ];
 
 export function Sidebar() {
@@ -34,7 +34,7 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (href: string) => {
-    if (href === '/') return pathname === '/';
+    if (href === '/cms') return pathname === '/cms';
     return pathname.startsWith(href);
   };
 
@@ -46,7 +46,7 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/cms" className="flex items-center gap-2">
           <Dumbbell className="h-8 w-8 text-primary-600 flex-shrink-0" />
           {!collapsed && (
             <span className="text-xl font-bold text-gray-900">FitToday</span>

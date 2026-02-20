@@ -14,7 +14,7 @@ export default function PendingApprovalPage() {
       if (!user) {
         router.push('/login');
       } else if (trainerStatus === 'active') {
-        router.push('/');
+        router.push('/cms');
       }
     }
   }, [user, trainerStatus, loading, router]);
@@ -34,7 +34,7 @@ export default function PendingApprovalPage() {
   const handleRefresh = async () => {
     await refreshUser();
     if (trainerStatus === 'active') {
-      router.push('/');
+      router.push('/cms');
     }
   };
 

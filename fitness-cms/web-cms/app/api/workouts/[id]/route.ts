@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, deleteWorkoutPDF, generateSignedUrl } from '@/lib/firebase-admin';
+import { adminDb, deleteWorkoutPDF, generateSignedUrl, verifyTrainerRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { Workout, WorkoutWithProgress } from '@/types/workout';
 
@@ -11,6 +11,18 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Verify trainer auth
+    const authResult = await verifyTrainerRequest(
+      request.headers.get('authorization')
+    );
+
+    if (!authResult.isTrainer || !authResult.uid) {
+      return NextResponse.json(
+        { error: authResult.error || 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const workoutId = params.id;
 
     if (!adminDb) {
@@ -25,6 +37,11 @@ export async function GET(
     }
 
     const workout = { id: workoutDoc.id, ...workoutDoc.data() } as Workout;
+
+    // Verify ownership - trainer can only access their own workouts
+    if (workout.trainerId !== authResult.uid) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     // Regenerate signed URL if needed (URL might have expired)
     let pdfUrl = workout.pdfUrl;
@@ -77,6 +94,18 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Verify trainer auth
+    const authResult = await verifyTrainerRequest(
+      request.headers.get('authorization')
+    );
+
+    if (!authResult.isTrainer || !authResult.uid) {
+      return NextResponse.json(
+        { error: authResult.error || 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const workoutId = params.id;
     const body = await request.json();
 
@@ -89,6 +118,12 @@ export async function PATCH(
 
     if (!workoutDoc.exists) {
       return NextResponse.json({ error: 'Workout not found' }, { status: 404 });
+    }
+
+    // Verify ownership
+    const workoutData = workoutDoc.data();
+    if (workoutData?.trainerId !== authResult.uid) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Allowed fields to update
@@ -153,6 +188,18 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Verify trainer auth
+    const authResult = await verifyTrainerRequest(
+      request.headers.get('authorization')
+    );
+
+    if (!authResult.isTrainer || !authResult.uid) {
+      return NextResponse.json(
+        { error: authResult.error || 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const workoutId = params.id;
     const { searchParams } = new URL(request.url);
     const hardDelete = searchParams.get('hard') === 'true';
@@ -169,6 +216,11 @@ export async function DELETE(
     }
 
     const workout = workoutDoc.data() as Workout;
+
+    // Verify ownership
+    if (workout.trainerId !== authResult.uid) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     if (hardDelete) {
       // Hard delete: remove PDF from Storage and document from Firestore

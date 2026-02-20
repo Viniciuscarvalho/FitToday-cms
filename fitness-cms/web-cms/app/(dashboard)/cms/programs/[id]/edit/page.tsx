@@ -80,7 +80,7 @@ export default function EditProgramPage() {
         // Verify ownership
         if (data.trainerId !== user.uid) {
           alert('Você não tem permissão para editar este programa');
-          router.push('/programs');
+          router.push('/cms/programs');
           return;
         }
 
@@ -107,7 +107,7 @@ export default function EditProgramPage() {
       } catch (error: any) {
         console.error('Error loading program:', error);
         alert(error.message || 'Erro ao carregar programa');
-        router.push('/programs');
+        router.push('/cms/programs');
       } finally {
         setLoading(false);
       }
@@ -235,7 +235,7 @@ export default function EditProgramPage() {
         });
       }
 
-      router.push('/programs');
+      router.push('/cms/programs');
     } catch (error: any) {
       console.error('Error saving program:', error);
       alert(error.message || 'Erro ao salvar programa');
@@ -266,7 +266,7 @@ export default function EditProgramPage() {
     try {
       setDeleting(true);
       await apiRequest(`/api/programs/${programId}`, { method: 'DELETE' });
-      router.push('/programs');
+      router.push('/cms/programs');
     } catch (error: any) {
       console.error('Error archiving program:', error);
       alert(error.message || 'Erro ao arquivar programa');

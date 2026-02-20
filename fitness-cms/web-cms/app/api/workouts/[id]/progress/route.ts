@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
+import { adminDb, verifyTrainerRequest } from '@/lib/firebase-admin';
 import { WorkoutProgressResponse } from '@/types/workout';
 
 export const dynamic = 'force-dynamic';
@@ -10,16 +10,33 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Verify trainer auth
+    const authResult = await verifyTrainerRequest(
+      request.headers.get('authorization')
+    );
+
+    if (!authResult.isTrainer || !authResult.uid) {
+      return NextResponse.json(
+        { error: authResult.error || 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const workoutId = params.id;
 
     if (!adminDb) {
       return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
     }
 
-    // Verify workout exists
+    // Verify workout exists and belongs to this trainer
     const workoutDoc = await adminDb.collection('workouts').doc(workoutId).get();
     if (!workoutDoc.exists) {
       return NextResponse.json({ error: 'Workout not found' }, { status: 404 });
+    }
+
+    const workoutData = workoutDoc.data();
+    if (workoutData?.trainerId !== authResult.uid) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Get progress document

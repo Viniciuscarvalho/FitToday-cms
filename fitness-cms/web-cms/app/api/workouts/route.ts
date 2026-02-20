@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, uploadWorkoutPDF, sendWorkoutNotification } from '@/lib/firebase-admin';
+import { adminDb, uploadWorkoutPDF, sendWorkoutNotification, verifyTrainerRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { Workout, WorkoutProgress, CreateWorkoutResponse, WorkoutListResponse } from '@/types/workout';
 
@@ -11,11 +11,22 @@ const ALLOWED_MIME_TYPES = ['application/pdf'];
 // POST /api/workouts - Create a new workout
 export async function POST(request: NextRequest) {
   try {
+    // Verify trainer auth
+    const authResult = await verifyTrainerRequest(
+      request.headers.get('authorization')
+    );
+
+    if (!authResult.isTrainer || !authResult.uid) {
+      return NextResponse.json(
+        { error: authResult.error || 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const formData = await request.formData();
 
     // Extract fields
     const file = formData.get('file') as File | null;
-    const trainerId = formData.get('trainerId') as string;
     const studentId = formData.get('studentId') as string;
     const title = formData.get('title') as string;
     const description = formData.get('description') as string | null;
@@ -23,14 +34,17 @@ export async function POST(request: NextRequest) {
     const totalDays = formData.get('totalDays') as string | null;
     const startDate = formData.get('startDate') as string | null;
 
+    // Use verified uid as trainerId (ignore form field)
+    const trainerId = authResult.uid;
+
     // Validate required fields
     if (!file) {
       return NextResponse.json({ error: 'PDF file is required' }, { status: 400 });
     }
 
-    if (!trainerId || !studentId || !title) {
+    if (!studentId || !title) {
       return NextResponse.json(
-        { error: 'trainerId, studentId, and title are required' },
+        { error: 'studentId and title are required' },
         { status: 400 }
       );
     }
@@ -155,39 +169,38 @@ export async function POST(request: NextRequest) {
 // GET /api/workouts - List workouts for a trainer or student
 export async function GET(request: NextRequest) {
   try {
+    // Verify trainer auth
+    const authResult = await verifyTrainerRequest(
+      request.headers.get('authorization')
+    );
+
+    if (!authResult.isTrainer || !authResult.uid) {
+      return NextResponse.json(
+        { error: authResult.error || 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
-    const trainerId = searchParams.get('trainerId');
     const studentId = searchParams.get('studentId');
     const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    // Require at least one of trainerId or studentId
-    if (!trainerId && !studentId) {
-      return NextResponse.json(
-        { error: 'trainerId or studentId is required' },
-        { status: 400 }
-      );
-    }
+    // Use verified uid as trainerId
+    const trainerId = authResult.uid;
 
     if (!adminDb) {
       return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
     }
 
-    // Build query based on provided parameters
+    // Build query - always scoped to verified trainer
     let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData>;
 
-    if (trainerId && studentId) {
-      // Both provided: filter by trainer AND student (CMS student detail view)
+    if (studentId) {
+      // Filter by trainer AND student (CMS student detail view)
       query = adminDb
         .collection('workouts')
         .where('trainerId', '==', trainerId)
-        .where('studentId', '==', studentId)
-        .orderBy('createdAt', 'desc')
-        .limit(limit);
-    } else if (studentId) {
-      // Only studentId: list all workouts for a student (mobile app "Personal" tab)
-      query = adminDb
-        .collection('workouts')
         .where('studentId', '==', studentId)
         .orderBy('createdAt', 'desc')
         .limit(limit);

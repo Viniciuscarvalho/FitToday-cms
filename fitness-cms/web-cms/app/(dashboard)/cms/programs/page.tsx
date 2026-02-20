@@ -185,7 +185,7 @@ export default function ProgramsPage() {
           </p>
         </div>
         <Link
-          href="/programs/new"
+          href="/cms/programs/new"
           className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
         >
           <Plus className="h-5 w-5" />
@@ -255,7 +255,7 @@ export default function ProgramsPage() {
                     {openMenuId === program.id && (
                       <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
                         <Link
-                          href={`/programs/${program.id}/edit`}
+                          href={`/cms/programs/${program.id}/edit`}
                           className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                         >
                           <Edit className="h-4 w-4" />
@@ -361,7 +361,7 @@ export default function ProgramsPage() {
           </p>
           {!searchQuery && statusFilter === 'all' && (
             <Link
-              href="/programs/new"
+              href="/cms/programs/new"
               className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
             >
               <Plus className="h-5 w-5" />

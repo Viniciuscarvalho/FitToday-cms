@@ -230,7 +230,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <Link
-          href="/programs/new"
+          href="/cms/programs/new"
           className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
         >
           <Plus className="h-5 w-5" />
@@ -333,7 +333,7 @@ export default function DashboardPage() {
           </div>
           <div className="p-4 border-t border-gray-100">
             <Link
-              href="/activity"
+              href="/cms/activity"
               className="text-sm text-primary-600 hover:text-primary-700 font-medium"
             >
               Ver todas as atividades
@@ -350,7 +350,7 @@ export default function DashboardPage() {
           </div>
           <div className="p-4 space-y-3">
             <Link
-              href="/programs/new"
+              href="/cms/programs/new"
               className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50 transition-all group"
             >
               <div className="p-2 rounded-lg bg-primary-100 group-hover:bg-primary-200">
@@ -364,7 +364,7 @@ export default function DashboardPage() {
               </div>
             </Link>
             <Link
-              href="/messages"
+              href="/cms/messages"
               className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50 transition-all group"
             >
               <div className="p-2 rounded-lg bg-blue-100 group-hover:bg-blue-200">
@@ -378,7 +378,7 @@ export default function DashboardPage() {
               </div>
             </Link>
             <Link
-              href="/finances"
+              href="/cms/finances"
               className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50 transition-all group"
             >
               <div className="p-2 rounded-lg bg-green-100 group-hover:bg-green-200">

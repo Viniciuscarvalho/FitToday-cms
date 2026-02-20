@@ -1,6 +1,6 @@
 'use client';
 
-import { ProgramFormData } from '@/app/(dashboard)/programs/new/page';
+import { ProgramFormData } from '@/app/(dashboard)/cms/programs/new/page';
 import { DollarSign, Percent, AlertCircle, CheckCircle } from 'lucide-react';
 import { PLATFORM_FEE_PERCENT } from '@/lib/constants';
 

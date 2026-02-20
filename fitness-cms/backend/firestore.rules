@@ -341,6 +341,80 @@ service cloud.firestore {
     }
 
     // ============================================================
+    // WORKOUTS COLLECTION
+    // ============================================================
+
+    match /workouts/{workoutId} {
+      // Trainer (dono) e aluno (destinatário) podem ler
+      allow read: if isAuthenticated() && (
+        resource.data.trainerId == request.auth.uid ||
+        resource.data.studentId == request.auth.uid
+      );
+
+      // Apenas trainers podem criar treinos para seus alunos
+      allow create: if isTrainer() &&
+        request.resource.data.trainerId == request.auth.uid;
+
+      // Apenas o trainer dono pode atualizar
+      allow update: if isAuthenticated() &&
+        resource.data.trainerId == request.auth.uid;
+
+      // Não permitir deleção direta (soft delete via status: 'archived')
+      allow delete: if false;
+    }
+
+    // ============================================================
+    // WORKOUT PROGRESS COLLECTION
+    // ============================================================
+
+    match /workout_progress/{progressId} {
+      // Trainer e aluno podem ler o progresso
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid ||
+        // Trainer pode ler se é dono do workout associado
+        exists(/databases/$(database)/documents/workouts/$(resource.data.workoutId)) &&
+        get(/databases/$(database)/documents/workouts/$(resource.data.workoutId)).data.trainerId == request.auth.uid
+      );
+
+      // Criação via API (servidor) - aluno não cria diretamente
+      allow create: if false;
+
+      // Aluno pode atualizar seu progresso (marcar dias completados)
+      allow update: if isAuthenticated() &&
+        resource.data.studentId == request.auth.uid;
+
+      allow delete: if false;
+    }
+
+    // ============================================================
+    // WORKOUT FEEDBACK COLLECTION
+    // ============================================================
+
+    match /workout_feedback/{feedbackId} {
+      // Trainer e aluno podem ler feedbacks do workout
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid ||
+        resource.data.trainerId == request.auth.uid
+      );
+
+      // Aluno pode criar feedback
+      allow create: if isStudent() &&
+        request.resource.data.studentId == request.auth.uid;
+
+      // Trainer pode adicionar resposta ao feedback
+      allow update: if isAuthenticated() && (
+        // Aluno pode atualizar seus próprios campos
+        (resource.data.studentId == request.auth.uid &&
+         !request.resource.data.keys().hasAny(['trainerResponse', 'respondedAt'])) ||
+        // Trainer pode adicionar resposta
+        (resource.data.trainerId == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['trainerResponse', 'respondedAt']))
+      );
+
+      allow delete: if false;
+    }
+
+    // ============================================================
     // ANALYTICS COLLECTION (Read-only para trainers)
     // ============================================================
 

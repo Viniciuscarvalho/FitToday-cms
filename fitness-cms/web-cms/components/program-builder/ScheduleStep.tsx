@@ -1,6 +1,6 @@
 'use client';
 
-import { ProgramFormData } from '@/app/(dashboard)/programs/new/page';
+import { ProgramFormData } from '@/app/(dashboard)/cms/programs/new/page';
 import { Calendar, Clock, Repeat } from 'lucide-react';
 
 interface ScheduleStepProps {

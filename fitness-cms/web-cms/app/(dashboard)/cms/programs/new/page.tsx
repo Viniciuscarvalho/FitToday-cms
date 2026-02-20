@@ -229,7 +229,7 @@ export default function NewProgramPage() {
         });
       }
 
-      router.push('/programs');
+      router.push('/cms/programs');
     } catch (error: any) {
       console.error('Error saving program:', error);
       alert(error.message || 'Erro ao salvar programa');

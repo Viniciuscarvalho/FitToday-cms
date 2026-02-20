@@ -10,13 +10,13 @@ export const AUTH_COOKIES = {
 // Route definitions by role
 export const ADMIN_ROUTES = ['/admin'];
 export const TRAINER_ROUTES = [
-  '/',
-  '/programs',
-  '/students',
-  '/messages',
-  '/analytics',
-  '/finances',
-  '/settings',
+  '/cms',
+  '/cms/programs',
+  '/cms/students',
+  '/cms/messages',
+  '/cms/analytics',
+  '/cms/finances',
+  '/cms/settings',
 ];
 export const AUTH_ROUTES = ['/login', '/register'];
 export const PENDING_ROUTE = '/pending-approval';
@@ -67,7 +67,7 @@ export function canAccessRoute(
     if (role === 'admin') {
       return { allowed: false, redirect: '/admin' };
     }
-    return { allowed: false, redirect: '/' };
+    return { allowed: false, redirect: '/cms' };
   }
 
   // Admin can access everything
@@ -77,7 +77,7 @@ export function canAccessRoute(
 
   // Trainer trying to access admin routes
   if (role === 'trainer' && isAdminRoute(pathname)) {
-    return { allowed: false, redirect: '/' };
+    return { allowed: false, redirect: '/cms' };
   }
 
   // Trainer with non-active status trying to access trainer routes
@@ -92,7 +92,7 @@ export function canAccessRoute(
 
   // Active trainer trying to access pending page
   if (role === 'trainer' && status === 'active' && pathname === PENDING_ROUTE) {
-    return { allowed: false, redirect: '/' };
+    return { allowed: false, redirect: '/cms' };
   }
 
   return { allowed: true };
@@ -103,17 +103,19 @@ export function canAccessRoute(
  */
 export function setRoleCookies(role: UserRole | null, status: TrainerStatus | null) {
   const maxAge = 60 * 60 * 24 * 7; // 7 days
+  const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+  const secureFlag = isSecure ? '; Secure' : '';
 
   if (role) {
-    document.cookie = `${AUTH_COOKIES.ROLE}=${role}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    document.cookie = `${AUTH_COOKIES.ROLE}=${role}; path=/; max-age=${maxAge}; SameSite=Lax${secureFlag}`;
   } else {
-    document.cookie = `${AUTH_COOKIES.ROLE}=; path=/; max-age=0`;
+    document.cookie = `${AUTH_COOKIES.ROLE}=; path=/; max-age=0; path=/`;
   }
 
   if (status) {
-    document.cookie = `${AUTH_COOKIES.STATUS}=${status}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    document.cookie = `${AUTH_COOKIES.STATUS}=${status}; path=/; max-age=${maxAge}; SameSite=Lax${secureFlag}`;
   } else {
-    document.cookie = `${AUTH_COOKIES.STATUS}=; path=/; max-age=0`;
+    document.cookie = `${AUTH_COOKIES.STATUS}=; path=/; max-age=0; path=/`;
   }
 }
 

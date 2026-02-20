@@ -117,7 +117,7 @@ export default function StudentDetailPage() {
 
         if (subsSnapshot.empty) {
           alert('Aluno não encontrado ou não autorizado');
-          router.push('/students');
+          router.push('/cms/students');
           return;
         }
 
@@ -281,7 +281,7 @@ export default function StudentDetailPage() {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">Aluno não encontrado</p>
-        <Link href="/students" className="text-primary-600 hover:underline mt-2 inline-block">
+        <Link href="/cms/students" className="text-primary-600 hover:underline mt-2 inline-block">
           Voltar para lista de alunos
         </Link>
       </div>

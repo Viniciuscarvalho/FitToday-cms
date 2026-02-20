@@ -1,5 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async redirects() {
+    return [
+      { source: '/site', destination: '/', permanent: true },
+      { source: '/programs/:path*', destination: '/cms/programs/:path*', permanent: true },
+      { source: '/students/:path*', destination: '/cms/students/:path*', permanent: true },
+      { source: '/messages', destination: '/cms/messages', permanent: true },
+      { source: '/analytics', destination: '/cms/analytics', permanent: true },
+      { source: '/finances', destination: '/cms/finances', permanent: true },
+      { source: '/settings', destination: '/cms/settings', permanent: true },
+    ];
+  },
   images: {
     remotePatterns: [
       {

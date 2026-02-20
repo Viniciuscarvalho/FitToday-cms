@@ -9,7 +9,7 @@ import {
   ChevronRight,
   Dumbbell,
 } from 'lucide-react';
-import { ProgramFormData } from '@/app/(dashboard)/programs/new/page';
+import { ProgramFormData } from '@/app/(dashboard)/cms/programs/new/page';
 
 interface WorkoutsStepProps {
   data: ProgramFormData;

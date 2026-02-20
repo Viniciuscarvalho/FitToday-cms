@@ -177,7 +177,7 @@ export default function WorkoutDetailPage() {
         <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
         <p className="text-gray-500 mb-4">{error || 'Treino não encontrado'}</p>
         <Link
-          href={`/students/${studentId}`}
+          href={`/cms/students/${studentId}`}
           className="text-primary-600 hover:underline"
         >
           Voltar para o aluno

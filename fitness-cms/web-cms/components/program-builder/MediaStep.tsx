@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Upload, X, Image as ImageIcon, Video, Link as LinkIcon } from 'lucide-react';
-import { ProgramFormData } from '@/app/(dashboard)/programs/new/page';
+import { ProgramFormData } from '@/app/(dashboard)/cms/programs/new/page';
 
 interface MediaStepProps {
   data: ProgramFormData;

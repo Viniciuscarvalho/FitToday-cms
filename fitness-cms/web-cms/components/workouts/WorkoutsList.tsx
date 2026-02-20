@@ -57,7 +57,7 @@ export function WorkoutsList({ trainerId, student }: WorkoutsListProps) {
   }, [trainerId, student.id]);
 
   const handleView = (workoutId: string) => {
-    router.push(`/students/${student.id}/workouts/${workoutId}`);
+    router.push(`/cms/students/${student.id}/workouts/${workoutId}`);
   };
 
   const handleArchive = async (workoutId: string) => {

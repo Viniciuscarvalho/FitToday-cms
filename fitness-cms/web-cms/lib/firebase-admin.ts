@@ -94,6 +94,55 @@ export async function verifyAdminRequest(
 }
 
 // ============================================================
+// GENERIC AUTH VERIFICATION (any role)
+// ============================================================
+
+export interface AuthVerificationResult {
+  isAuthenticated: boolean;
+  uid: string | null;
+  role: string | null;
+  error?: string;
+}
+
+/**
+ * Verify if the request is from any authenticated user (any role).
+ * Use this for endpoints that need auth but aren't role-specific.
+ */
+export async function verifyAuthRequest(
+  authHeader: string | null
+): Promise<AuthVerificationResult> {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { isAuthenticated: false, uid: null, role: null, error: 'Missing or invalid authorization header' };
+  }
+
+  if (!adminAuth || !adminDb) {
+    return { isAuthenticated: false, uid: null, role: null, error: 'Firebase Admin not initialized' };
+  }
+
+  try {
+    const token = authHeader.split('Bearer ')[1];
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    const uid = decodedToken.uid;
+
+    const userDoc = await adminDb.collection('users').doc(uid).get();
+
+    if (!userDoc.exists) {
+      return { isAuthenticated: false, uid, role: null, error: 'User not found' };
+    }
+
+    const userData = userDoc.data();
+    return { isAuthenticated: true, uid, role: userData?.role || null };
+  } catch (error: any) {
+    return {
+      isAuthenticated: false,
+      uid: null,
+      role: null,
+      error: error.message || 'Failed to verify token',
+    };
+  }
+}
+
+// ============================================================
 // TRAINER VERIFICATION UTILITIES
 // ============================================================
 

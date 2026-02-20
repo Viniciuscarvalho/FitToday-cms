@@ -71,12 +71,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initFirebase();
   }, []);
 
+  // Track if the user has explicitly signed out (vs transient null during rehydration)
+  const [hasSignedOut, setHasSignedOut] = useState(false);
+
   // Helper to manage auth cookie for middleware
   const setAuthCookie = (token: string | null) => {
+    const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const secureFlag = isSecure ? '; Secure' : '';
     if (token) {
-      document.cookie = `${AUTH_COOKIES.TOKEN}=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      document.cookie = `${AUTH_COOKIES.TOKEN}=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax${secureFlag}`;
     } else {
-      document.cookie = `${AUTH_COOKIES.TOKEN}=; path=/; max-age=0`;
+      document.cookie = `${AUTH_COOKIES.TOKEN}=; path=/; max-age=0; path=/`;
     }
   };
 
@@ -87,12 +92,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       if (firebaseUser && db) {
-        // Set auth cookie for middleware
-        const token = await firebaseUser.getIdToken();
+        setHasSignedOut(false);
+        // Force refresh to ensure the token is valid
+        const token = await firebaseUser.getIdToken(true);
         setAuthCookie(token);
         await fetchUserData(firebaseUser.uid);
       } else {
-        clearAuthCookies();
+        // Only clear cookies if user explicitly signed out,
+        // not during transient null state on page load
+        if (hasSignedOut) {
+          clearAuthCookies();
+        }
         setTrainer(null);
         setAdmin(null);
         setUserRole(null);
@@ -103,6 +113,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => unsubscribe();
   }, [auth, db]);
+
+  // Refresh the auth token every 30 minutes to keep the cookie fresh
+  useEffect(() => {
+    if (!auth || !user) return;
+
+    const refreshInterval = setInterval(async () => {
+      try {
+        const token = await user.getIdToken(true);
+        setAuthCookie(token);
+      } catch {
+        // Token refresh failed — session likely expired
+      }
+    }, 30 * 60 * 1000); // 30 minutes
+
+    return () => clearInterval(refreshInterval);
+  }, [auth, user]);
 
   const fetchUserData = async (uid: string) => {
     if (!db) return;
@@ -334,6 +360,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     if (!auth) throw new Error('Firebase not initialized');
+    setHasSignedOut(true);
     clearAuthCookies();
     await firebaseSignOut(auth);
     setTrainer(null);
