@@ -54,14 +54,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const limit = parseInt(searchParams.get('limit') || '50');
 
-    // Build query for trainers
-    let query = adminDb
-      .collection('users')
-      .where('role', '==', 'trainer')
-      .orderBy('createdAt', 'desc')
-      .limit(limit);
-
-    // Get all trainers for status counts
+    // Get all trainers (single query — avoids composite index requirement)
     const allTrainersSnapshot = await adminDb
       .collection('users')
       .where('role', '==', 'trainer')
@@ -86,10 +79,8 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Get filtered trainers
-    const snapshot = await query.get();
-
-    const trainers: TrainerListItem[] = snapshot.docs
+    // Build trainer list from allTrainersSnapshot (avoids orderBy index issues)
+    const trainers: TrainerListItem[] = allTrainersSnapshot.docs
       .map((doc) => {
         const data = doc.data() as PersonalTrainer;
 
@@ -133,7 +124,9 @@ export async function GET(request: NextRequest) {
 
         return item;
       })
-      .filter((t): t is TrainerListItem => t !== null);
+      .filter((t): t is TrainerListItem => t !== null)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, limit);
 
     const response: TrainerListResponse = {
       trainers,
