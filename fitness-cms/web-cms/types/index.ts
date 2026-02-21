@@ -315,6 +315,58 @@ export interface StudentProgress {
 }
 
 // ============================================================
+// REVIEW TYPES
+// ============================================================
+
+export interface TrainerReview {
+  id: string;
+  trainerId: string;
+  studentId: string;
+  studentName: string;
+  studentPhotoURL?: string;
+  rating: number;
+  comment?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// ============================================================
+// PUBLIC API RESPONSE TYPES
+// ============================================================
+
+export interface PublicTrainerProfile {
+  id: string;
+  displayName: string;
+  photoURL?: string;
+  profile: {
+    bio: string;
+    specialties: string[];
+    certifications: { name: string; institution: string; year: number }[];
+    experience: number;
+    socialMedia?: { instagram?: string; youtube?: string; tiktok?: string };
+    coverPhotoURL?: string;
+    location?: { city: string; state: string; country: string };
+  };
+  stats: {
+    rating: number;
+    totalReviews: number;
+    totalStudents: number;
+  };
+}
+
+export interface PublicTrainerListResponse {
+  trainers: PublicTrainerProfile[];
+  total: number;
+  hasMore: boolean;
+}
+
+export interface TrainerReviewListResponse {
+  reviews: Omit<TrainerReview, 'trainerId' | 'studentId' | 'updatedAt'>[];
+  total: number;
+  averageRating: number;
+}
+
+// ============================================================
 // ANALYTICS TYPES
 // ============================================================
 
