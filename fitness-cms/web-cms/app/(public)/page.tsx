@@ -27,7 +27,7 @@ const d = display.className;
 export const metadata: Metadata = {
   title: 'FitToday - Plataforma para Personal Trainers',
   description:
-    'Gerencie seus programas de treino, alunos e pagamentos em um unico lugar. A plataforma completa para personal trainers profissionais.',
+    'Gerencie seus programas de treino, alunos e pagamentos em um único lugar. A plataforma completa para personal trainers profissionais.',
 };
 
 export default function SitePage() {
@@ -55,7 +55,7 @@ export default function SitePage() {
                   Como Funciona
                 </a>
                 <a href="#precos" className="text-sm text-gray-300 hover:text-white transition-colors duration-200">
-                  Precos
+                  Preços
                 </a>
               </nav>
 
@@ -107,13 +107,13 @@ export default function SitePage() {
             Seus treinos.
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 via-primary-300 to-amber-400">
-              Seu negocio.
+              Seu negócio.
             </span>
           </h1>
 
           <p className="animate-fade-in-up animation-delay-200 text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed mb-10">
             Crie programas de treino, acompanhe seus alunos e receba
-            pagamentos de forma segura. Tudo que voce precisa para
+            pagamentos de forma segura. Tudo que você precisa para
             profissionalizar seu trabalho.
           </p>
 
@@ -136,7 +136,7 @@ export default function SitePage() {
           <div className="animate-fade-in-up animation-delay-400 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-gray-400">
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-primary-400" />
-              Plano gratis disponivel
+              Plano grátis disponível
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-primary-400" />
@@ -173,9 +173,9 @@ export default function SitePage() {
               Funcionalidades
             </div>
             <h2 className={`${d} text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight`}>
-              Tudo que voce precisa,{' '}
+              Tudo que você precisa,{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-amber-500">
-                nada que nao precisa
+                nada que não precisa
               </span>
             </h2>
           </div>
@@ -200,14 +200,14 @@ export default function SitePage() {
                 Monte treinos profissionais em minutos
               </h3>
               <p className="text-gray-600 text-lg leading-relaxed mb-8">
-                Crie programas completos com exercicios, series, repeticoes e envie
+                Crie programas completos com exercícios, séries, repetições e envie
                 PDFs personalizados diretamente para seus alunos pelo app.
               </p>
               <ul className="space-y-4">
-                <FeatureBullet icon={<Dumbbell className="w-4 h-4" />} text="Biblioteca completa de exercicios" />
+                <FeatureBullet icon={<Dumbbell className="w-4 h-4" />} text="Programas com exercícios personalizados" />
                 <FeatureBullet icon={<FileText className="w-4 h-4" />} text="Envio de treinos em PDF" />
                 <FeatureBullet icon={<Smartphone className="w-4 h-4" />} text="Alunos recebem direto no app" />
-                <FeatureBullet icon={<Clock className="w-4 h-4" />} text="Defina duracao e periodizacao" />
+                <FeatureBullet icon={<Clock className="w-4 h-4" />} text="Defina duração e periodização" />
               </ul>
             </div>
           </div>
@@ -217,20 +217,20 @@ export default function SitePage() {
             <div className="order-2 lg:order-1">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-50 text-primary-600 rounded-full text-xs font-semibold uppercase tracking-wider mb-4">
                 <Users className="w-3.5 h-3.5" />
-                Gestao de Alunos
+                Gestão de Alunos
               </div>
               <h3 className={`${d} text-2xl sm:text-3xl font-bold text-gray-900 mb-4`}>
                 Acompanhe cada aluno de perto
               </h3>
               <p className="text-gray-600 text-lg leading-relaxed mb-8">
-                Visualize o progresso, historico de treinos e mantenha
-                comunicacao direta com cada aluno pela plataforma.
+                Visualize o progresso, histórico de treinos e mantenha
+                comunicação direta com cada aluno pela plataforma.
               </p>
               <ul className="space-y-4">
                 <FeatureBullet icon={<BarChart3 className="w-4 h-4" />} text="Dashboard de progresso individual" />
                 <FeatureBullet icon={<MessageSquare className="w-4 h-4" />} text="Mensagens diretas com alunos" />
-                <FeatureBullet icon={<TrendingUp className="w-4 h-4" />} text="Historico completo de treinos" />
-                <FeatureBullet icon={<Award className="w-4 h-4" />} text="Feedback e avaliacao de treinos" />
+                <FeatureBullet icon={<TrendingUp className="w-4 h-4" />} text="Histórico completo de treinos" />
+                <FeatureBullet icon={<Award className="w-4 h-4" />} text="Feedback e avaliação de treinos" />
               </ul>
             </div>
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl shadow-gray-200/80 order-1 lg:order-2">
@@ -261,17 +261,17 @@ export default function SitePage() {
                 Financeiro
               </div>
               <h3 className={`${d} text-2xl sm:text-3xl font-bold text-gray-900 mb-4`}>
-                Receba pagamentos sem complicacao
+                Receba pagamentos sem complicação
               </h3>
               <p className="text-gray-600 text-lg leading-relaxed mb-8">
-                Pagamentos seguros via Stripe com suporte a Pix, boleto e cartao.
+                Pagamentos seguros via Stripe com suporte a Pix, boleto e cartão.
                 Acompanhe receitas e repasses em tempo real.
               </p>
               <ul className="space-y-4">
-                <FeatureBullet icon={<CreditCard className="w-4 h-4" />} text="Pix, boleto e cartao de credito" />
-                <FeatureBullet icon={<Shield className="w-4 h-4" />} text="Processado pelo Stripe com criptografia" />
+                <FeatureBullet icon={<CreditCard className="w-4 h-4" />} text="Pix, boleto e cartão de crédito" />
+                <FeatureBullet icon={<Shield className="w-4 h-4" />} text="Processado pelo Stripe com segurança" />
                 <FeatureBullet icon={<TrendingUp className="w-4 h-4" />} text="Dashboard financeiro em tempo real" />
-                <FeatureBullet icon={<Wallet className="w-4 h-4" />} text="Repasse automatico na sua conta" />
+                <FeatureBullet icon={<Wallet className="w-4 h-4" />} text="Repasse automático na sua conta" />
               </ul>
             </div>
           </div>
@@ -306,13 +306,13 @@ export default function SitePage() {
             <StepCard
               number="02"
               title="Monte seus Programas"
-              description="Crie treinos com exercicios, defina precos e publique para seus alunos acessarem pelo app."
+              description="Crie treinos com exercícios, defina preços e publique para seus alunos acessarem pelo app."
               icon={<Dumbbell className="w-6 h-6" />}
             />
             <StepCard
               number="03"
               title="Receba Pagamentos"
-              description="Alunos pagam diretamente pelo app. Voce recebe automaticamente na sua conta via Stripe."
+              description="Alunos pagam diretamente pelo app. Você recebe automaticamente na sua conta via Stripe."
               icon={<Wallet className="w-6 h-6" />}
             />
           </div>
@@ -325,13 +325,13 @@ export default function SitePage() {
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-50 text-primary-600 rounded-full text-sm font-medium mb-4">
               <Star className="w-3.5 h-3.5" />
-              Precos
+              Preços
             </div>
             <h2 className={`${d} text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight mb-4`}>
-              Escolha o plano ideal para voce
+              Escolha o plano ideal para você
             </h2>
             <p className="text-gray-600 text-lg max-w-xl mx-auto">
-              Comece gratis e faca upgrade conforme seu negocio cresce.
+              Comece grátis e faça upgrade conforme seu negócio cresce.
             </p>
           </div>
 
@@ -341,24 +341,24 @@ export default function SitePage() {
               <div className="px-6 py-8">
                 <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Starter</div>
                 <div className="flex items-baseline gap-1 mb-1">
-                  <span className={`${d} text-4xl font-extrabold text-gray-900`}>Gratis</span>
+                  <span className={`${d} text-4xl font-extrabold text-gray-900`}>Grátis</span>
                 </div>
-                <p className="text-primary-600 font-medium text-sm mb-6">+ 10% por transacao</p>
+                <p className="text-primary-600 font-medium text-sm mb-6">+ 10% por transação</p>
                 <Link
                   href="/register"
                   className="w-full flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors"
                 >
-                  Comece Gratis
+                  Comece Grátis
                 </Link>
               </div>
               <div className="px-6 pb-8">
                 <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">O que inclui</div>
                 <ul className="space-y-3">
-                  <PricingItem text="Ate 5 alunos" />
-                  <PricingItem text="Ate 3 programas de treino" />
+                  <PricingItem text="Até 5 alunos" />
+                  <PricingItem text="Até 3 programas de treino" />
                   <PricingItem text="Envio de treinos em PDF" />
-                  <PricingItem text="Mensagens com alunos" />
                   <PricingItem text="Pagamentos via Stripe" />
+                  <PricingItem text="Dashboard básico" />
                   <PricingItem text="Apps iOS e Android" />
                 </ul>
               </div>
@@ -377,7 +377,7 @@ export default function SitePage() {
                     <span className={`${d} text-4xl font-extrabold text-gray-900`}>R$ 97</span>
                     <span className="text-gray-500 text-sm">/mes</span>
                   </div>
-                  <p className="text-primary-600 font-medium text-sm mb-6">+ 5% por transacao</p>
+                  <p className="text-primary-600 font-medium text-sm mb-6">+ 5% por transação</p>
                   <Link
                     href="/register"
                     className="group w-full flex items-center justify-center gap-2 px-6 py-3 bg-primary-500 hover:bg-primary-400 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-primary-500/25 hover:shadow-primary-400/30"
@@ -391,9 +391,9 @@ export default function SitePage() {
                   <ul className="space-y-3">
                     <PricingItem text="Alunos ilimitados" highlight />
                     <PricingItem text="Programas ilimitados" highlight />
-                    <PricingItem text="Dashboard com analytics" />
-                    <PricingItem text="Comissao reduzida (5%)" />
-                    <PricingItem text="Pagamentos via Stripe" />
+                    <PricingItem text="Analytics avançado" />
+                    <PricingItem text="Comissão reduzida (5%)" />
+                    <PricingItem text="Acompanhamento de progresso" />
                     <PricingItem text="Suporte por email" />
                   </ul>
                 </div>
@@ -408,7 +408,7 @@ export default function SitePage() {
                   <span className={`${d} text-4xl font-extrabold text-gray-900`}>R$ 197</span>
                   <span className="text-gray-500 text-sm">/mes</span>
                 </div>
-                <p className="text-green-600 font-medium text-sm mb-6">Sem comissao</p>
+                <p className="text-green-600 font-medium text-sm mb-6">Sem comissão</p>
                 <Link
                   href="/register"
                   className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-colors"
@@ -419,11 +419,11 @@ export default function SitePage() {
               <div className="px-6 pb-8">
                 <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Tudo do Pro, mais</div>
                 <ul className="space-y-3">
-                  <PricingItem text="0% de comissao" highlight />
-                  <PricingItem text="White-label (sua marca)" highlight />
-                  <PricingItem text="Suporte prioritario" />
+                  <PricingItem text="0% de comissão" highlight />
+                  <PricingItem text="Chat direto com alunos" highlight />
+                  <PricingItem text="Suporte prioritário" />
+                  <PricingItem text="White-label (sua marca)" />
                   <PricingItem text="Branding personalizado" />
-                  <PricingItem text="Analytics avancado" />
                   <PricingItem text="Tudo ilimitado" />
                 </ul>
               </div>
@@ -448,14 +448,14 @@ export default function SitePage() {
             Pagamentos seguros com Stripe
           </h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto leading-relaxed mb-10">
-            Todos os pagamentos sao processados pelo Stripe, lider mundial em
-            pagamentos online. Seus dados e os dos seus alunos estao protegidos
-            com criptografia de nivel bancario.
+            Todos os pagamentos são processados pelo Stripe, líder mundial em
+            pagamentos online. Seus dados e os dos seus alunos estão protegidos
+            com criptografia de nível bancário.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <TrustBadge text="Criptografia SSL/TLS" />
             <TrustBadge text="PCI DSS Compliant" />
-            <TrustBadge text="Protecao contra fraudes" />
+            <TrustBadge text="Proteção contra fraudes" />
           </div>
         </div>
       </section>
@@ -490,7 +490,7 @@ export default function SitePage() {
               href="/login"
               className="w-full sm:w-auto px-8 py-4 border border-white/30 text-white font-medium rounded-full hover:bg-white/10 transition-all text-center"
             >
-              Ja tenho conta
+              Já tenho conta
             </Link>
           </div>
         </div>
@@ -523,7 +523,7 @@ export default function SitePage() {
                 </li>
                 <li>
                   <a href="#precos" className="hover:text-white transition-colors">
-                    Precos
+                    Preços
                   </a>
                 </li>
                 <li>
@@ -539,10 +539,10 @@ export default function SitePage() {
               <ul className="space-y-3 text-sm">
                 <li>
                   <a
-                    href="mailto:contato@fittoday.com.br"
+                    href="mailto:contato@fittoday.me"
                     className="hover:text-white transition-colors"
                   >
-                    contato@fittoday.com.br
+                    contato@fittoday.me
                   </a>
                 </li>
               </ul>

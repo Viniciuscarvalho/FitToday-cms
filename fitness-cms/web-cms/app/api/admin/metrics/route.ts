@@ -119,33 +119,29 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Get recent activity (pending trainers + recent sign ups)
-    const recentTrainersSnapshot = await adminDb
-      .collection('users')
-      .where('role', '==', 'trainer')
-      .orderBy('createdAt', 'desc')
-      .limit(10)
-      .get();
+    // Build recent activity from trainersSnapshot (avoids orderBy composite index)
+    const recentActivity = trainersSnapshot.docs
+      .map((doc) => {
+        const data = doc.data();
+        const status = data.status || 'pending';
 
-    const recentActivity = recentTrainersSnapshot.docs.map((doc) => {
-      const data = doc.data();
-      const status = data.status || 'pending';
+        let type = 'trainer_signup';
+        let description = `${data.displayName || data.email} se cadastrou`;
 
-      let type = 'trainer_signup';
-      let description = `${data.displayName || data.email} se cadastrou`;
+        if (status === 'pending') {
+          type = 'pending_approval';
+          description = `${data.displayName || data.email} aguarda aprovação`;
+        }
 
-      if (status === 'pending') {
-        type = 'pending_approval';
-        description = `${data.displayName || data.email} aguarda aprovação`;
-      }
-
-      return {
-        type,
-        description,
-        timestamp: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        userId: doc.id,
-      };
-    });
+        return {
+          type,
+          description,
+          timestamp: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          userId: doc.id,
+        };
+      })
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 10);
 
     const response: PlatformMetrics = {
       trainers: {
