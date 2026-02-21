@@ -8,21 +8,38 @@ import {
   DollarSign,
   BarChart3,
   Activity,
-  Calendar,
   Target,
   ArrowUpRight,
   ArrowDownRight,
   Loader2,
+  Lock,
+  Sparkles,
+  Star,
+  UserMinus,
+  UserPlus,
+  Percent,
+  Dumbbell,
 } from 'lucide-react';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
+import Link from 'next/link';
 import { useAuth } from '@/providers/AuthProvider';
 import {
   collection,
   query,
   where,
   getDocs,
-  orderBy,
   Firestore,
-  Timestamp,
 } from 'firebase/firestore';
 
 interface AnalyticsData {
@@ -37,18 +54,15 @@ interface AnalyticsData {
     active: number;
     newThisMonth: number;
     growth: number;
+    churned: number;
+    retentionRate: number;
+    churnRate: number;
   };
   programs: {
     total: number;
-    published: number;
+    active: number;
     avgRating: number;
     completionRate: number;
-  };
-  engagement: {
-    activeUsers: number;
-    avgSessionDuration: number;
-    workoutsCompleted: number;
-    checkIns: number;
   };
   topPrograms: {
     id: string;
@@ -57,36 +71,31 @@ interface AnalyticsData {
     revenue: number;
     rating: number;
   }[];
-  revenueByMonth: {
-    month: string;
-    revenue: number;
-  }[];
-  studentsByMonth: {
-    month: string;
-    count: number;
-  }[];
+  revenueByMonth: { month: string; revenue: number }[];
+  studentsByMonth: { month: string; newStudents: number; churned: number; active: number }[];
 }
 
 const periodOptions = [
-  { value: '7d', label: 'Últimos 7 dias' },
   { value: '30d', label: 'Últimos 30 dias' },
   { value: '90d', label: 'Últimos 90 dias' },
   { value: '12m', label: 'Últimos 12 meses' },
 ];
 
 export default function AnalyticsPage() {
-  const { user } = useAuth();
+  const { user, trainer } = useAuth();
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30d');
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     revenue: { total: 0, thisMonth: 0, lastMonth: 0, growth: 0 },
-    students: { total: 0, active: 0, newThisMonth: 0, growth: 0 },
-    programs: { total: 0, published: 0, avgRating: 0, completionRate: 0 },
-    engagement: { activeUsers: 0, avgSessionDuration: 0, workoutsCompleted: 0, checkIns: 0 },
+    students: { total: 0, active: 0, newThisMonth: 0, growth: 0, churned: 0, retentionRate: 0, churnRate: 0 },
+    programs: { total: 0, active: 0, avgRating: 0, completionRate: 0 },
     topPrograms: [],
     revenueByMonth: [],
     studentsByMonth: [],
   });
+
+  const trainerPlan = trainer?.subscription?.plan || 'starter';
+  const hasAdvancedAnalytics = trainerPlan === 'pro' || trainerPlan === 'elite';
 
   useEffect(() => {
     loadAnalytics();
@@ -101,39 +110,28 @@ export default function AnalyticsPage() {
       if (!db) return;
 
       // Load programs
-      const programsRef = collection(db as Firestore, 'programs');
       const programsQuery = query(
-        programsRef,
+        collection(db as Firestore, 'programs'),
         where('trainerId', '==', user.uid)
       );
       const programsSnapshot = await getDocs(programsQuery);
-      const programs = programsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const programs = programsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
       // Load subscriptions
-      const subsRef = collection(db as Firestore, 'subscriptions');
       const subsQuery = query(
-        subsRef,
+        collection(db as Firestore, 'subscriptions'),
         where('trainerId', '==', user.uid)
       );
       const subsSnapshot = await getDocs(subsQuery);
-      const subscriptions = subsSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const subscriptions = subsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-      // Calculate analytics
       const now = new Date();
       const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
 
       // Revenue calculations
-      const totalRevenue = subscriptions.reduce((acc: number, sub: any) => {
-        return acc + (sub.price || 0);
-      }, 0);
+      const totalRevenue = subscriptions.reduce((acc: number, sub: any) => acc + (sub.price || 0), 0);
 
       const thisMonthRevenue = subscriptions
         .filter((sub: any) => {
@@ -155,9 +153,11 @@ export default function AnalyticsPage() {
 
       // Student calculations
       const uniqueStudents = new Set(subscriptions.map((s: any) => s.studentId));
-      const activeStudents = subscriptions.filter(
-        (s: any) => s.status === 'active'
-      ).length;
+      const activeSubs = subscriptions.filter((s: any) => s.status === 'active');
+      const canceledSubs = subscriptions.filter(
+        (s: any) => s.status === 'canceled' || s.status === 'cancelled'
+      );
+
       const newStudentsThisMonth = subscriptions.filter((sub: any) => {
         const subDate = sub.createdAt?.toDate?.() || new Date(sub.createdAt);
         return subDate >= thisMonthStart;
@@ -172,20 +172,24 @@ export default function AnalyticsPage() {
         ? ((newStudentsThisMonth - lastMonthStudents) / lastMonthStudents) * 100
         : 0;
 
+      // Retention and Churn
+      const totalEver = uniqueStudents.size || 1;
+      const churnedCount = canceledSubs.length;
+      const retentionRate = totalEver > 0 ? ((totalEver - churnedCount) / totalEver) * 100 : 100;
+      const churnRate = totalEver > 0 ? (churnedCount / totalEver) * 100 : 0;
+
       // Program stats
-      const publishedPrograms = programs.filter((p: any) => p.status === 'published');
+      const activePrograms = programs.filter((p: any) => p.status === 'published' || p.status === 'draft');
       const avgRating =
-        programs.reduce((acc: number, p: any) => acc + (p.stats?.averageRating || 0), 0) /
-          (programs.length || 1);
+        programs.reduce((acc: number, p: any) => acc + (p.stats?.averageRating || 0), 0) / (programs.length || 1);
       const avgCompletion =
-        programs.reduce((acc: number, p: any) => acc + (p.stats?.completionRate || 0), 0) /
-          (programs.length || 1);
+        programs.reduce((acc: number, p: any) => acc + (p.stats?.completionRate || 0), 0) / (programs.length || 1);
 
       // Top programs
       const topPrograms = programs
         .map((p: any) => ({
           id: p.id,
-          name: p.title || p.name || 'Programa',
+          name: p.title || p.name || 'Treino',
           students: p.stats?.activeStudents || 0,
           revenue: p.stats?.totalSales || 0,
           rating: p.stats?.averageRating || 0,
@@ -193,11 +197,14 @@ export default function AnalyticsPage() {
         .sort((a, b) => b.students - a.students)
         .slice(0, 5);
 
-      // Revenue by month (last 6 months)
+      // Monthly data (last 6 months)
       const revenueByMonth = [];
+      const studentsByMonth = [];
       for (let i = 5; i >= 0; i--) {
         const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+        const monthLabel = monthStart.toLocaleDateString('pt-BR', { month: 'short' });
+
         const monthRevenue = subscriptions
           .filter((sub: any) => {
             const subDate = sub.createdAt?.toDate?.() || new Date(sub.createdAt);
@@ -205,25 +212,22 @@ export default function AnalyticsPage() {
           })
           .reduce((acc: number, sub: any) => acc + (sub.price || 0), 0);
 
-        revenueByMonth.push({
-          month: monthStart.toLocaleDateString('pt-BR', { month: 'short' }),
-          revenue: monthRevenue,
-        });
-      }
-
-      // Students by month (last 6 months)
-      const studentsByMonth = [];
-      for (let i = 5; i >= 0; i--) {
-        const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
-        const monthStudents = subscriptions.filter((sub: any) => {
+        const monthNew = subscriptions.filter((sub: any) => {
           const subDate = sub.createdAt?.toDate?.() || new Date(sub.createdAt);
           return subDate >= monthStart && subDate <= monthEnd;
         }).length;
 
+        const monthChurned = canceledSubs.filter((sub: any) => {
+          const cancelDate = sub.canceledAt?.toDate?.() || sub.updatedAt?.toDate?.() || new Date();
+          return cancelDate >= monthStart && cancelDate <= monthEnd;
+        }).length;
+
+        revenueByMonth.push({ month: monthLabel, revenue: monthRevenue });
         studentsByMonth.push({
-          month: monthStart.toLocaleDateString('pt-BR', { month: 'short' }),
-          count: monthStudents,
+          month: monthLabel,
+          newStudents: monthNew,
+          churned: monthChurned,
+          active: activeSubs.length, // Approximation
         });
       }
 
@@ -236,21 +240,18 @@ export default function AnalyticsPage() {
         },
         students: {
           total: uniqueStudents.size,
-          active: activeStudents,
+          active: activeSubs.length,
           newThisMonth: newStudentsThisMonth,
           growth: studentGrowth,
+          churned: churnedCount,
+          retentionRate,
+          churnRate,
         },
         programs: {
           total: programs.length,
-          published: publishedPrograms.length,
+          active: activePrograms.length,
           avgRating,
           completionRate: avgCompletion,
-        },
-        engagement: {
-          activeUsers: activeStudents,
-          avgSessionDuration: 45, // Placeholder
-          workoutsCompleted: 0, // Would need workout completion collection
-          checkIns: 0, // Would need check-in collection
         },
         topPrograms,
         revenueByMonth,
@@ -263,16 +264,11 @@ export default function AnalyticsPage() {
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
-  const formatPercentage = (value: number) => {
-    return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
-  };
+  const formatPercentage = (value: number) =>
+    `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
 
   if (loading) {
     return (
@@ -282,18 +278,13 @@ export default function AnalyticsPage() {
     );
   }
 
-  const maxRevenue = Math.max(...analytics.revenueByMonth.map((m) => m.revenue), 1);
-  const maxStudents = Math.max(...analytics.studentsByMonth.map((m) => m.count), 1);
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-500 mt-1">
-            Acompanhe o desempenho dos seus programas
-          </p>
+          <p className="text-gray-500 mt-1">Acompanhe o desempenho do seu negócio</p>
         </div>
         <select
           value={period}
@@ -308,169 +299,193 @@ export default function AnalyticsPage() {
         </select>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Revenue */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <DollarSign className="h-6 w-6 text-green-600" />
-            </div>
-            <span
-              className={`flex items-center gap-1 text-sm font-medium ${
-                analytics.revenue.growth >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
-              {analytics.revenue.growth >= 0 ? (
-                <ArrowUpRight className="h-4 w-4" />
-              ) : (
-                <ArrowDownRight className="h-4 w-4" />
-              )}
-              {formatPercentage(analytics.revenue.growth)}
-            </span>
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900">
-            {formatCurrency(analytics.revenue.thisMonth)}
-          </h3>
-          <p className="text-sm text-gray-500 mt-1">Receita este mês</p>
-          <p className="text-xs text-gray-400 mt-2">
-            Total: {formatCurrency(analytics.revenue.total)}
-          </p>
-        </div>
-
-        {/* Students */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Users className="h-6 w-6 text-blue-600" />
-            </div>
-            <span
-              className={`flex items-center gap-1 text-sm font-medium ${
-                analytics.students.growth >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}
-            >
-              {analytics.students.growth >= 0 ? (
-                <ArrowUpRight className="h-4 w-4" />
-              ) : (
-                <ArrowDownRight className="h-4 w-4" />
-              )}
-              {formatPercentage(analytics.students.growth)}
-            </span>
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900">
-            {analytics.students.newThisMonth}
-          </h3>
-          <p className="text-sm text-gray-500 mt-1">Novos alunos este mês</p>
-          <p className="text-xs text-gray-400 mt-2">
-            {analytics.students.active} ativos de {analytics.students.total} total
-          </p>
-        </div>
-
-        {/* Programs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <BarChart3 className="h-6 w-6 text-purple-600" />
-            </div>
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900">
-            {analytics.programs.published}
-          </h3>
-          <p className="text-sm text-gray-500 mt-1">Programas publicados</p>
-          <p className="text-xs text-gray-400 mt-2">
-            {analytics.programs.total} total
-          </p>
-        </div>
-
-        {/* Engagement */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-orange-100 rounded-lg">
-              <Activity className="h-6 w-6 text-orange-600" />
-            </div>
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900">
-            {analytics.programs.avgRating.toFixed(1)}
-          </h3>
-          <p className="text-sm text-gray-500 mt-1">Avaliação média</p>
-          <p className="text-xs text-gray-400 mt-2">
-            {analytics.programs.completionRate.toFixed(0)}% taxa de conclusão
-          </p>
-        </div>
+      {/* Key Metrics - Always visible */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard
+          icon={DollarSign}
+          iconBg="bg-green-100"
+          iconColor="text-green-600"
+          value={formatCurrency(analytics.revenue.thisMonth)}
+          label="Receita este mês"
+          subtext={`Total: ${formatCurrency(analytics.revenue.total)}`}
+          growth={analytics.revenue.growth}
+        />
+        <MetricCard
+          icon={Users}
+          iconBg="bg-blue-100"
+          iconColor="text-blue-600"
+          value={String(analytics.students.active)}
+          label="Alunos ativos"
+          subtext={`${analytics.students.newThisMonth} novos este mês`}
+          growth={analytics.students.growth}
+        />
+        <MetricCard
+          icon={Dumbbell}
+          iconBg="bg-purple-100"
+          iconColor="text-purple-600"
+          value={String(analytics.programs.active)}
+          label="Treinos ativos"
+          subtext={`${analytics.programs.total} total`}
+        />
+        <MetricCard
+          icon={Star}
+          iconBg="bg-yellow-100"
+          iconColor="text-yellow-600"
+          value={analytics.programs.avgRating.toFixed(1)}
+          label="Nota média"
+          subtext={`${analytics.programs.completionRate.toFixed(0)}% taxa de conclusão`}
+        />
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue Chart */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-semibold text-gray-900">Receita Mensal</h3>
-            <TrendingUp className="h-5 w-5 text-gray-400" />
-          </div>
-          <div className="h-48 flex items-end gap-2">
-            {analytics.revenueByMonth.map((month, index) => (
-              <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                <div
-                  className="w-full bg-primary-500 rounded-t transition-all hover:bg-primary-600"
-                  style={{
-                    height: `${(month.revenue / maxRevenue) * 100}%`,
-                    minHeight: month.revenue > 0 ? '8px' : '0px',
-                  }}
-                />
-                <span className="text-xs text-gray-500">{month.month}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Students Chart */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-semibold text-gray-900">Novos Alunos</h3>
-            <Users className="h-5 w-5 text-gray-400" />
-          </div>
-          <div className="h-48 flex items-end gap-2">
-            {analytics.studentsByMonth.map((month, index) => (
-              <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                <div
-                  className="w-full bg-blue-500 rounded-t transition-all hover:bg-blue-600"
-                  style={{
-                    height: `${(month.count / maxStudents) * 100}%`,
-                    minHeight: month.count > 0 ? '8px' : '0px',
-                  }}
-                />
-                <span className="text-xs text-gray-500">{month.month}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Top Programs */}
+      {/* Revenue Chart - Always visible */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="font-semibold text-gray-900">Programas Mais Populares</h3>
-          <Target className="h-5 w-5 text-gray-400" />
+        <h3 className="font-semibold text-gray-900 mb-4">Receita Mensal</h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={analytics.revenueByMonth}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `R$${v}`} />
+              <Tooltip
+                formatter={(value: number) => [formatCurrency(value), 'Receita']}
+                contentStyle={{
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                }}
+              />
+              <Bar dataKey="revenue" name="Receita" fill="#0d9488" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
-        {analytics.topPrograms.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            Nenhum programa encontrado
+      </div>
+
+      {/* Advanced Analytics - Pro/Elite only */}
+      {hasAdvancedAnalytics ? (
+        <>
+          {/* Retention & Churn Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MetricCard
+              icon={Percent}
+              iconBg="bg-emerald-100"
+              iconColor="text-emerald-600"
+              value={`${analytics.students.retentionRate.toFixed(1)}%`}
+              label="Taxa de retenção"
+              subtext="Alunos que permanecem"
+            />
+            <MetricCard
+              icon={UserMinus}
+              iconBg="bg-red-100"
+              iconColor="text-red-600"
+              value={`${analytics.students.churnRate.toFixed(1)}%`}
+              label="Taxa de churn"
+              subtext={`${analytics.students.churned} cancelamentos`}
+            />
+            <MetricCard
+              icon={UserPlus}
+              iconBg="bg-sky-100"
+              iconColor="text-sky-600"
+              value={String(analytics.students.newThisMonth)}
+              label="Novos alunos"
+              subtext="Este mês"
+              growth={analytics.students.growth}
+            />
+            <MetricCard
+              icon={Activity}
+              iconBg="bg-orange-100"
+              iconColor="text-orange-600"
+              value={`${analytics.programs.completionRate.toFixed(0)}%`}
+              label="Taxa de conclusão"
+              subtext="Média dos treinos"
+            />
           </div>
+
+          {/* Students Trend Chart */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h3 className="font-semibold text-gray-900 mb-4">Evolução de Alunos</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={analytics.studentsByMonth}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: '8px',
+                      border: '1px solid #e5e7eb',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="newStudents"
+                    name="Novos"
+                    stroke="#0d9488"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="churned"
+                    name="Cancelados"
+                    stroke="#ef4444"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </>
+      ) : (
+        /* Upsell for Starter plan */
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <BarChart3 className="h-8 w-8 text-primary-600" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Analytics Avançado</h3>
+          <p className="text-gray-500 mb-6 max-w-md mx-auto">
+            Acompanhe taxa de retenção, churn, evolução de alunos e métricas detalhadas de
+            desempenho. Disponível nos planos Pro e Elite.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 mb-6">
+            {['Taxa de Retenção', 'Taxa de Churn', 'Evolução de Alunos', 'Gráficos Detalhados'].map(
+              (feature) => (
+                <span
+                  key={feature}
+                  className="px-3 py-1.5 bg-gray-100 text-gray-600 text-sm rounded-full flex items-center gap-1.5"
+                >
+                  <Lock className="h-3.5 w-3.5" />
+                  {feature}
+                </span>
+              )
+            )}
+          </div>
+          <Link
+            href="/cms/settings"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
+          >
+            <Sparkles className="h-5 w-5" />
+            Fazer Upgrade
+          </Link>
+        </div>
+      )}
+
+      {/* Top Programs - Always visible */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h3 className="font-semibold text-gray-900 mb-4">Treinos Mais Populares</h3>
+        {analytics.topPrograms.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">Nenhum treino encontrado</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="text-left border-b border-gray-100">
-                  <th className="pb-3 font-medium text-gray-500 text-sm">Programa</th>
-                  <th className="pb-3 font-medium text-gray-500 text-sm text-right">
-                    Alunos
-                  </th>
-                  <th className="pb-3 font-medium text-gray-500 text-sm text-right">
-                    Receita
-                  </th>
-                  <th className="pb-3 font-medium text-gray-500 text-sm text-right">
-                    Avaliação
-                  </th>
+                  <th className="pb-3 font-medium text-gray-500 text-sm">Treino</th>
+                  <th className="pb-3 font-medium text-gray-500 text-sm text-right">Alunos</th>
+                  <th className="pb-3 font-medium text-gray-500 text-sm text-right">Receita</th>
+                  <th className="pb-3 font-medium text-gray-500 text-sm text-right">Avaliação</th>
                 </tr>
               </thead>
               <tbody>
@@ -501,30 +516,55 @@ export default function AnalyticsPage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl p-6 text-white">
-          <Calendar className="h-8 w-8 mb-4 opacity-80" />
-          <h4 className="text-2xl font-bold">{analytics.engagement.avgSessionDuration}min</h4>
-          <p className="text-primary-100 text-sm mt-1">Duração média de treino</p>
+// ============================================================
+// METRIC CARD COMPONENT
+// ============================================================
+
+function MetricCard({
+  icon: Icon,
+  iconBg,
+  iconColor,
+  value,
+  label,
+  subtext,
+  growth,
+}: {
+  icon: React.ElementType;
+  iconBg: string;
+  iconColor: string;
+  value: string;
+  label: string;
+  subtext?: string;
+  growth?: number;
+}) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+      <div className="flex items-center justify-between mb-3">
+        <div className={`p-2 ${iconBg} rounded-lg`}>
+          <Icon className={`h-5 w-5 ${iconColor}`} />
         </div>
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
-          <Target className="h-8 w-8 mb-4 opacity-80" />
-          <h4 className="text-2xl font-bold">{analytics.engagement.workoutsCompleted}</h4>
-          <p className="text-green-100 text-sm mt-1">Treinos completados</p>
-        </div>
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
-          <Activity className="h-8 w-8 mb-4 opacity-80" />
-          <h4 className="text-2xl font-bold">{analytics.engagement.activeUsers}</h4>
-          <p className="text-blue-100 text-sm mt-1">Usuários ativos</p>
-        </div>
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
-          <BarChart3 className="h-8 w-8 mb-4 opacity-80" />
-          <h4 className="text-2xl font-bold">{analytics.engagement.checkIns}</h4>
-          <p className="text-purple-100 text-sm mt-1">Check-ins no mês</p>
-        </div>
+        {growth != null && (
+          <span
+            className={`flex items-center gap-0.5 text-sm font-medium ${
+              growth >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}
+          >
+            {growth >= 0 ? (
+              <ArrowUpRight className="h-4 w-4" />
+            ) : (
+              <ArrowDownRight className="h-4 w-4" />
+            )}
+            {growth >= 0 ? '+' : ''}{growth.toFixed(1)}%
+          </span>
+        )}
       </div>
+      <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
+      <p className="text-sm text-gray-500 mt-1">{label}</p>
+      {subtext && <p className="text-xs text-gray-400 mt-1">{subtext}</p>}
     </div>
   );
 }

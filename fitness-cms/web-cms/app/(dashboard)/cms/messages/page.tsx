@@ -18,7 +18,12 @@ import {
   Users,
   Star,
   Loader2,
+  Lock,
+  Sparkles,
+  MessageCircle,
+  Zap,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useAuth } from '@/providers/AuthProvider';
 import {
   collection,
@@ -269,10 +274,69 @@ export default function MessagesPage() {
     setShowMobileChat(true);
   };
 
+  // Check if trainer has Elite plan for chat access
+  const trainerPlan = trainer?.subscription?.plan || 'starter';
+  const hasChatAccess = trainerPlan === 'elite';
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+      </div>
+    );
+  }
+
+  // Upsell screen for non-Elite plans
+  if (!hasChatAccess) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="max-w-lg text-center px-6">
+          <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <MessageCircle className="h-10 w-10 text-primary-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">
+            Chat com Alunos
+          </h1>
+          <p className="text-gray-500 mb-8 leading-relaxed">
+            Comunique-se diretamente com seus alunos em tempo real. Envie mensagens, arquivos e
+            acompanhe tudo em um só lugar. Disponível exclusivamente no plano Elite.
+          </p>
+
+          <div className="bg-gray-50 rounded-xl p-6 mb-8 text-left">
+            <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary-600" />
+              Incluído no plano Elite
+            </h3>
+            <ul className="space-y-3">
+              {[
+                'Mensagens em tempo real com alunos',
+                'Envio de fotos e arquivos',
+                'Histórico completo de conversas',
+                'Notificações push no app',
+                'Suporte prioritário',
+                '0% de comissão nas vendas',
+              ].map((feature, i) => (
+                <li key={i} className="flex items-center gap-3 text-sm text-gray-700">
+                  <Zap className="h-4 w-4 text-primary-500 flex-shrink-0" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="space-y-3">
+            <Link
+              href="/cms/settings"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
+            >
+              <Lock className="h-5 w-5" />
+              Fazer Upgrade para Elite — R$197/mês
+            </Link>
+            <p className="text-xs text-gray-400">
+              Seu plano atual: <span className="font-medium capitalize">{trainerPlan}</span>
+            </p>
+          </div>
+        </div>
       </div>
     );
   }

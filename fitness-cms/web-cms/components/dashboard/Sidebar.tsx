@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import {
   Dumbbell,
   LayoutDashboard,
-  FileText,
   Users,
   MessageSquare,
   BarChart3,
@@ -14,15 +13,16 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Lock,
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useState } from 'react';
 
 const navigation = [
   { name: 'Dashboard', href: '/cms', icon: LayoutDashboard },
-  { name: 'Programas', href: '/cms/programs', icon: FileText },
+  { name: 'Treinos', href: '/cms/programs', icon: Dumbbell },
   { name: 'Alunos', href: '/cms/students', icon: Users },
-  { name: 'Mensagens', href: '/cms/messages', icon: MessageSquare },
+  { name: 'Mensagens', href: '/cms/messages', icon: MessageSquare, eliteOnly: true },
   { name: 'Analytics', href: '/cms/analytics', icon: BarChart3 },
   { name: 'Financeiro', href: '/cms/finances', icon: Wallet },
   { name: 'Configurações', href: '/cms/settings', icon: Settings },
@@ -68,6 +68,8 @@ export function Sidebar() {
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
           const active = isActive(item.href);
+          const trainerPlan = trainer?.subscription?.plan || 'starter';
+          const isLocked = item.eliteOnly && trainerPlan !== 'elite';
           return (
             <Link
               key={item.name}
@@ -84,7 +86,14 @@ export function Sidebar() {
                   active ? 'text-primary-600' : 'text-gray-400'
                 }`}
               />
-              {!collapsed && <span>{item.name}</span>}
+              {!collapsed && (
+                <span className="flex-1 flex items-center justify-between">
+                  <span>{item.name}</span>
+                  {isLocked && (
+                    <Lock className="h-3.5 w-3.5 text-gray-400" />
+                  )}
+                </span>
+              )}
             </Link>
           );
         })}

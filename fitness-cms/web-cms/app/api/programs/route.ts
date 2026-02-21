@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const trainerId = searchParams.get('trainerId');
+    const studentId = searchParams.get('studentId');
     const status = searchParams.get('status');
     const visibility = searchParams.get('visibility');
     const category = searchParams.get('category');
@@ -27,6 +28,10 @@ export async function GET(request: NextRequest) {
 
     if (trainerId) {
       query = query.where('trainerId', '==', trainerId);
+    }
+
+    if (studentId) {
+      query = query.where('studentId', '==', studentId);
     }
 
     if (status) {
@@ -165,6 +170,7 @@ export async function POST(request: NextRequest) {
 
     const programData = {
       trainerId: authResult.uid,
+      ...(body.studentId ? { studentId: body.studentId } : {}),
       title: body.title.trim(),
       description: body.description?.trim() || '',
       coverImageURL,

@@ -389,6 +389,39 @@ export async function sendPushNotification(payload: PushNotificationPayload): Pr
 }
 
 /**
+ * Upload a progress photo to Storage
+ */
+export async function uploadProgressPhoto(
+  trainerId: string,
+  studentId: string,
+  position: 'front' | 'side' | 'back',
+  fileBuffer: Buffer,
+  contentType: string
+): Promise<UploadResult> {
+  if (!adminStorage) {
+    throw new Error('Firebase Storage not initialized');
+  }
+
+  const ext = contentType.split('/')[1] || 'jpg';
+  const bucket = adminStorage.bucket();
+  const timestamp = Date.now();
+  const filePath = `trainers/${trainerId}/students/${studentId}/progress-photos/${position}_${timestamp}.${ext}`;
+  const file = bucket.file(filePath);
+
+  await file.save(fileBuffer, {
+    metadata: {
+      contentType,
+      metadata: { trainerId, studentId, position, uploadedAt: new Date().toISOString() },
+    },
+  });
+
+  await file.makePublic();
+  const url = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+
+  return { path: filePath, url };
+}
+
+/**
  * Send workout notification to student
  */
 export async function sendWorkoutNotification(

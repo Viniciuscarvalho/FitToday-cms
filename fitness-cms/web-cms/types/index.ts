@@ -81,6 +81,7 @@ export interface PlanFeatures {
 
 export interface Student extends BaseUser {
   role: 'student';
+  trainerId?: string;
   fitnessProfile: {
     height?: number;
     weight?: number;
@@ -91,11 +92,20 @@ export interface Student extends BaseUser {
     injuries?: string[];
     availableEquipment: string[];
   };
+  plan?: StudentPlan;
   purchases: {
     activeSubscriptions: string[];
     purchasedPrograms: string[];
     totalSpent: number;
   };
+}
+
+export interface StudentPlan {
+  monthlyFee: number;
+  billingDay: number;
+  paymentMethod: 'pix' | 'credit_card' | 'boleto';
+  stripeSubscriptionId?: string;
+  status: 'active' | 'past_due' | 'cancelled';
 }
 
 export interface AdminUser extends BaseUser {
@@ -128,6 +138,7 @@ export type ProgramCategory =
 export interface WorkoutProgram {
   id: string;
   trainerId: string;
+  studentId?: string;
   title: string;
   subtitle?: string;
   description: string;
@@ -367,12 +378,87 @@ export interface TrainerReviewListResponse {
 }
 
 // ============================================================
+// PROGRESS TRACKING TYPES
+// ============================================================
+
+export interface ProgressEntry {
+  id: string;
+  trainerId: string;
+  studentId: string;
+  date: Timestamp;
+  measurements: {
+    weight?: number;
+    bodyFat?: number;
+    muscleMass?: number;
+    chest?: number;
+    waist?: number;
+    hips?: number;
+    rightArm?: number;
+    leftArm?: number;
+    rightThigh?: number;
+    leftThigh?: number;
+    rightCalf?: number;
+    leftCalf?: number;
+  };
+  photos?: {
+    front?: string;
+    side?: string;
+    back?: string;
+  };
+  notes?: string;
+  registeredBy: 'trainer' | 'student';
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// ============================================================
+// CHAT TYPES
+// ============================================================
+
+export interface Chat {
+  id: string;
+  participants: string[];
+  trainerId: string;
+  studentId: string;
+  lastMessage?: {
+    text: string;
+    sentBy: string;
+    sentAt: Timestamp;
+  };
+  unreadCount: Record<string, number>;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface ChatMessage {
+  id: string;
+  text: string;
+  sentBy: string;
+  sentAt: Timestamp;
+  readAt?: Timestamp;
+  type: 'text' | 'image' | 'file';
+  mediaUrl?: string;
+}
+
+// ============================================================
 // ANALYTICS TYPES
 // ============================================================
 
+export interface AnalyticsSnapshot {
+  trainerId: string;
+  month: string;
+  activeStudents: number;
+  newStudents: number;
+  cancelledStudents: number;
+  retentionRate: number;
+  averageRating: number;
+  revenue: number;
+  churnRate: number;
+}
+
 export interface DashboardStats {
   activeStudents: number;
-  totalPrograms: number;
+  activePrograms: number;
   monthlyRevenue: number;
   averageRating: number;
   revenueChange: number;

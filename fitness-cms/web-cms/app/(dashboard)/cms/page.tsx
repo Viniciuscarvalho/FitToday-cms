@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   Users,
-  FileText,
+  Dumbbell,
   DollarSign,
-  TrendingUp,
+  Star,
   ArrowUpRight,
   ArrowDownRight,
   Clock,
@@ -25,11 +25,11 @@ import {
 interface DashboardStats {
   totalStudents: number;
   activeStudents: number;
+  activePrograms: number;
   totalPrograms: number;
-  publishedPrograms: number;
   monthlyRevenue: number;
   revenueChange: number;
-  completionRate: number;
+  avgRating: number;
 }
 
 interface RecentActivity {
@@ -44,11 +44,11 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats>({
     totalStudents: 0,
     activeStudents: 0,
+    activePrograms: 0,
     totalPrograms: 0,
-    publishedPrograms: 0,
     monthlyRevenue: 0,
     revenueChange: 0,
-    completionRate: 0,
+    avgRating: 0,
   });
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,9 +76,12 @@ export default function DashboardPage() {
         );
         const programsSnapshot = await getDocs(programsQuery);
         const programs = programsSnapshot.docs.map((doc) => doc.data());
-        const publishedPrograms = programs.filter(
-          (p) => p.status === 'published'
+        const activePrograms = programs.filter(
+          (p) => p.status === 'published' || p.status === 'draft'
         ).length;
+        const avgRating =
+          programs.reduce((acc, p: any) => acc + (p.stats?.averageRating || 0), 0) /
+          (programs.length || 1);
 
         // Fetch subscriptions (students)
         const subsQuery = query(
@@ -109,11 +112,11 @@ export default function DashboardPage() {
         setStats({
           totalStudents: subscriptions.length,
           activeStudents,
+          activePrograms,
           totalPrograms: programs.length,
-          publishedPrograms,
           monthlyRevenue,
-          revenueChange: 12.5, // Placeholder - would need previous month data
-          completionRate: 78, // Placeholder - would need workout completion data
+          revenueChange: 12.5,
+          avgRating,
         });
 
         // Mock recent activities for now
@@ -177,10 +180,10 @@ export default function DashboardPage() {
       textColor: 'text-blue-600',
     },
     {
-      title: 'Programas Publicados',
-      value: stats.publishedPrograms,
+      title: 'Treinos Ativos',
+      value: stats.activePrograms,
       total: stats.totalPrograms,
-      icon: FileText,
+      icon: Dumbbell,
       color: 'bg-purple-500',
       lightColor: 'bg-purple-50',
       textColor: 'text-purple-600',
@@ -195,12 +198,12 @@ export default function DashboardPage() {
       textColor: 'text-green-600',
     },
     {
-      title: 'Taxa de Conclusão',
-      value: `${stats.completionRate}%`,
-      icon: TrendingUp,
-      color: 'bg-orange-500',
-      lightColor: 'bg-orange-50',
-      textColor: 'text-orange-600',
+      title: 'Nota Média',
+      value: stats.avgRating.toFixed(1),
+      icon: Star,
+      color: 'bg-yellow-500',
+      lightColor: 'bg-yellow-50',
+      textColor: 'text-yellow-600',
     },
   ];
 
@@ -234,7 +237,7 @@ export default function DashboardPage() {
           className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
         >
           <Plus className="h-5 w-5" />
-          Criar Programa
+          Novo Treino
         </Link>
       </div>
 
@@ -354,10 +357,10 @@ export default function DashboardPage() {
               className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50 transition-all group"
             >
               <div className="p-2 rounded-lg bg-primary-100 group-hover:bg-primary-200">
-                <FileText className="h-5 w-5 text-primary-600" />
+                <Dumbbell className="h-5 w-5 text-primary-600" />
               </div>
               <div>
-                <p className="font-medium text-gray-900">Criar Programa</p>
+                <p className="font-medium text-gray-900">Criar Treino</p>
                 <p className="text-xs text-gray-500">
                   Monte um novo programa de treino
                 </p>
