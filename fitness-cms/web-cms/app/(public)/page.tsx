@@ -238,40 +238,38 @@ export default function SitePage() {
               <div className="relative">
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent-500/10 border border-accent-500/20 text-accent-400 rounded-full text-xs font-semibold uppercase tracking-wider mb-6">
                   <Wallet className="w-3.5 h-3.5" />
-                  Fluxo 2 — Marketplace
+                  Fluxo 2 — Contratacao
                 </div>
 
                 <h3 className="font-display text-2xl font-bold mb-3">
-                  Aluno paga, trainer recebe
+                  Aluno contrata, trainer recebe
                 </h3>
                 <p className="text-primary-200/70 leading-relaxed mb-8">
-                  Quando um aluno compra um programa de treino, o pagamento
-                  e intermediado pela FitToday. O trainer recebe a maior parte,
-                  nos ficamos com uma comissao.
+                  Quando um aluno quer contratar um personal, ele e redirecionado
+                  pelo app para entrar em contato via WhatsApp ou outro canal do
+                  trainer. O pagamento e feito fora do app, de forma direta.
                 </p>
 
                 <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-6 mb-6">
-                  <div className="flex items-center gap-4 mb-3">
+                  <div className="flex items-center gap-4 mb-4">
                     <div className="w-10 h-10 bg-accent-500/10 rounded-xl flex items-center justify-center border border-accent-500/20">
                       <Smartphone className="w-5 h-5 text-accent-400" />
                     </div>
                     <div>
-                      <div className="text-sm text-primary-200/60">Aluno</div>
-                      <div className="font-semibold">Paga R$ 100</div>
+                      <div className="text-sm text-primary-200/60">Aluno no App</div>
+                      <div className="font-semibold">Ve perfil do personal</div>
                     </div>
                   </div>
-                  <div className="ml-5 border-l-2 border-dashed border-white/10 pl-6 space-y-3 py-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-primary-200/60">Taxa Stripe (~4%)</span>
-                      <span className="text-sm font-medium text-gray-300">-R$ 4</span>
+                  <div className="flex items-center justify-center my-3">
+                    <ArrowRight className="w-5 h-5 text-accent-400" />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-primary-500/10 rounded-xl flex items-center justify-center border border-primary-500/20">
+                      <MessageSquare className="w-5 h-5 text-primary-400" />
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-primary-200/60">Comissao FitToday (10%)</span>
-                      <span className="text-sm font-medium text-accent-400">R$ 10</span>
-                    </div>
-                    <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                      <span className="text-sm font-medium text-white">Personal recebe</span>
-                      <span className="text-sm font-bold text-primary-300">R$ 86</span>
+                    <div>
+                      <div className="text-sm text-primary-200/60">Contato direto</div>
+                      <div className="font-semibold">Via WhatsApp ou canal do trainer</div>
                     </div>
                   </div>
                 </div>
@@ -279,15 +277,15 @@ export default function SitePage() {
                 <ul className="space-y-2.5 text-sm text-primary-200/80">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-primary-400 flex-shrink-0" />
-                    Via Stripe Connect (cada trainer tem sub-conta)
+                    Aluno nao faz pagamento pelo app
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-primary-400 flex-shrink-0" />
-                    Aceita Pix, boleto e cartao
+                    Contato direto via WhatsApp ou link
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-primary-400 flex-shrink-0" />
-                    Repasse automatico para o trainer
+                    Trainer define seu proprio canal de contato
                   </li>
                 </ul>
               </div>
@@ -333,7 +331,7 @@ export default function SitePage() {
               </h3>
               <p className="text-gray-600 text-lg leading-relaxed mb-8">
                 Crie programas completos com exercicios, series, repeticoes e envie
-                PDFs personalizados diretamente para seus alunos pelo app.
+                PDFs personalizados. Seus alunos acessam tudo pelo app.
               </p>
               <ul className="space-y-4">
                 <FeatureBullet icon={<Dumbbell className="w-4 h-4" />} text="Programas com exercicios personalizados" />
@@ -438,13 +436,13 @@ export default function SitePage() {
             <StepCard
               number="02"
               title="Monte seus Programas"
-              description="Crie treinos com exercicios, defina precos e publique para seus alunos acessarem pelo app."
+              description="Crie treinos com exercicios, series e repeticoes. Publique programas para seus alunos visualizarem pelo app."
               icon={<Settings className="w-6 h-6" />}
             />
             <StepCard
               number="03"
-              title="Receba Pagamentos"
-              description="Alunos pagam diretamente pelo app. Voce recebe automaticamente na sua conta via Stripe."
+              title="Conecte-se com Alunos"
+              description="Alunos encontram seu perfil no app e entram em contato via WhatsApp ou pelo canal que voce preferir."
               icon={<Wallet className="w-6 h-6" />}
             />
           </div>
@@ -467,15 +465,16 @@ export default function SitePage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-start">
-            {/* Free Plan */}
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto items-start">
+            {/* Starter Plan */}
             <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
               <div className="px-8 pt-8 pb-6">
                 <div className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Starter</div>
                 <div className="flex items-baseline gap-1 mb-1">
-                  <span className="font-display text-5xl font-extrabold text-gray-900">Gratis</span>
+                  <span className="font-display text-4xl lg:text-5xl font-extrabold text-gray-900">Gratis</span>
                 </div>
-                <p className="text-gray-500 text-sm mb-8">Para comecar sem compromisso</p>
+                <p className="text-gray-500 text-sm mb-2">+ 10% de comissao</p>
+                <p className="text-gray-400 text-xs mb-8">Para comecar sem compromisso</p>
                 <Link
                   href="/register"
                   className="w-full flex items-center justify-center gap-2 px-6 py-3.5 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors"
@@ -485,21 +484,19 @@ export default function SitePage() {
               </div>
               <div className="px-8 pb-8">
                 <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 pt-6 border-t border-gray-100">O que inclui</div>
-                <ul className="space-y-3.5">
+                <ul className="space-y-3">
                   <PricingItem text="Ate 5 alunos ativos" included />
                   <PricingItem text="Ate 3 programas de treino" included />
                   <PricingItem text="Envio de treinos em PDF" included />
-                  <PricingItem text="Pagamentos via Stripe" included />
                   <PricingItem text="Dashboard basico" included />
                   <PricingItem text="Apps iOS e Android" included />
                   <PricingItem text="Analytics avancado" included={false} />
                   <PricingItem text="Alunos ilimitados" included={false} />
-                  <PricingItem text="Chat com alunos" included={false} />
-                  <PricingItem text="Branding personalizado" included={false} />
+                  <PricingItem text="White-label" included={false} />
                 </ul>
                 <div className="mt-6 pt-4 border-t border-gray-100">
                   <p className="text-xs text-gray-500">
-                    <span className="font-semibold text-accent-600">10% de comissao</span> sobre pagamentos de alunos
+                    <span className="font-semibold text-accent-600">10% de comissao</span> sobre vendas de programas
                   </p>
                 </div>
               </div>
@@ -515,10 +512,11 @@ export default function SitePage() {
                 <div className="px-8 pt-8 pb-6">
                   <div className="text-sm font-semibold text-primary-600 uppercase tracking-wider mb-3">Pro</div>
                   <div className="flex items-baseline gap-1 mb-1">
-                    <span className="font-display text-5xl font-extrabold text-gray-900">R$ 97</span>
+                    <span className="font-display text-4xl lg:text-5xl font-extrabold text-gray-900">R$ 97</span>
                     <span className="text-gray-500 text-sm font-medium">/mes</span>
                   </div>
-                  <p className="text-gray-500 text-sm mb-8">Para trainers que querem crescer</p>
+                  <p className="text-gray-500 text-sm mb-2">+ 5% de comissao</p>
+                  <p className="text-gray-400 text-xs mb-8">Para trainers que querem crescer</p>
                   <Link
                     href="/register"
                     className="group w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-500 hover:bg-primary-400 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-primary-500/25 hover:shadow-primary-400/30"
@@ -529,29 +527,70 @@ export default function SitePage() {
                 </div>
                 <div className="px-8 pb-8">
                   <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 pt-6 border-t border-gray-100">Tudo do Starter, mais</div>
-                  <ul className="space-y-3.5">
+                  <ul className="space-y-3">
                     <PricingItem text="Alunos ilimitados" included highlight />
                     <PricingItem text="Programas ilimitados" included highlight />
                     <PricingItem text="Analytics avancado" included highlight />
                     <PricingItem text="Comissao reduzida (5%)" included highlight />
                     <PricingItem text="Chat direto com alunos" included highlight />
                     <PricingItem text="Acompanhamento de progresso" included />
-                    <PricingItem text="Branding personalizado" included />
-                    <PricingItem text="Suporte prioritario" included />
+                    <PricingItem text="White-label" included={false} />
+                    <PricingItem text="Suporte prioritario" included={false} />
                   </ul>
                   <div className="mt-6 pt-4 border-t border-gray-100">
                     <p className="text-xs text-gray-500">
-                      <span className="font-semibold text-primary-600">5% de comissao</span> sobre pagamentos de alunos
+                      <span className="font-semibold text-primary-600">5% de comissao</span> sobre vendas de programas
                     </p>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Elite Plan */}
+            <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
+              <div className="bg-gray-900 px-8 py-2.5 text-center">
+                <span className="text-xs font-bold text-accent-400 uppercase tracking-widest">Sem comissao</span>
+              </div>
+              <div className="px-8 pt-8 pb-6">
+                <div className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Elite</div>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="font-display text-4xl lg:text-5xl font-extrabold text-gray-900">R$ 197</span>
+                  <span className="text-gray-500 text-sm font-medium">/mes</span>
+                </div>
+                <p className="text-gray-500 text-sm mb-2">0% de comissao</p>
+                <p className="text-gray-400 text-xs mb-8">Para trainers que querem o maximo</p>
+                <Link
+                  href="/register"
+                  className="group w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-gray-900/25"
+                >
+                  Assinar Elite
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              </div>
+              <div className="px-8 pb-8">
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 pt-6 border-t border-gray-100">Tudo do Pro, mais</div>
+                <ul className="space-y-3">
+                  <PricingItem text="Zero comissao sobre vendas" included highlight />
+                  <PricingItem text="White-label completo" included highlight />
+                  <PricingItem text="Suporte prioritario" included highlight />
+                  <PricingItem text="Alunos ilimitados" included />
+                  <PricingItem text="Programas ilimitados" included />
+                  <PricingItem text="Analytics avancado" included />
+                  <PricingItem text="Chat direto com alunos" included />
+                  <PricingItem text="Acompanhamento de progresso" included />
+                </ul>
+                <div className="mt-6 pt-4 border-t border-gray-100">
+                  <p className="text-xs text-gray-500">
+                    <span className="font-semibold text-gray-900">0% de comissao</span> — voce fica com tudo
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
           <p className="text-center text-sm text-gray-500 mt-8 max-w-lg mx-auto">
-            Ambos os planos incluem processamento de pagamentos via Stripe.
-            A comissao e aplicada apenas sobre pagamentos de alunos para programas de treino.
+            Todos os planos incluem apps iOS e Android para seus alunos.
+            Alunos nao fazem pagamentos pelo app — contratam diretamente com o personal.
           </p>
         </div>
       </section>

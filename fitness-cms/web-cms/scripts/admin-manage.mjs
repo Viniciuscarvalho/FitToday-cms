@@ -3,15 +3,17 @@
  * Admin management script for FitToday CMS.
  *
  * Usage (from web-cms/):
- *   node --env-file=.env.local scripts/admin-manage.mjs make-admin  <uid>
- *   node --env-file=.env.local scripts/admin-manage.mjs approve     <uid>
- *   node --env-file=.env.local scripts/admin-manage.mjs reject      <uid> [reason]
- *   node --env-file=.env.local scripts/admin-manage.mjs suspend     <uid> [reason]
- *   node --env-file=.env.local scripts/admin-manage.mjs status      <uid>
+ *   node --env-file=.env.local scripts/admin-manage.mjs make-admin     <uid>
+ *   node --env-file=.env.local scripts/admin-manage.mjs set-superuser  <uid>
+ *   node --env-file=.env.local scripts/admin-manage.mjs approve        <uid>
+ *   node --env-file=.env.local scripts/admin-manage.mjs reject         <uid> [reason]
+ *   node --env-file=.env.local scripts/admin-manage.mjs suspend        <uid> [reason]
+ *   node --env-file=.env.local scripts/admin-manage.mjs status         <uid>
  *   node --env-file=.env.local scripts/admin-manage.mjs list-pending
  */
 
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin
@@ -29,6 +31,7 @@ if (getApps().length === 0) {
   });
 }
 
+const auth = getAuth();
 const db = getFirestore();
 const [, , command, uid, extra] = process.argv;
 
@@ -159,6 +162,53 @@ async function listPending() {
   });
 }
 
+async function setSuperUser(uid) {
+  const ref = db.collection('users').doc(uid);
+  const doc = await ref.get();
+
+  if (!doc.exists) {
+    console.error(`User ${uid} not found.`);
+    process.exit(1);
+  }
+
+  // 1. Set Firebase Auth custom claims
+  await auth.setCustomUserClaims(uid, {
+    role: 'admin',
+    superUser: true,
+    plan: 'elite',
+  });
+
+  // 2. Update Firestore document with admin role + elite subscription
+  await ref.update({
+    role: 'admin',
+    status: 'active',
+    permissions: {
+      canApproveTrainers: true,
+      canSuspendTrainers: true,
+      canViewMetrics: true,
+    },
+    subscription: {
+      plan: 'elite',
+      status: 'active',
+      features: {
+        maxPrograms: -1,
+        maxStudents: -1,
+        customBranding: true,
+        analyticsAdvanced: true,
+        prioritySupport: true,
+        commissionRate: 0,
+      },
+    },
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+
+  const data = doc.data();
+  console.log(`\nSuperuser configured for ${data.displayName || data.email} (${uid})`);
+  console.log('  - Firebase Auth custom claims: role=admin, superUser=true, plan=elite');
+  console.log('  - Firestore: role=admin, subscription=elite (all features unlocked)');
+  console.log('\nIMPORTANT: The user must log out and log back in for custom claims to take effect.');
+}
+
 // Route command
 switch (command) {
   case 'make-admin':
@@ -184,17 +234,22 @@ switch (command) {
   case 'list-pending':
     await listPending();
     break;
+  case 'set-superuser':
+    if (!uid) { console.error('Usage: set-superuser <uid>'); process.exit(1); }
+    await setSuperUser(uid);
+    break;
   default:
     console.log(`
 FitToday Admin CLI
 
 Commands:
-  make-admin  <uid>           Set a user as admin
-  approve     <uid>           Approve a pending trainer
-  reject      <uid> [reason]  Reject a trainer
-  suspend     <uid> [reason]  Suspend a trainer
-  status      <uid>           Show user info
-  list-pending                List all pending trainers
+  make-admin     <uid>           Set a user as admin
+  set-superuser  <uid>           Admin + elite plan + custom claims (for testing)
+  approve        <uid>           Approve a pending trainer
+  reject         <uid> [reason]  Reject a trainer
+  suspend        <uid> [reason]  Suspend a trainer
+  status         <uid>           Show user info
+  list-pending                   List all pending trainers
 
 Run from web-cms/:
   node --env-file=.env.local scripts/admin-manage.mjs <command> <uid>
