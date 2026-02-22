@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:e2e": "playwright test --config=playwright.config.ts e2e/tests/",
+    "test:screenshots": "playwright test --config=playwright.config.ts e2e/capture/screenshots.spec.ts",
+    "test:flows": "playwright test --config=playwright.config.ts e2e/capture/flows.spec.ts",
+    "test:report": "playwright show-report"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^16.5.0",
@@ -33,6 +37,7 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/node": "^20.11.0",
     "@types/react": "^18.2.47",
     "@types/react-dom": "^18.2.18",

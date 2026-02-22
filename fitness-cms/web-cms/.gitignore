@@ -21,6 +21,10 @@ yarn-error.log*
 
 # Testing
 coverage
+e2e/results/
+e2e/capture/output/
+playwright-report/
+test-results/
 
 # IDE
 .idea
