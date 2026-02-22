@@ -419,7 +419,7 @@ export default function FinancesPage() {
 
       {/* Stripe Connect Banner */}
       {!stripeStatus.onboardingComplete && (
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white">
+        <div className="bg-gradient-to-r from-primary-500 to-primary-700 rounded-xl p-6 text-white">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
@@ -430,7 +430,7 @@ export default function FinancesPage() {
                     : 'Configure seus pagamentos'}
                 </h3>
               </div>
-              <p className="text-indigo-100">
+              <p className="text-primary-100">
                 {stripeStatus.connected
                   ? 'Sua conta Stripe esta conectada, mas precisa completar a verificacao para receber pagamentos.'
                   : 'Conecte sua conta Stripe para receber pagamentos diretamente na sua conta bancaria.'}
@@ -459,7 +459,7 @@ export default function FinancesPage() {
             <button
               onClick={handleConnectStripe}
               disabled={connectingStripe}
-              className="flex items-center gap-2 px-6 py-3 bg-white text-indigo-600 rounded-lg font-medium hover:bg-indigo-50 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-3 bg-white text-primary-600 rounded-lg font-medium hover:bg-primary-50 transition-colors disabled:opacity-50"
             >
               {connectingStripe ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -547,8 +547,8 @@ export default function FinancesPage() {
         {/* Total Earnings */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <TrendingUp className="h-6 w-6 text-purple-600" />
+            <div className="p-2 bg-primary-100 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-primary-600" />
             </div>
           </div>
           <h3 className="text-2xl font-bold text-gray-900">

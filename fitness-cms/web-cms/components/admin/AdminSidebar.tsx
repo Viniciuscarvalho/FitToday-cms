@@ -39,7 +39,7 @@ export function AdminSidebar() {
       {/* Logo */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-gray-800">
         <Link href="/admin" className="flex items-center gap-2">
-          <Shield className="h-8 w-8 text-amber-500 flex-shrink-0" />
+          <Shield className="h-8 w-8 text-primary-400 flex-shrink-0" />
           {!collapsed && (
             <span className="text-xl font-bold text-white">FitToday Admin</span>
           )}
@@ -66,14 +66,14 @@ export function AdminSidebar() {
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${
                 active
-                  ? 'bg-amber-500/10 text-amber-500'
+                  ? 'bg-primary-400/10 text-primary-400'
                   : 'text-gray-400 hover:bg-gray-800 hover:text-white'
               }`}
               title={collapsed ? item.name : undefined}
             >
               <item.icon
                 className={`h-5 w-5 flex-shrink-0 ${
-                  active ? 'text-amber-500' : 'text-gray-500'
+                  active ? 'text-primary-400' : 'text-gray-500'
                 }`}
               />
               {!collapsed && <span>{item.name}</span>}
@@ -87,8 +87,8 @@ export function AdminSidebar() {
         <div
           className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}
         >
-          <div className="h-10 w-10 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-            <span className="text-amber-500 font-semibold">
+          <div className="h-10 w-10 rounded-full bg-primary-400/10 flex items-center justify-center flex-shrink-0">
+            <span className="text-primary-400 font-semibold">
               {(admin?.displayName || user?.displayName || 'A')[0].toUpperCase()}
             </span>
           </div>
