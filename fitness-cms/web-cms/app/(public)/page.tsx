@@ -23,6 +23,7 @@ import {
   UserPlus,
   Settings,
 } from 'lucide-react';
+import { AuthNavButtons } from '@/components/landing/AuthNavButtons';
 
 export const metadata: Metadata = {
   title: 'FitToday - Plataforma para Personal Trainers',
@@ -59,20 +60,7 @@ export default function SitePage() {
                 </a>
               </nav>
 
-              <div className="flex items-center gap-3">
-                <Link
-                  href="/login"
-                  className="hidden sm:inline-flex text-sm font-medium text-gray-300 hover:text-white transition-colors"
-                >
-                  Entrar
-                </Link>
-                <Link
-                  href="/register"
-                  className="px-5 py-2 bg-primary-500 hover:bg-primary-400 text-white text-sm font-semibold rounded-full transition-all duration-200 shadow-lg shadow-primary-500/25 hover:shadow-primary-400/30"
-                >
-                  Criar Conta
-                </Link>
-              </div>
+              <AuthNavButtons />
             </div>
           </div>
         </div>

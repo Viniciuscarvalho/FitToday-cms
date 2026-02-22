@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -18,22 +18,24 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, signInWithGoogle, signInWithApple, userRole, trainerStatus } = useAuth();
-
-  // Helper to determine redirect URL based on user role and status
-  const getRedirectUrl = () => {
-    if (userRole === 'admin') {
-      return '/admin';
-    }
-    if (userRole === 'trainer' && trainerStatus !== 'active') {
-      return '/pending-approval';
-    }
-    return '/cms';
-  };
+  const { signIn, signInWithGoogle, signInWithApple, user, userRole, trainerStatus } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
+
+  // Redirect when auth state updates with the correct role
+  useEffect(() => {
+    if (user && userRole) {
+      if (userRole === 'admin') {
+        router.push('/admin');
+      } else if (userRole === 'trainer' && trainerStatus !== 'active') {
+        router.push('/pending-approval');
+      } else {
+        router.push('/cms');
+      }
+    }
+  }, [user, userRole, trainerStatus, router]);
 
   const {
     register,
@@ -48,10 +50,7 @@ export default function LoginPage() {
       setIsLoading(true);
       setError(null);
       await signIn(data.email, data.password);
-      // Small delay to allow state to update before redirect
-      setTimeout(() => {
-        router.push(getRedirectUrl());
-      }, 100);
+      // useEffect handles redirect when userRole updates
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erro ao fazer login';
       if (message.includes('invalid-credential')) {
@@ -71,9 +70,7 @@ export default function LoginPage() {
       setIsGoogleLoading(true);
       setError(null);
       await signInWithGoogle();
-      setTimeout(() => {
-        router.push(getRedirectUrl());
-      }, 100);
+      // useEffect handles redirect when userRole updates
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error('Google sign-in error:', err);
@@ -94,9 +91,7 @@ export default function LoginPage() {
       setIsAppleLoading(true);
       setError(null);
       await signInWithApple();
-      setTimeout(() => {
-        router.push(getRedirectUrl());
-      }, 100);
+      // useEffect handles redirect when userRole updates
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       console.error('Apple sign-in error:', err);
