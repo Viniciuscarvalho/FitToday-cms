@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { UserRole, TrainerStatus } from '@/types';
+import type { UserRole, TrainerStatus } from '@/types';
 
 // Cookie names
 const AUTH_TOKEN = 'auth-token';
