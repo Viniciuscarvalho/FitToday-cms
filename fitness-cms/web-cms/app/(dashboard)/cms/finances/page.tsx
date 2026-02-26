@@ -350,7 +350,7 @@ export default function FinancesPage() {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'Concluido';
+        return 'Concluído';
       case 'paid':
         return 'Pago';
       case 'pending':
@@ -388,7 +388,7 @@ export default function FinancesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Financas</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Finanças</h1>
           <p className="text-gray-500 mt-1">
             Gerencie seus ganhos e pagamentos
           </p>
@@ -426,13 +426,13 @@ export default function FinancesPage() {
                 <CreditCard className="h-6 w-6" />
                 <h3 className="text-lg font-semibold">
                   {stripeStatus.connected
-                    ? 'Complete sua configuracao'
+                    ? 'Complete sua configuração'
                     : 'Configure seus pagamentos'}
                 </h3>
               </div>
               <p className="text-primary-100">
                 {stripeStatus.connected
-                  ? 'Sua conta Stripe esta conectada, mas precisa completar a verificacao para receber pagamentos.'
+                  ? 'Sua conta Stripe está conectada, mas precisa completar a verificação para receber pagamentos.'
                   : 'Conecte sua conta Stripe para receber pagamentos diretamente na sua conta bancaria.'}
               </p>
               {stripeStatus.connected && (
@@ -443,7 +443,7 @@ export default function FinancesPage() {
                     ) : (
                       <Clock className="h-4 w-4 text-yellow-300" />
                     )}
-                    Cobrancas
+                    Cobranças
                   </span>
                   <span className="flex items-center gap-1">
                     {stripeStatus.payoutsEnabled ? (
@@ -465,7 +465,7 @@ export default function FinancesPage() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  {stripeStatus.connected ? 'Completar Verificacao' : 'Conectar Stripe'}
+                  {stripeStatus.connected ? 'Completar Verificação' : 'Conectar Stripe'}
                   <ExternalLink className="h-4 w-4" />
                 </>
               )}
@@ -482,7 +482,7 @@ export default function FinancesPage() {
             <div>
               <h4 className="font-medium text-green-900">Stripe Conectado</h4>
               <p className="text-sm text-green-700">
-                Sua conta esta configurada e pronta para receber pagamentos.
+                Sua conta está configurada e pronta para receber pagamentos.
                 {stripeStatus.email && ` (${stripeStatus.email})`}
               </p>
             </div>
@@ -503,7 +503,7 @@ export default function FinancesPage() {
           <h3 className="text-2xl font-bold text-gray-900">
             {formatCurrency(stats.balance)}
           </h3>
-          <p className="text-sm text-gray-500 mt-1">Saldo disponivel</p>
+          <p className="text-sm text-gray-500 mt-1">Saldo disponível</p>
         </div>
 
         {/* Pending Balance */}
@@ -541,7 +541,7 @@ export default function FinancesPage() {
           <h3 className="text-2xl font-bold text-gray-900">
             {formatCurrency(stats.thisMonthRevenue)}
           </h3>
-          <p className="text-sm text-gray-500 mt-1">Receita este mes</p>
+          <p className="text-sm text-gray-500 mt-1">Receita este mês</p>
         </div>
 
         {/* Total Earnings */}
@@ -567,7 +567,7 @@ export default function FinancesPage() {
                 <Calendar className="h-8 w-8 text-primary-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Proximo pagamento</h3>
+                <h3 className="font-semibold text-gray-900">Próximo pagamento</h3>
                 <p className="text-gray-500">
                   Estimado para {formatDate(stats.nextPayoutDate)}
                 </p>
@@ -587,12 +587,12 @@ export default function FinancesPage() {
         {/* Recent Transactions */}
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="p-6 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-900">Transacoes Recentes</h3>
+            <h3 className="font-semibold text-gray-900">Transações Recentes</h3>
           </div>
           {transactions.length === 0 ? (
             <div className="p-12 text-center">
               <DollarSign className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">Nenhuma transacao encontrada</p>
+              <p className="text-gray-500">Nenhuma transação encontrada</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-50">
@@ -660,7 +660,7 @@ export default function FinancesPage() {
           {transactions.length > 10 && (
             <div className="p-4 border-t border-gray-100">
               <button className="w-full text-center text-primary-600 hover:text-primary-700 font-medium text-sm">
-                Ver todas as transacoes
+                Ver todas as transações
               </button>
             </div>
           )}
@@ -669,7 +669,7 @@ export default function FinancesPage() {
         {/* Payout History */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100">
           <div className="p-6 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-900">Historico de Saques</h3>
+            <h3 className="font-semibold text-gray-900">Histórico de Saques</h3>
           </div>
           {payouts.length === 0 ? (
             <div className="p-12 text-center">
@@ -715,8 +715,8 @@ export default function FinancesPage() {
           <div>
             <h4 className="font-semibold text-blue-900 mb-1">Sobre seus pagamentos</h4>
             <p className="text-blue-700 text-sm">
-              Os pagamentos sao processados automaticamente a cada 7 dias. A taxa da
-              plataforma e de 10% sobre cada venda. Pagamentos podem levar ate 2 dias
+              Os pagamentos são processados automaticamente a cada 7 dias. A taxa da
+              plataforma é de 10% sobre cada venda. Pagamentos podem levar até 2 dias
               uteis para aparecer na sua conta bancaria apos a liberacao.
             </p>
           </div>

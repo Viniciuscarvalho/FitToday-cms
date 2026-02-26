@@ -60,54 +60,75 @@ export default function DashboardPage() {
         return;
       }
 
+      // Dynamically import Firebase
+      const { db } = await import('@/lib/firebase');
+      if (!db) {
+        console.warn('Firebase not configured');
+        setLoading(false);
+        return;
+      }
+
       try {
-        // Dynamically import Firebase
-        const { db } = await import('@/lib/firebase');
-        if (!db) {
-          console.warn('Firebase not configured');
-          setLoading(false);
-          return;
-        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let programs: any[] = [];
+        let activePrograms = 0;
+        let avgRating = 0;
 
         // Fetch programs
-        const programsQuery = query(
-          collection(db as Firestore, 'programs'),
-          where('trainerId', '==', user.uid)
-        );
-        const programsSnapshot = await getDocs(programsQuery);
-        const programs = programsSnapshot.docs.map((doc) => doc.data());
-        const activePrograms = programs.filter(
-          (p) => p.status === 'published' || p.status === 'draft'
-        ).length;
-        const avgRating =
-          programs.reduce((acc, p: any) => acc + (p.stats?.averageRating || 0), 0) /
-          (programs.length || 1);
+        try {
+          const programsQuery = query(
+            collection(db as Firestore, 'programs'),
+            where('trainerId', '==', user.uid)
+          );
+          const programsSnapshot = await getDocs(programsQuery);
+          programs = programsSnapshot.docs.map((doc) => doc.data());
+          activePrograms = programs.filter(
+            (p) => p.status === 'published' || p.status === 'draft'
+          ).length;
+          avgRating =
+            programs.reduce((acc, p: any) => acc + (p.stats?.averageRating || 0), 0) /
+            (programs.length || 1);
+        } catch (err) {
+          console.warn('Error fetching programs:', err);
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let subscriptions: any[] = [];
+        let activeStudents = 0;
 
         // Fetch subscriptions (students)
-        const subsQuery = query(
-          collection(db as Firestore, 'subscriptions'),
-          where('trainerId', '==', user.uid)
-        );
-        const subsSnapshot = await getDocs(subsQuery);
-        const subscriptions = subsSnapshot.docs.map((doc) => doc.data());
-        const activeStudents = subscriptions.filter(
-          (s) => s.status === 'active'
-        ).length;
+        try {
+          const subsQuery = query(
+            collection(db as Firestore, 'subscriptions'),
+            where('trainerId', '==', user.uid)
+          );
+          const subsSnapshot = await getDocs(subsQuery);
+          subscriptions = subsSnapshot.docs.map((doc) => doc.data());
+          activeStudents = subscriptions.filter((s) => s.status === 'active').length;
+        } catch (err) {
+          console.warn('Error fetching subscriptions:', err);
+        }
+
+        let monthlyRevenue = 0;
 
         // Fetch transactions for revenue
-        const now = new Date();
-        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const transactionsQuery = query(
-          collection(db as Firestore, 'transactions'),
-          where('trainerId', '==', user.uid),
-          where('type', '==', 'sale'),
-          where('createdAt', '>=', firstDayOfMonth)
-        );
-        const transactionsSnapshot = await getDocs(transactionsQuery);
-        const monthlyRevenue = transactionsSnapshot.docs.reduce(
-          (acc, doc) => acc + (doc.data().trainerAmount || 0),
-          0
-        );
+        try {
+          const now = new Date();
+          const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const transactionsQuery = query(
+            collection(db as Firestore, 'transactions'),
+            where('trainerId', '==', user.uid),
+            where('type', '==', 'sale'),
+            where('createdAt', '>=', firstDayOfMonth)
+          );
+          const transactionsSnapshot = await getDocs(transactionsQuery);
+          monthlyRevenue = transactionsSnapshot.docs.reduce(
+            (acc, doc) => acc + (doc.data().trainerAmount || 0),
+            0
+          );
+        } catch (err) {
+          console.warn('Error fetching transactions:', err);
+        }
 
         setStats({
           totalStudents: subscriptions.length,

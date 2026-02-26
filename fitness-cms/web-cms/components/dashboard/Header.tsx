@@ -43,15 +43,20 @@ export function Header() {
 
   return (
     <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-      {/* Search */}
+      {/* Search — not yet implemented */}
       <div className="flex-1 max-w-lg">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-300" />
           <input
             type="text"
             placeholder="Buscar programas, alunos..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all text-sm"
+            disabled
+            title="Busca em breve"
+            className="w-full pl-10 pr-20 py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-400 outline-none text-sm cursor-not-allowed"
           />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
+            Em breve
+          </span>
         </div>
       </div>
 
