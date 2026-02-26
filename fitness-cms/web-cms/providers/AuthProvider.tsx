@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token) {
       document.cookie = `${AUTH_COOKIES.TOKEN}=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax${secureFlag}`;
     } else {
-      document.cookie = `${AUTH_COOKIES.TOKEN}=; path=/; max-age=0; path=/`;
+      document.cookie = `${AUTH_COOKIES.TOKEN}=; path=/; max-age=0`;
     }
   };
 
@@ -167,8 +167,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     if (!auth) throw new Error('Firebase not initialized');
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    await fetchUserData(result.user.uid);
+    await signInWithEmailAndPassword(auth, email, password);
+    // onAuthStateChanged handles fetchUserData + cookie setting
   };
 
   const signUp = async (email: string, password: string, name: string) => {
@@ -187,8 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isActive: true,
       role: 'student',
     });
-
-    await fetchUserData(result.user.uid);
+    // onAuthStateChanged handles fetchUserData + cookie setting
   };
 
   const signUpAsTrainer = async (email: string, password: string, name: string) => {
@@ -234,7 +233,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     await setDoc(doc(db, 'users', result.user.uid), trainerData);
-    await fetchUserData(result.user.uid);
+    // onAuthStateChanged handles fetchUserData + cookie setting
   };
 
   const signInWithGoogle = async () => {
@@ -282,8 +281,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       await setDoc(doc(db, 'users', result.user.uid), trainerData);
     }
-
-    await fetchUserData(result.user.uid);
+    // onAuthStateChanged handles fetchUserData + cookie setting
   };
 
   const signInWithApple = async () => {
@@ -334,8 +332,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       await setDoc(doc(db, 'users', result.user.uid), trainerData);
     }
-
-    await fetchUserData(result.user.uid);
+    // onAuthStateChanged handles fetchUserData + cookie setting
   };
 
   const signOut = async () => {

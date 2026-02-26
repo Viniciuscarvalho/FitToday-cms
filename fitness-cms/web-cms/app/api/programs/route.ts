@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, verifyTrainerRequest, uploadProgramCover } from '@/lib/firebase-admin';
+import { adminDb, verifyTrainerRequest, uploadProgramCover, uploadProgramPDF, uploadProgramVideo } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { isWithinProgramLimit, PLANS, PlanId } from '@/lib/constants';
 
@@ -101,12 +101,16 @@ export async function POST(request: NextRequest) {
 
     let body: any;
     let coverFile: File | null = null;
+    let pdfFile: File | null = null;
+    let videoFile: File | null = null;
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData();
       const dataStr = formData.get('data') as string;
       body = JSON.parse(dataStr);
       coverFile = formData.get('cover') as File | null;
+      pdfFile = formData.get('pdf') as File | null;
+      videoFile = formData.get('video') as File | null;
     } else {
       body = await request.json();
     }
@@ -168,13 +172,44 @@ export async function POST(request: NextRequest) {
       coverImageURL = result.url;
     }
 
+    // Upload workout PDF if provided
+    let workoutPdfUrl = '';
+    let workoutPdfPath = '';
+    if (pdfFile) {
+      if (pdfFile.type !== 'application/pdf') {
+        return NextResponse.json({ error: 'Workout file must be a PDF' }, { status: 400 });
+      }
+      if (pdfFile.size > 10 * 1024 * 1024) {
+        return NextResponse.json({ error: 'PDF must be less than 10MB' }, { status: 400 });
+      }
+      const buffer = Buffer.from(await pdfFile.arrayBuffer());
+      const result = await uploadProgramPDF(programId, buffer, pdfFile.type);
+      workoutPdfUrl = result.url;
+      workoutPdfPath = result.path;
+    }
+
+    // Upload preview video if provided
+    let previewVideoURL = body.previewVideoURL || '';
+    if (videoFile) {
+      if (!videoFile.type.startsWith('video/')) {
+        return NextResponse.json({ error: 'Preview file must be a video' }, { status: 400 });
+      }
+      if (videoFile.size > 100 * 1024 * 1024) {
+        return NextResponse.json({ error: 'Video must be less than 100MB' }, { status: 400 });
+      }
+      const buffer = Buffer.from(await videoFile.arrayBuffer());
+      const result = await uploadProgramVideo(programId, buffer, videoFile.type);
+      previewVideoURL = result.url;
+    }
+
     const programData = {
       trainerId: authResult.uid,
       ...(body.studentId ? { studentId: body.studentId } : {}),
       title: body.title.trim(),
       description: body.description?.trim() || '',
       coverImageURL,
-      previewVideoURL: body.previewVideoURL || '',
+      previewVideoURL,
+      ...(workoutPdfUrl ? { workoutPdfUrl, workoutPdfPath } : {}),
       category: body.category || '',
       tags: body.tags || [],
       difficulty: body.difficulty || 'intermediate',

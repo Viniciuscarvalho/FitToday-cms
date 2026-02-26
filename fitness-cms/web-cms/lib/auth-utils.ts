@@ -109,13 +109,13 @@ export function setRoleCookies(role: UserRole | null, status: TrainerStatus | nu
   if (role) {
     document.cookie = `${AUTH_COOKIES.ROLE}=${role}; path=/; max-age=${maxAge}; SameSite=Lax${secureFlag}`;
   } else {
-    document.cookie = `${AUTH_COOKIES.ROLE}=; path=/; max-age=0; path=/`;
+    document.cookie = `${AUTH_COOKIES.ROLE}=; path=/; max-age=0`;
   }
 
   if (status) {
     document.cookie = `${AUTH_COOKIES.STATUS}=${status}; path=/; max-age=${maxAge}; SameSite=Lax${secureFlag}`;
   } else {
-    document.cookie = `${AUTH_COOKIES.STATUS}=; path=/; max-age=0; path=/`;
+    document.cookie = `${AUTH_COOKIES.STATUS}=; path=/; max-age=0`;
   }
 }
 

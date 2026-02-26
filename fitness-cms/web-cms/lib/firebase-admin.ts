@@ -254,6 +254,85 @@ export async function deleteProgramCover(programId: string): Promise<void> {
 }
 
 // ============================================================
+// PROGRAM PDF UPLOAD
+// ============================================================
+
+/**
+ * Upload a program workout PDF to Firebase Storage
+ */
+export async function uploadProgramPDF(
+  programId: string,
+  fileBuffer: Buffer,
+  contentType: string = 'application/pdf'
+): Promise<UploadResult> {
+  if (!adminStorage) {
+    throw new Error('Firebase Storage not initialized');
+  }
+
+  if (fileBuffer.length > 10 * 1024 * 1024) {
+    throw new Error('File size exceeds maximum of 10MB');
+  }
+
+  const bucket = adminStorage.bucket();
+  const filePath = `programs/${programId}/workout.pdf`;
+  const file = bucket.file(filePath);
+
+  await file.save(fileBuffer, {
+    metadata: {
+      contentType,
+      metadata: {
+        programId,
+        uploadedAt: new Date().toISOString(),
+      },
+    },
+  });
+
+  // Generate signed URL for PDF (not public)
+  const url = await generateSignedUrl(filePath);
+  return { path: filePath, url };
+}
+
+// ============================================================
+// PROGRAM VIDEO UPLOAD
+// ============================================================
+
+/**
+ * Upload a program preview video to Firebase Storage
+ */
+export async function uploadProgramVideo(
+  programId: string,
+  fileBuffer: Buffer,
+  contentType: string
+): Promise<UploadResult> {
+  if (!adminStorage) {
+    throw new Error('Firebase Storage not initialized');
+  }
+
+  if (fileBuffer.length > 100 * 1024 * 1024) {
+    throw new Error('File size exceeds maximum of 100MB');
+  }
+
+  const ext = contentType.split('/')[1] || 'mp4';
+  const bucket = adminStorage.bucket();
+  const filePath = `programs/${programId}/preview-video.${ext}`;
+  const file = bucket.file(filePath);
+
+  await file.save(fileBuffer, {
+    metadata: {
+      contentType,
+      metadata: {
+        programId,
+        uploadedAt: new Date().toISOString(),
+      },
+    },
+  });
+
+  await file.makePublic();
+  const url = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+  return { path: filePath, url };
+}
+
+// ============================================================
 // STORAGE UTILITIES
 // ============================================================
 

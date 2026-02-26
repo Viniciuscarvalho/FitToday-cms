@@ -37,6 +37,9 @@ export interface ProgramFormData {
   coverImage: string;
   coverImageFile: File | null;
   previewVideo: string;
+  previewVideoFile: File | null;
+  workoutPdfUrl: string;
+  workoutPdfFile: File | null;
 
   // Schedule
   durationWeeks: number;
@@ -85,6 +88,9 @@ const initialFormData: ProgramFormData = {
   coverImage: '',
   coverImageFile: null,
   previewVideo: '',
+  previewVideoFile: null,
+  workoutPdfUrl: '',
+  workoutPdfFile: null,
   durationWeeks: 8,
   workoutsPerWeek: 4,
   averageWorkoutDuration: 60,
@@ -211,12 +217,14 @@ export default function NewProgramPage() {
       setSaving(true);
 
       const body = formToApiBody(status);
+      const hasFiles = formData.coverImageFile || formData.workoutPdfFile || formData.previewVideoFile;
 
-      // If there's a cover image file, use multipart form data
-      if (formData.coverImageFile) {
+      if (hasFiles) {
         const fd = new FormData();
         fd.append('data', JSON.stringify(body));
-        fd.append('cover', formData.coverImageFile);
+        if (formData.coverImageFile) fd.append('cover', formData.coverImageFile);
+        if (formData.workoutPdfFile) fd.append('pdf', formData.workoutPdfFile);
+        if (formData.previewVideoFile) fd.append('video', formData.previewVideoFile);
 
         await apiRequest('/api/programs', {
           method: 'POST',

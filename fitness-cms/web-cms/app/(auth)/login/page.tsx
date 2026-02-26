@@ -18,15 +18,15 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, signInWithGoogle, signInWithApple, user, userRole, trainerStatus } = useAuth();
+  const { signIn, signInWithGoogle, signInWithApple, user, userRole, trainerStatus, loading } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
 
-  // Redirect when auth state updates with the correct role
+  // Redirect when auth state updates with the correct role and cookies are set
   useEffect(() => {
-    if (user && userRole) {
+    if (!loading && user && userRole) {
       if (userRole === 'admin') {
         router.push('/admin');
       } else if (userRole === 'trainer' && trainerStatus !== 'active') {
@@ -35,7 +35,7 @@ export default function LoginPage() {
         router.push('/cms');
       }
     }
-  }, [user, userRole, trainerStatus, router]);
+  }, [loading, user, userRole, trainerStatus, router]);
 
   const {
     register,

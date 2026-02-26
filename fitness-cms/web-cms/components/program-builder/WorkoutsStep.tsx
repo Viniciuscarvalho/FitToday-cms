@@ -27,18 +27,48 @@ const dayNames = [
   'Domingo',
 ];
 
-// Sample exercises for demo
-const sampleExercises = [
-  { id: '1', name: 'Supino Reto', muscleGroup: 'Peito' },
-  { id: '2', name: 'Agachamento Livre', muscleGroup: 'Pernas' },
-  { id: '3', name: 'Levantamento Terra', muscleGroup: 'Costas' },
-  { id: '4', name: 'Desenvolvimento', muscleGroup: 'Ombros' },
-  { id: '5', name: 'Rosca Direta', muscleGroup: 'Bíceps' },
-  { id: '6', name: 'Tríceps Pulley', muscleGroup: 'Tríceps' },
-  { id: '7', name: 'Leg Press', muscleGroup: 'Pernas' },
-  { id: '8', name: 'Remada Curvada', muscleGroup: 'Costas' },
-  { id: '9', name: 'Crucifixo', muscleGroup: 'Peito' },
-  { id: '10', name: 'Elevação Lateral', muscleGroup: 'Ombros' },
+// Exercise suggestions for autocomplete (trainer can type any name)
+const exerciseSuggestions = [
+  'Supino Reto',
+  'Supino Inclinado',
+  'Supino Declinado',
+  'Supino com Halteres',
+  'Agachamento Livre',
+  'Agachamento Frontal',
+  'Agachamento Búlgaro',
+  'Levantamento Terra',
+  'Levantamento Terra Romeno',
+  'Desenvolvimento',
+  'Desenvolvimento com Halteres',
+  'Rosca Direta',
+  'Rosca Alternada',
+  'Rosca Martelo',
+  'Tríceps Pulley',
+  'Tríceps Testa',
+  'Tríceps Francês',
+  'Leg Press',
+  'Leg Press 45',
+  'Cadeira Extensora',
+  'Mesa Flexora',
+  'Remada Curvada',
+  'Remada Unilateral',
+  'Remada Baixa',
+  'Crucifixo',
+  'Crucifixo Inclinado',
+  'Elevação Lateral',
+  'Elevação Frontal',
+  'Puxada Frontal',
+  'Puxada Supinada',
+  'Panturrilha em Pé',
+  'Panturrilha Sentado',
+  'Abdominal',
+  'Prancha',
+  'Barra Fixa',
+  'Paralelas',
+  'Stiff',
+  'Hip Thrust',
+  'Passada',
+  'Afundo',
 ];
 
 export function WorkoutsStep({ data, onChange, errors }: WorkoutsStepProps) {
@@ -121,10 +151,14 @@ export function WorkoutsStep({ data, onChange, errors }: WorkoutsStepProps) {
       newWeeks[weekIndex].workouts[workoutIndex].exercises[exerciseIndex];
     (exercise as Record<string, string | number>)[field] = value;
 
-    // If exerciseId is updated, also update exerciseName
-    if (field === 'exerciseId') {
-      const selectedExercise = sampleExercises.find((e) => e.id === value);
-      exercise.exerciseName = selectedExercise?.name || '';
+    // When exerciseName changes, generate exerciseId from the name
+    if (field === 'exerciseName') {
+      exercise.exerciseId = String(value)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
     }
 
     onChange({ weeks: newWeeks });
@@ -279,31 +313,32 @@ export function WorkoutsStep({ data, onChange, errors }: WorkoutsStepProps) {
                               className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
                             >
                               <div className="flex-1 grid grid-cols-12 gap-3">
-                                {/* Exercise Select */}
+                                {/* Exercise Name (free text with autocomplete) */}
                                 <div className="col-span-4">
                                   <label className="text-xs text-gray-500 mb-1 block">
                                     Exercício
                                   </label>
-                                  <select
-                                    value={exercise.exerciseId}
+                                  <input
+                                    type="text"
+                                    list={`exercises-${weekIndex}-${workoutIndex}-${exerciseIndex}`}
+                                    value={exercise.exerciseName}
                                     onChange={(e) =>
                                       updateExercise(
                                         weekIndex,
                                         workoutIndex,
                                         exerciseIndex,
-                                        'exerciseId',
+                                        'exerciseName',
                                         e.target.value
                                       )
                                     }
+                                    placeholder="Digite o nome do exercício"
                                     className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:border-primary-500 outline-none"
-                                  >
-                                    <option value="">Selecione...</option>
-                                    {sampleExercises.map((ex) => (
-                                      <option key={ex.id} value={ex.id}>
-                                        {ex.name}
-                                      </option>
+                                  />
+                                  <datalist id={`exercises-${weekIndex}-${workoutIndex}-${exerciseIndex}`}>
+                                    {exerciseSuggestions.map((name) => (
+                                      <option key={name} value={name} />
                                     ))}
-                                  </select>
+                                  </datalist>
                                 </div>
 
                                 {/* Sets */}

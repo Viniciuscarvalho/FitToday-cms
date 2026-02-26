@@ -46,6 +46,9 @@ const initialFormData: ProgramFormData = {
   coverImage: '',
   coverImageFile: null,
   previewVideo: '',
+  previewVideoFile: null,
+  workoutPdfUrl: '',
+  workoutPdfFile: null,
   durationWeeks: 8,
   workoutsPerWeek: 4,
   averageWorkoutDuration: 60,
@@ -96,6 +99,9 @@ export default function EditProgramPage() {
           coverImage: data.coverImageURL || data.coverImage || '',
           coverImageFile: null,
           previewVideo: data.previewVideoURL || data.previewVideo || '',
+          previewVideoFile: null,
+          workoutPdfUrl: data.workoutPdfUrl || '',
+          workoutPdfFile: null,
           durationWeeks: data.duration?.weeks || data.durationWeeks || 8,
           workoutsPerWeek: data.duration?.daysPerWeek || data.workoutsPerWeek || 4,
           averageWorkoutDuration: data.duration?.avgSessionMinutes || data.averageWorkoutDuration || 60,
@@ -218,11 +224,14 @@ export default function EditProgramPage() {
 
       const body = formToApiBody(newStatus || originalStatus);
 
-      // If there's a new cover image file, use multipart form data
-      if (formData.coverImageFile) {
+      const hasFiles = formData.coverImageFile || formData.workoutPdfFile || formData.previewVideoFile;
+
+      if (hasFiles) {
         const fd = new FormData();
         fd.append('data', JSON.stringify(body));
-        fd.append('cover', formData.coverImageFile);
+        if (formData.coverImageFile) fd.append('cover', formData.coverImageFile);
+        if (formData.workoutPdfFile) fd.append('pdf', formData.workoutPdfFile);
+        if (formData.previewVideoFile) fd.append('video', formData.previewVideoFile);
 
         await apiRequest(`/api/programs/${programId}`, {
           method: 'PUT',

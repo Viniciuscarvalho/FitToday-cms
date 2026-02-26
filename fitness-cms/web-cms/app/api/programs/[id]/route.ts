@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, verifyTrainerRequest, uploadProgramCover, deleteProgramCover } from '@/lib/firebase-admin';
+import { adminDb, verifyTrainerRequest, uploadProgramCover, deleteProgramCover, uploadProgramPDF, uploadProgramVideo } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
@@ -84,12 +84,16 @@ export async function PUT(
 
     let body: any;
     let coverFile: File | null = null;
+    let pdfFile: File | null = null;
+    let videoFile: File | null = null;
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData();
       const dataStr = formData.get('data') as string;
       body = JSON.parse(dataStr);
       coverFile = formData.get('cover') as File | null;
+      pdfFile = formData.get('pdf') as File | null;
+      videoFile = formData.get('video') as File | null;
     } else {
       body = await request.json();
     }
@@ -114,6 +118,33 @@ export async function PUT(
       coverImageURL = result.url;
     }
 
+    // Upload workout PDF if provided
+    if (pdfFile) {
+      if (pdfFile.type !== 'application/pdf') {
+        return NextResponse.json({ error: 'Workout file must be a PDF' }, { status: 400 });
+      }
+      if (pdfFile.size > 10 * 1024 * 1024) {
+        return NextResponse.json({ error: 'PDF must be less than 10MB' }, { status: 400 });
+      }
+      const buffer = Buffer.from(await pdfFile.arrayBuffer());
+      const result = await uploadProgramPDF(programId, buffer, pdfFile.type);
+      body.workoutPdfUrl = result.url;
+      body.workoutPdfPath = result.path;
+    }
+
+    // Upload preview video file if provided
+    if (videoFile) {
+      if (!videoFile.type.startsWith('video/')) {
+        return NextResponse.json({ error: 'Preview file must be a video' }, { status: 400 });
+      }
+      if (videoFile.size > 100 * 1024 * 1024) {
+        return NextResponse.json({ error: 'Video must be less than 100MB' }, { status: 400 });
+      }
+      const buffer = Buffer.from(await videoFile.arrayBuffer());
+      const result = await uploadProgramVideo(programId, buffer, videoFile.type);
+      body.previewVideoURL = result.url;
+    }
+
     // Build update data - only include fields that were provided
     const updateData: Record<string, any> = {
       updatedAt: FieldValue.serverTimestamp(),
@@ -123,6 +154,8 @@ export async function PUT(
     if (body.description !== undefined) updateData.description = body.description.trim();
     if (coverImageURL !== undefined) updateData.coverImageURL = coverImageURL;
     if (body.previewVideoURL !== undefined) updateData.previewVideoURL = body.previewVideoURL;
+    if (body.workoutPdfUrl !== undefined) updateData.workoutPdfUrl = body.workoutPdfUrl;
+    if (body.workoutPdfPath !== undefined) updateData.workoutPdfPath = body.workoutPdfPath;
     if (body.category !== undefined) updateData.category = body.category;
     if (body.tags !== undefined) updateData.tags = body.tags;
     if (body.difficulty !== undefined) updateData.difficulty = body.difficulty;
