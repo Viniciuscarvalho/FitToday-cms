@@ -197,6 +197,8 @@ export async function POST(request: NextRequest) {
         break;
       }
 
+      // invoice.paid fires when an invoice is marked paid (Stripe's canonical event)
+      case 'invoice.paid':
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
         console.log('Invoice payment succeeded:', invoice.id);
@@ -286,6 +288,37 @@ export async function POST(request: NextRequest) {
             updatedAt: FieldValue.serverTimestamp(),
           });
           console.log('Updated subscription to past_due:', subscriptionQuery.docs[0].id);
+        }
+        break;
+      }
+
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription;
+        console.log('Subscription updated:', subscription.id, 'status:', subscription.status);
+
+        if (!adminDb) break;
+
+        const subscriptionQuery = await adminDb
+          .collection('subscriptions')
+          .where('stripeSubscriptionId', '==', subscription.id)
+          .limit(1)
+          .get();
+
+        if (!subscriptionQuery.empty) {
+          let newStatus: 'active' | 'canceled' | 'past_due' | 'expired' = 'active';
+          if (subscription.status === 'canceled') newStatus = 'canceled';
+          else if (subscription.status === 'past_due') newStatus = 'past_due';
+          else if (subscription.status === 'unpaid') newStatus = 'past_due';
+
+          const subAny = subscription as any;
+          await subscriptionQuery.docs[0].ref.update({
+            status: newStatus,
+            currentPeriodEnd: subAny.current_period_end
+              ? new Date(subAny.current_period_end * 1000)
+              : null,
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+          console.log('Updated subscription status:', subscription.id, '->', newStatus);
         }
         break;
       }
