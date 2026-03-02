@@ -415,6 +415,54 @@ service cloud.firestore {
     }
 
     // ============================================================
+    // TRAINER STUDENTS COLLECTION (usado pelo app iOS)
+    // ============================================================
+
+    match /trainerStudents/{documentId} {
+      // Aluno pode ver seus próprios vínculos; trainer pode ver seus alunos
+      allow read: if isAuthenticated() && (
+        resource.data.studentId == request.auth.uid ||
+        resource.data.trainerId == request.auth.uid
+      );
+
+      // Trainer pode criar vínculo ao cadastrar aluno
+      allow create: if isAuthenticated() && (
+        request.resource.data.trainerId == request.auth.uid ||
+        request.resource.data.studentId == request.auth.uid
+      );
+
+      // Trainer ou aluno podem atualizar status do vínculo
+      allow update: if isAuthenticated() && (
+        resource.data.trainerId == request.auth.uid ||
+        resource.data.studentId == request.auth.uid
+      );
+
+      allow delete: if false;
+    }
+
+    // ============================================================
+    // TRAINER WORKOUTS COLLECTION (usado pelo app iOS)
+    // ============================================================
+
+    match /trainerWorkouts/{workoutId} {
+      // Trainer vê seus próprios treinos; aluno vê treinos atribuídos a ele
+      allow read: if isAuthenticated() && (
+        resource.data.trainerId == request.auth.uid ||
+        request.auth.uid in resource.data.assignedStudents
+      );
+
+      // Apenas trainers podem criar
+      allow create: if isTrainer() &&
+        request.resource.data.trainerId == request.auth.uid;
+
+      // Apenas o trainer dono pode atualizar
+      allow update: if isAuthenticated() &&
+        resource.data.trainerId == request.auth.uid;
+
+      allow delete: if false;
+    }
+
+    // ============================================================
     // ANALYTICS COLLECTION (Read-only para trainers)
     // ============================================================
 
