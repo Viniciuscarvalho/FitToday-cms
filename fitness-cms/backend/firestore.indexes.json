@@ -47,13 +47,6 @@
       ]
     },
     {
-      "collectionGroup": "subscriptions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "stripeSubscriptionId", "order": "ASCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "transactions",
       "queryScope": "COLLECTION",
       "fields": [
@@ -85,13 +78,6 @@
         { "fieldPath": "trainerId", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "updatedAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "progress",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "subscriptionId", "order": "ASCENDING" }
       ]
     },
     {
@@ -174,7 +160,26 @@
       "collectionGroup": "users",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "store.slug", "order": "ASCENDING" }
+        { "fieldPath": "role", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "store.rating", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "trainerWorkouts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "assignedStudents", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "isActive", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "trainerStudents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "studentId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
       ]
     }
   ],
