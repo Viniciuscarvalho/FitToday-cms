@@ -1,8 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Firestore } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * Creates a subscription document linking a student to a trainer if one doesn't exist yet.
+ * This enables the trainer to see the student in /cms/students.
+ */
+async function ensureSubscriptionLink(
+  db: Firestore,
+  studentId: string,
+  trainerId: string
+): Promise<void> {
+  const existingSubscription = await db
+    .collection('subscriptions')
+    .where('studentId', '==', studentId)
+    .where('trainerId', '==', trainerId)
+    .limit(1)
+    .get();
+
+  if (existingSubscription.empty) {
+    await db.collection('subscriptions').add({
+      studentId,
+      trainerId,
+      status: 'active',
+      source: 'app_connection',
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  }
+}
 
 // POST /api/students - Register a student with Firebase UID
 export async function POST(request: NextRequest) {
@@ -24,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { displayName, email, photoURL, fcmToken } = body;
+    const { displayName, email, photoURL, fcmToken, trainerId } = body;
 
     const uid = authResult.uid;
 
@@ -32,7 +60,7 @@ export async function POST(request: NextRequest) {
     const existingDoc = await adminDb.collection('users').doc(uid).get();
 
     if (existingDoc.exists) {
-      // User already exists - update FCM token and return existing data
+      // User already exists - update FCM token, trainerId, and return existing data
       const updateData: Record<string, any> = {
         updatedAt: FieldValue.serverTimestamp(),
       };
@@ -41,7 +69,16 @@ export async function POST(request: NextRequest) {
         updateData.fcmToken = fcmToken;
       }
 
+      if (trainerId) {
+        updateData.trainerId = trainerId;
+      }
+
       await adminDb.collection('users').doc(uid).update(updateData);
+
+      // Ensure subscription link exists when trainerId is provided
+      if (trainerId) {
+        await ensureSubscriptionLink(adminDb, uid, trainerId);
+      }
 
       const updatedDoc = await adminDb.collection('users').doc(uid).get();
       return NextResponse.json({
@@ -52,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new student document
-    const studentData = {
+    const studentData: Record<string, any> = {
       uid,
       email: email || authResult.uid,
       displayName: displayName || '',
@@ -64,7 +101,16 @@ export async function POST(request: NextRequest) {
       updatedAt: FieldValue.serverTimestamp(),
     };
 
+    if (trainerId) {
+      studentData.trainerId = trainerId;
+    }
+
     await adminDb.collection('users').doc(uid).set(studentData);
+
+    // Create subscription link so the trainer can see this student in /cms/students
+    if (trainerId) {
+      await ensureSubscriptionLink(adminDb, uid, trainerId);
+    }
 
     return NextResponse.json(
       { id: uid, ...studentData, created: true },
