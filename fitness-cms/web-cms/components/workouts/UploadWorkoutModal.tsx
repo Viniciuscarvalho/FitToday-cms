@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { apiRequest } from '@/lib/api-client';
 import {
   X,
   Upload,
@@ -111,16 +112,10 @@ export function UploadWorkoutModal({
       if (totalDays) formData.append('totalDays', String(totalDays));
       if (startDate) formData.append('startDate', startDate);
 
-      const response = await fetch('/api/workouts', {
+      await apiRequest('/api/workouts', {
         method: 'POST',
         body: formData,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao enviar treino');
-      }
 
       setSuccess(true);
       setTimeout(() => {

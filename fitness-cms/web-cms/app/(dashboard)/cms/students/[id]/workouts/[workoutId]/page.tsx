@@ -18,6 +18,7 @@ import {
   Flame,
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
+import { apiRequest } from '@/lib/api-client';
 import {
   WorkoutWithProgress,
   WorkoutFeedback,
@@ -54,30 +55,21 @@ export default function WorkoutDetailPage() {
       setError(null);
 
       // Fetch workout details
-      const workoutRes = await fetch(`/api/workouts/${workoutId}`);
-      const workoutData = await workoutRes.json();
-
-      if (!workoutRes.ok) {
-        throw new Error(workoutData.error || 'Erro ao carregar treino');
-      }
-
+      const workoutData = await apiRequest<WorkoutWithProgress>(`/api/workouts/${workoutId}`);
       setWorkout(workoutData);
 
       // Fetch progress and feedback in parallel
-      const [progressRes, feedbackRes] = await Promise.all([
-        fetch(`/api/workouts/${workoutId}/progress`),
-        fetch(`/api/workouts/${workoutId}/feedback`),
+      const [progressData, feedbackData] = await Promise.allSettled([
+        apiRequest<WorkoutProgressResponse>(`/api/workouts/${workoutId}/progress`),
+        apiRequest<{ feedbacks: WorkoutFeedback[] }>(`/api/workouts/${workoutId}/feedback`),
       ]);
 
-      const progressData = await progressRes.json();
-      const feedbackData = await feedbackRes.json();
-
-      if (progressRes.ok) {
-        setProgress(progressData);
+      if (progressData.status === 'fulfilled') {
+        setProgress(progressData.value);
       }
 
-      if (feedbackRes.ok) {
-        setFeedbacks(feedbackData.feedbacks || []);
+      if (feedbackData.status === 'fulfilled') {
+        setFeedbacks(feedbackData.value.feedbacks || []);
       }
     } catch (err: any) {
       setError(err.message);
@@ -92,22 +84,13 @@ export default function WorkoutDetailPage() {
     try {
       setSubmittingReply(true);
 
-      const response = await fetch(`/api/workouts/${workoutId}/feedback`, {
+      const updatedFeedback = await apiRequest<WorkoutFeedback>(`/api/workouts/${workoutId}/feedback`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           feedbackId,
           response: replyText.trim(),
         }),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Erro ao enviar resposta');
-      }
-
-      // Update local state
-      const updatedFeedback = await response.json();
       setFeedbacks((prev) =>
         prev.map((f) => (f.id === feedbackId ? updatedFeedback : f))
       );

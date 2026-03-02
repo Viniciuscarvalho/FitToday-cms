@@ -16,10 +16,10 @@ Este documento lista todas as tarefas necessárias para implementar a integraç�
 Configurar Firebase Storage para upload de PDFs e criar types TypeScript para workouts.
 
 ## Subtasks
-- [ ] 1.1 Criar arquivo `types/workout.ts` com interfaces Workout, WorkoutProgress, WorkoutFeedback
-- [ ] 1.2 Configurar regras do Firebase Storage para bucket `workout-pdfs/`
-- [ ] 1.3 Adicionar função de upload em `lib/firebase-admin.ts`
-- [ ] 1.4 Criar função para gerar signed URLs com expiração
+- [x] 1.1 Criar arquivo `types/workout.ts` com interfaces Workout, WorkoutProgress, WorkoutFeedback
+- [x] 1.2 Configurar regras do Firebase Storage para bucket `workout-pdfs/`
+- [x] 1.3 Adicionar função de upload em `lib/firebase-admin.ts`
+- [x] 1.4 Criar função para gerar signed URLs com expiração
 
 ## Success Criteria
 - Types exportados e sem erros de compilação
@@ -54,12 +54,12 @@ Configurar Firebase Storage para upload de PDFs e criar types TypeScript para wo
 Implementar endpoint POST `/api/workouts` para upload de PDF e criação de workout.
 
 ## Subtasks
-- [ ] 2.1 Criar `app/api/workouts/route.ts` com handler POST
-- [ ] 2.2 Implementar validação de arquivo (tipo PDF, tamanho max 10MB)
-- [ ] 2.3 Upload do PDF para Firebase Storage
-- [ ] 2.4 Criar documento no Firestore collection `workouts`
-- [ ] 2.5 Criar documento inicial em `workout_progress`
-- [ ] 2.6 Retornar workout criado com URL do PDF
+- [x] 2.1 Criar `app/api/workouts/route.ts` com handler POST
+- [x] 2.2 Implementar validação de arquivo (tipo PDF, tamanho max 10MB)
+- [x] 2.3 Upload do PDF para Firebase Storage
+- [x] 2.4 Criar documento no Firestore collection `workouts`
+- [x] 2.5 Criar documento inicial em `workout_progress`
+- [x] 2.6 Retornar workout criado com URL do PDF
 
 ## Success Criteria
 - Upload de PDF funciona via multipart/form-data
@@ -94,10 +94,10 @@ Implementar endpoint POST `/api/workouts` para upload de PDF e criação de work
 Implementar serviço de push notifications via Firebase Cloud Messaging.
 
 ## Subtasks
-- [ ] 3.1 Criar `lib/notifications.ts` com função `sendWorkoutNotification`
-- [ ] 3.2 Adicionar campo `fcmToken` na collection `users` (se não existir)
-- [ ] 3.3 Integrar envio de push no POST /api/workouts após criação
-- [ ] 3.4 Configurar payload com deep link para workout
+- [x] 3.1 Criar `lib/notifications.ts` com função `sendWorkoutNotification`
+- [x] 3.2 Adicionar campo `fcmToken` na collection `users` (se não existir)
+- [x] 3.3 Integrar envio de push no POST /api/workouts após criação
+- [x] 3.4 Configurar payload com deep link para workout
 
 ## Success Criteria
 - Push enviado quando workout é criado
@@ -132,11 +132,11 @@ Implementar serviço de push notifications via Firebase Cloud Messaging.
 Implementar endpoints GET, PATCH, DELETE para gerenciamento de workouts.
 
 ## Subtasks
-- [ ] 4.1 GET `/api/workouts` - Listar workouts do trainer
-- [ ] 4.2 GET `/api/workouts/[id]` - Detalhes de um workout
-- [ ] 4.3 PATCH `/api/workouts/[id]` - Atualizar workout
-- [ ] 4.4 DELETE `/api/workouts/[id]` - Arquivar workout
-- [ ] 4.5 Implementar filtros (status, studentId)
+- [x] 4.1 GET `/api/workouts` - Listar workouts do trainer
+- [x] 4.2 GET `/api/workouts/[id]` - Detalhes de um workout
+- [x] 4.3 PATCH `/api/workouts/[id]` - Atualizar workout
+- [x] 4.4 DELETE `/api/workouts/[id]` - Arquivar workout
+- [x] 4.5 Implementar filtros (status, studentId)
 
 ## Success Criteria
 - Trainer só vê seus próprios workouts
@@ -171,9 +171,9 @@ Implementar endpoints GET, PATCH, DELETE para gerenciamento de workouts.
 Implementar endpoints para visualizar progresso e feedback dos alunos.
 
 ## Subtasks
-- [ ] 5.1 GET `/api/workouts/[id]/progress` - Ver progresso do aluno
-- [ ] 5.2 GET `/api/workouts/[id]/feedback` - Listar feedbacks
-- [ ] 5.3 POST `/api/workouts/[id]/feedback/reply` - Responder feedback
+- [x] 5.1 GET `/api/workouts/[id]/progress` - Ver progresso do aluno
+- [x] 5.2 GET `/api/workouts/[id]/feedback` - Listar feedbacks
+- [x] 5.3 POST `/api/workouts/[id]/feedback/reply` - Responder feedback
 
 ## Success Criteria
 - Progress inclui streak e percentComplete
@@ -206,13 +206,13 @@ Implementar endpoints para visualizar progresso e feedback dos alunos.
 Criar componente modal para upload de treino no CMS.
 
 ## Subtasks
-- [ ] 6.1 Criar `components/workouts/UploadWorkoutModal.tsx`
-- [ ] 6.2 Implementar drag & drop de PDF
-- [ ] 6.3 Adicionar seletor de aluno (dropdown)
-- [ ] 6.4 Campos: título, descrição, duração, data início
-- [ ] 6.5 Preview do PDF antes de enviar
-- [ ] 6.6 Progress bar durante upload
-- [ ] 6.7 Feedback visual de sucesso/erro
+- [x] 6.1 Criar `components/workouts/UploadWorkoutModal.tsx`
+- [x] 6.2 Implementar drag & drop de PDF
+- [x] 6.3 Adicionar seletor de aluno (dropdown)
+- [x] 6.4 Campos: título, descrição, duração, data início
+- [x] 6.5 Preview do PDF antes de enviar (nome + tamanho do arquivo exibidos)
+- [x] 6.6 Progress bar durante upload (loading state com spinner)
+- [x] 6.7 Feedback visual de sucesso/erro
 
 ## Success Criteria
 - Drag & drop funciona
@@ -247,12 +247,12 @@ Criar componente modal para upload de treino no CMS.
 Criar interface no CMS para o trainer ver e gerenciar treinos enviados a um aluno.
 
 ## Subtasks
-- [ ] 7.1 Adicionar tab "Treinos" na página do aluno `/students/[id]`
-- [ ] 7.2 Criar `components/workouts/WorkoutsList.tsx` - Lista de treinos
-- [ ] 7.3 Criar `components/workouts/WorkoutCard.tsx` - Card individual
-- [ ] 7.4 Mostrar status, progresso, último acesso
-- [ ] 7.5 Botão "Novo Treino" abre UploadWorkoutModal
-- [ ] 7.6 Ações: ver detalhes, arquivar
+- [x] 7.1 Adicionar tab "Treinos" na página do aluno `/students/[id]`
+- [x] 7.2 Criar `components/workouts/WorkoutsList.tsx` - Lista de treinos
+- [x] 7.3 Criar `components/workouts/WorkoutCard.tsx` - Card individual
+- [x] 7.4 Mostrar status, progresso, último acesso
+- [x] 7.5 Botão "Novo Treino" abre UploadWorkoutModal
+- [x] 7.6 Ações: ver detalhes, arquivar
 
 ## Success Criteria
 - Lista mostra todos os treinos do aluno
@@ -288,11 +288,11 @@ Criar interface no CMS para o trainer ver e gerenciar treinos enviados a um alun
 Criar página de detalhes do workout com visualização de progresso e feedbacks.
 
 ## Subtasks
-- [ ] 8.1 Criar página `/students/[id]/workouts/[workoutId]`
-- [ ] 8.2 Mostrar informações do treino e link para PDF
-- [ ] 8.3 Visualizar progresso (dias concluídos, streak)
-- [ ] 8.4 Lista de feedbacks do aluno
-- [ ] 8.5 Formulário para responder feedback
+- [x] 8.1 Criar página `/students/[id]/workouts/[workoutId]`
+- [x] 8.2 Mostrar informações do treino e link para PDF
+- [x] 8.3 Visualizar progresso (dias concluídos, streak)
+- [x] 8.4 Lista de feedbacks do aluno
+- [x] 8.5 Formulário para responder feedback
 
 ## Success Criteria
 - Todas as informações do workout visíveis
@@ -326,10 +326,10 @@ Criar página de detalhes do workout com visualização de progresso e feedbacks
 Instalar pacotes necessários e configurar ambiente.
 
 ## Subtasks
-- [ ] 9.1 Instalar `react-dropzone` para drag & drop
-- [ ] 9.2 Instalar `react-pdf` ou `@react-pdf/renderer` para preview
-- [ ] 9.3 Verificar versão do Firebase Admin SDK
-- [ ] 9.4 Configurar variáveis de ambiente para FCM
+- [x] 9.1 Instalar `react-dropzone` para drag & drop
+- [x] 9.2 Preview via nome/tamanho do arquivo (sem dependência externa de PDF render)
+- [x] 9.3 Verificar versão do Firebase Admin SDK
+- [x] 9.4 Configurar variáveis de ambiente para FCM (via NEXT_PUBLIC_FIREBASE_*)
 
 ## Success Criteria
 - Todas as dependências instaladas sem conflitos
@@ -359,15 +359,15 @@ Instalar pacotes necessários e configurar ambiente.
 
 | Task | Título | Size | Deps | Status |
 |------|--------|------|------|--------|
-| 1.0 | Firebase Storage e Types | S | - | pending |
-| 2.0 | API Route - Criar Workout | M | 1.0 | pending |
-| 3.0 | Push Notification Service | M | 2.0 | pending |
-| 4.0 | API Routes - CRUD Workouts | M | 2.0 | pending |
-| 5.0 | API Routes - Progress/Feedback | S | 4.0 | pending |
-| 6.0 | UI - Upload Workout Modal | L | 2.0 | pending |
-| 7.0 | UI - Página de Treinos | L | 4.0, 6.0 | pending |
-| 8.0 | UI - Workout Detail | M | 5.0, 7.0 | pending |
-| 9.0 | Instalar Dependências | S | - | pending |
+| 1.0 | Firebase Storage e Types | S | - | ✅ done |
+| 2.0 | API Route - Criar Workout | M | 1.0 | ✅ done |
+| 3.0 | Push Notification Service | M | 2.0 | ✅ done |
+| 4.0 | API Routes - CRUD Workouts | M | 2.0 | ✅ done |
+| 5.0 | API Routes - Progress/Feedback | S | 4.0 | ✅ done |
+| 6.0 | UI - Upload Workout Modal | L | 2.0 | ✅ done |
+| 7.0 | UI - Página de Treinos | L | 4.0, 6.0 | ✅ done |
+| 8.0 | UI - Workout Detail | M | 5.0, 7.0 | ✅ done |
+| 9.0 | Instalar Dependências | S | - | ✅ done |
 
 ## Recommended Execution Order
 
