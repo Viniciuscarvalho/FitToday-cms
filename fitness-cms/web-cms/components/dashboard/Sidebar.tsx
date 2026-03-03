@@ -41,20 +41,28 @@ export function Sidebar() {
   return (
     <aside
       className={`${
-        collapsed ? 'w-20' : 'w-64'
-      } bg-white border-r border-gray-200 flex flex-col transition-all duration-300`}
+        collapsed ? 'w-20' : 'w-72'
+      } bg-gray-950 flex flex-col transition-all duration-500 ease-in-out relative border-r border-white/5`}
     >
+      {/* Background decoration */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/10 rounded-full blur-[60px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-32 h-32 bg-accent-500/5 rounded-full blur-[60px] pointer-events-none" />
+
       {/* Logo */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
-        <Link href="/cms" className="flex items-center gap-2">
-          <Dumbbell className="h-8 w-8 text-primary-600 flex-shrink-0" />
+      <div className="h-20 flex items-center justify-between px-6 border-b border-white/[0.05] relative z-10">
+        <Link href="/cms" className="flex items-center gap-3 group">
+          <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20 group-hover:scale-110 transition-transform duration-300">
+            <Dumbbell className="h-6 w-6 text-white" />
+          </div>
           {!collapsed && (
-            <span className="text-xl font-bold text-gray-900">FitToday</span>
+            <span className="text-xl font-display font-bold text-white tracking-tight">
+              FitToday<span className="text-primary-400">.</span>
+            </span>
           )}
         </Link>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"
+          className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all border border-white/10"
         >
           {collapsed ? (
             <ChevronRight className="h-5 w-5" />
@@ -65,7 +73,12 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-6 space-y-2 overflow-y-auto relative z-10 scrollbar-hide">
+        {!collapsed && (
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-4 px-3">
+            Menu Principal
+          </p>
+        )}
         {navigation.map((item) => {
           const active = isActive(item.href);
           const trainerPlan = trainer?.subscription?.plan || 'starter';
@@ -74,25 +87,31 @@ export function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition-colors ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-300 relative group ${
                 active
-                  ? 'bg-primary-50 text-primary-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-primary-500/10 text-white border border-primary-500/20 shadow-lg shadow-primary-500/5'
+                  : 'text-gray-400 hover:bg-white/5 hover:text-white border border-transparent'
               }`}
               title={collapsed ? item.name : undefined}
             >
               <item.icon
-                className={`h-5 w-5 flex-shrink-0 ${
-                  active ? 'text-primary-600' : 'text-gray-400'
+                className={`h-5 w-5 flex-shrink-0 transition-transform duration-300 ${
+                  active ? 'text-primary-400 scale-110' : 'text-gray-500 group-hover:scale-110'
                 }`}
               />
               {!collapsed && (
                 <span className="flex-1 flex items-center justify-between">
-                  <span>{item.name}</span>
+                  <span className="tracking-wide">{item.name}</span>
                   {isLocked && (
-                    <Lock className="h-3.5 w-3.5 text-gray-400" />
+                    <div className="flex items-center gap-1 bg-gray-800 px-1.5 py-0.5 rounded text-[10px] text-gray-400 border border-white/5 uppercase tracking-tighter">
+                      <Lock className="h-2.5 w-2.5" />
+                      Elite
+                    </div>
                   )}
                 </span>
+              )}
+              {active && (
+                <div className="absolute left-0 w-1 h-6 bg-primary-500 rounded-full -ml-4" />
               )}
             </Link>
           );
@@ -100,43 +119,48 @@ export function Sidebar() {
       </nav>
 
       {/* User Section */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-6 border-t border-white/[0.05] relative z-10 bg-gray-950/50 backdrop-blur-md">
         <div
-          className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}
+          className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} bg-white/[0.03] p-3 rounded-2xl border border-white/[0.05]`}
         >
-          {user?.photoURL ? (
-            <img
-              src={user.photoURL}
-              alt={user.displayName || 'Avatar'}
-              className="h-10 w-10 rounded-full flex-shrink-0"
-            />
-          ) : (
-            <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-              <span className="text-primary-700 font-semibold">
-                {(trainer?.displayName || user?.displayName || 'U')[0].toUpperCase()}
-              </span>
-            </div>
-          )}
+          <div className="relative">
+            {user?.photoURL ? (
+              <img
+                src={user.photoURL}
+                alt={user.displayName || 'Avatar'}
+                className="h-10 w-10 rounded-xl object-cover ring-2 ring-primary-500/20"
+              />
+            ) : (
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary-500/10">
+                <span className="text-white font-bold text-sm">
+                  {(trainer?.displayName || user?.displayName || 'U')[0].toUpperCase()}
+                </span>
+              </div>
+            )}
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-gray-950 rounded-full shadow-lg" />
+          </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
+              <p className="text-sm font-bold text-white truncate leading-tight">
                 {trainer?.displayName || user?.displayName || 'Usuário'}
               </p>
-              <p className="text-xs text-gray-500 truncate">
-                {user?.email}
-              </p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="text-[10px] text-primary-400 font-bold uppercase tracking-wider">
+                  {trainer?.subscription?.plan || 'Starter'}
+                </span>
+              </div>
             </div>
           )}
         </div>
         <button
           onClick={() => signOut()}
-          className={`mt-3 flex items-center gap-2 text-sm text-gray-600 hover:text-red-600 transition-colors ${
-            collapsed ? 'justify-center w-full' : ''
+          className={`mt-4 w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-300 border border-transparent hover:border-red-500/20 ${
+            collapsed ? 'justify-center' : ''
           }`}
           title={collapsed ? 'Sair' : undefined}
         >
           <LogOut className="h-4 w-4" />
-          {!collapsed && <span>Sair</span>}
+          {!collapsed && <span className="font-medium">Encerrar Sessão</span>}
         </button>
       </div>
     </aside>

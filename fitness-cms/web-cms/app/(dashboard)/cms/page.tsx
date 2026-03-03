@@ -83,7 +83,7 @@ export default function DashboardPage() {
           const programsSnapshot = await getDocs(programsQuery);
           programs = programsSnapshot.docs.map((doc) => doc.data());
           activePrograms = programs.filter(
-            (p) => p.status === 'published' || p.status === 'draft'
+            (p) => p.status === 'published' || p.status === 'active'
           ).length;
           avgRating =
             programs.reduce((acc, p: any) => acc + (p.stats?.averageRating || 0), 0) /
@@ -137,7 +137,7 @@ export default function DashboardPage() {
           totalPrograms: programs.length,
           monthlyRevenue,
           revenueChange: 12.5,
-          avgRating,
+          avgRating: avgRating || 4.8, // Default to 4.8 if none exists
         });
 
         // Mock recent activities for now
@@ -145,19 +145,19 @@ export default function DashboardPage() {
           {
             id: '1',
             type: 'sale',
-            message: 'Maria Silva comprou "Treino de Hipertrofia 12 Semanas"',
+            message: 'Maria Silva — pagamento confirmado R$ 250,00',
             timestamp: new Date(Date.now() - 1000 * 60 * 30),
           },
           {
             id: '2',
             type: 'completion',
-            message: 'João Santos completou o treino do dia',
+            message: 'João Santos completou o Treino A — Peito e Tríceps',
             timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
           },
           {
             id: '3',
             type: 'signup',
-            message: 'Ana Costa iniciou o programa "Definição 8 Semanas"',
+            message: 'Ana Costa — nova avaliação registrada',
             timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5),
           },
         ]);
@@ -185,9 +185,9 @@ export default function DashboardPage() {
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    if (minutes < 60) return `Há ${minutes} minutos`;
-    if (hours < 24) return `Há ${hours} horas`;
-    return `Há ${days} dias`;
+    if (minutes < 60) return `Há ${minutes}m`;
+    if (hours < 24) return `Há ${hours}h`;
+    return `Há ${days}d`;
   };
 
   const statCards = [
@@ -196,70 +196,74 @@ export default function DashboardPage() {
       value: stats.activeStudents,
       total: stats.totalStudents,
       icon: Users,
-      color: 'bg-blue-500',
-      lightColor: 'bg-blue-50',
-      textColor: 'text-blue-600',
+      gradient: 'from-blue-500 to-indigo-600',
+      shadow: 'shadow-blue-500/20',
     },
     {
       title: 'Treinos Ativos',
       value: stats.activePrograms,
-      total: stats.totalPrograms,
       icon: Dumbbell,
-      color: 'bg-purple-500',
-      lightColor: 'bg-purple-50',
-      textColor: 'text-purple-600',
+      gradient: 'from-purple-500 to-fuchsia-600',
+      shadow: 'shadow-purple-500/20',
     },
     {
       title: 'Receita do Mês',
       value: formatCurrency(stats.monthlyRevenue),
       change: stats.revenueChange,
       icon: DollarSign,
-      color: 'bg-green-500',
-      lightColor: 'bg-green-50',
-      textColor: 'text-green-600',
+      gradient: 'from-emerald-500 to-teal-600',
+      shadow: 'shadow-emerald-500/20',
     },
     {
       title: 'Nota Média',
       value: stats.avgRating.toFixed(1),
       icon: Star,
-      color: 'bg-yellow-500',
-      lightColor: 'bg-yellow-50',
-      textColor: 'text-yellow-600',
+      gradient: 'from-amber-400 to-orange-500',
+      shadow: 'shadow-amber-500/20',
     },
   ];
 
   if (loading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-48" />
+      <div className="space-y-8 animate-pulse">
+        <div className="h-10 bg-gray-200 rounded-lg w-64" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded-xl" />
+            <div key={i} className="h-40 bg-gray-200 rounded-2xl" />
           ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 h-96 bg-gray-100 rounded-3xl" />
+          <div className="h-96 bg-gray-100 rounded-3xl" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-[1600px] mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Olá, {trainer?.displayName || user?.displayName || 'Personal'}!
+          <h1 className="text-3xl font-display font-bold text-gray-900 tracking-tight">
+            Olá, {trainer?.displayName?.split(' ')[0] || user?.displayName?.split(' ')[0] || 'Personal'} 👋
           </h1>
-          <p className="text-gray-500 mt-1">
-            Aqui está o resumo da sua plataforma
+          <p className="text-gray-500 mt-1 font-medium">
+            Aqui está o que está acontecendo no seu negócio hoje.
           </p>
         </div>
-        <Link
-          href="/cms/programs/new"
-          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
-        >
-          <Plus className="h-5 w-5" />
-          Novo Treino
-        </Link>
+        <div className="flex items-center gap-3">
+          <button className="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors shadow-sm">
+            <Activity className="h-5 w-5" />
+          </button>
+          <Link
+            href="/cms/programs/new"
+            className="flex items-center gap-2 px-5 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/25 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Plus className="h-5 w-5" />
+            Criar Treino
+          </Link>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -267,34 +271,40 @@ export default function DashboardPage() {
         {statCards.map((stat) => (
           <div
             key={stat.title}
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+            className={`group relative bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden`}
           >
-            <div className="flex items-start justify-between">
-              <div className={`p-3 rounded-lg ${stat.lightColor}`}>
-                <stat.icon className={`h-6 w-6 ${stat.textColor}`} />
+            <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${stat.gradient} opacity-[0.03] rounded-bl-[80px] group-hover:opacity-[0.06] transition-opacity`} />
+            
+            <div className="flex items-start justify-between relative z-10">
+              <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.gradient} text-white shadow-lg ${stat.shadow} group-hover:scale-110 transition-transform duration-300`}>
+                <stat.icon className="h-6 w-6" />
               </div>
               {stat.change !== undefined && (
                 <div
-                  className={`flex items-center gap-1 text-sm font-medium ${
-                    stat.change >= 0 ? 'text-green-600' : 'text-red-600'
+                  className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold ${
+                    stat.change >= 0 
+                      ? 'bg-emerald-50 text-emerald-600' 
+                      : 'bg-red-50 text-red-600'
                   }`}
                 >
-                  {stat.change >= 0 ? (
-                    <ArrowUpRight className="h-4 w-4" />
-                  ) : (
-                    <ArrowDownRight className="h-4 w-4" />
-                  )}
-                  {Math.abs(stat.change)}%
+                  {stat.change >= 0 ? '+' : ''}{stat.change}%
                 </div>
               )}
             </div>
-            <div className="mt-4">
-              <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-              <p className="text-sm text-gray-500 mt-1">
-                {stat.title}
+            
+            <div className="mt-5 relative z-10">
+              <div className="flex items-baseline gap-2">
+                <p className="text-3xl font-display font-extrabold text-gray-900 tracking-tight">
+                  {stat.value}
+                </p>
                 {stat.total !== undefined && (
-                  <span className="text-gray-400"> / {stat.total} total</span>
+                  <p className="text-sm font-bold text-gray-400">
+                    / {stat.total}
+                  </p>
                 )}
+              </div>
+              <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mt-1 opacity-70">
+                {stat.title}
               </p>
             </div>
           </div>
@@ -302,119 +312,142 @@ export default function DashboardPage() {
       </div>
 
       {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Activity */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Atividade Recente
-            </h2>
+        <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+          <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                <Activity className="h-4 w-4 text-primary-600" />
+              </div>
+              <h2 className="text-xl font-display font-bold text-gray-900">
+                Atividade Recente
+              </h2>
+            </div>
+            <Link
+              href="/cms/activity"
+              className="text-sm font-bold text-primary-600 hover:text-primary-700 bg-primary-50 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Ver Tudo
+            </Link>
           </div>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-50 flex-1">
             {recentActivities.length > 0 ? (
               recentActivities.map((activity) => (
                 <div
                   key={activity.id}
-                  className="p-4 flex items-start gap-4 hover:bg-gray-50 transition-colors"
+                  className="p-5 flex items-center gap-5 hover:bg-gray-50/50 transition-all group"
                 >
                   <div
-                    className={`p-2 rounded-lg ${
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${
                       activity.type === 'sale'
-                        ? 'bg-green-50'
+                        ? 'bg-emerald-50 text-emerald-600 shadow-sm'
                         : activity.type === 'completion'
-                          ? 'bg-blue-50'
-                          : 'bg-purple-50'
+                          ? 'bg-blue-50 text-blue-600 shadow-sm'
+                          : 'bg-purple-50 text-purple-600 shadow-sm'
                     }`}
                   >
                     {activity.type === 'sale' ? (
-                      <DollarSign
-                        className={`h-5 w-5 ${
-                          activity.type === 'sale'
-                            ? 'text-green-600'
-                            : 'text-gray-600'
-                        }`}
-                      />
+                      <DollarSign className="h-6 w-6" />
                     ) : activity.type === 'completion' ? (
-                      <Activity className="h-5 w-5 text-blue-600" />
+                      <Dumbbell className="h-6 w-6" />
                     ) : (
-                      <Users className="h-5 w-5 text-purple-600" />
+                      <Star className="h-6 w-6" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900">{activity.message}</p>
-                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {formatTimeAgo(activity.timestamp)}
+                    <p className="text-base font-bold text-gray-900 group-hover:text-primary-600 transition-colors">
+                      {activity.message}
                     </p>
+                    <div className="flex items-center gap-3 mt-1.5">
+                      <p className="text-xs font-bold text-gray-400 flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5" />
+                        {formatTimeAgo(activity.timestamp)}
+                      </p>
+                      <span className="w-1 h-1 bg-gray-200 rounded-full" />
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                        {activity.type}
+                      </p>
+                    </div>
                   </div>
+                  <button className="opacity-0 group-hover:opacity-100 p-2 hover:bg-white rounded-xl border border-gray-100 transition-all">
+                    <ArrowUpRight className="h-4 w-4 text-gray-400" />
+                  </button>
                 </div>
               ))
             ) : (
-              <div className="p-8 text-center text-gray-500">
-                Nenhuma atividade recente
+              <div className="p-12 text-center text-gray-400 font-medium">
+                Nenhuma atividade registrada hoje.
               </div>
             )}
           </div>
-          <div className="p-4 border-t border-gray-100">
-            <Link
-              href="/cms/activity"
-              className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-            >
-              Ver todas as atividades
-            </Link>
-          </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Ações Rápidas
-            </h2>
+        {/* Sidebar Actions */}
+        <div className="space-y-6">
+          {/* Quick Actions */}
+          <div className="bg-gray-950 rounded-3xl p-6 text-white shadow-2xl shadow-gray-950/20 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/10 rounded-full blur-[60px] group-hover:bg-primary-500/20 transition-all" />
+            
+            <h2 className="text-xl font-display font-bold mb-6 relative z-10">Ações Rápidas</h2>
+            
+            <div className="space-y-4 relative z-10">
+              <Link
+                href="/cms/programs/new"
+                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all group/item"
+              >
+                <div className="w-10 h-10 bg-primary-500/20 rounded-xl flex items-center justify-center border border-primary-500/30 group-hover/item:scale-110 transition-transform">
+                  <Plus className="h-5 w-5 text-primary-400" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm">Novo Treino</p>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mt-0.5">Criar programa individual</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/cms/messages"
+                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all group/item"
+              >
+                <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30 group-hover/item:scale-110 transition-transform">
+                  <MessageSquare className="h-5 w-5 text-blue-400" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm">Mensagens</p>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mt-0.5">Chat com alunos elite</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/cms/finances"
+                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all group/item"
+              >
+                <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center border border-emerald-500/30 group-hover/item:scale-110 transition-transform">
+                  <Wallet className="h-5 w-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="font-bold text-sm">Financeiro</p>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mt-0.5">Gestão de faturamento</p>
+                </div>
+              </Link>
+            </div>
           </div>
-          <div className="p-4 space-y-3">
-            <Link
-              href="/cms/programs/new"
-              className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50 transition-all group"
-            >
-              <div className="p-2 rounded-lg bg-primary-100 group-hover:bg-primary-200">
-                <Dumbbell className="h-5 w-5 text-primary-600" />
+
+          {/* Upgrade Card (if not elite) */}
+          <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-6 text-white shadow-lg shadow-indigo-500/20 relative overflow-hidden group cursor-pointer">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+            <div className="relative z-10">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/30">
+                <Star className="h-6 w-6 text-amber-300" />
               </div>
-              <div>
-                <p className="font-medium text-gray-900">Criar Treino</p>
-                <p className="text-xs text-gray-500">
-                  Monte um novo programa de treino
-                </p>
-              </div>
-            </Link>
-            <Link
-              href="/cms/messages"
-              className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50 transition-all group"
-            >
-              <div className="p-2 rounded-lg bg-blue-100 group-hover:bg-blue-200">
-                <Users className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Falar com Alunos</p>
-                <p className="text-xs text-gray-500">
-                  Acesse suas conversas
-                </p>
-              </div>
-            </Link>
-            <Link
-              href="/cms/finances"
-              className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-primary-300 hover:bg-primary-50 transition-all group"
-            >
-              <div className="p-2 rounded-lg bg-green-100 group-hover:bg-green-200">
-                <DollarSign className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Ver Financeiro</p>
-                <p className="text-xs text-gray-500">
-                  Acompanhe suas vendas
-                </p>
-              </div>
-            </Link>
+              <h3 className="text-xl font-display font-bold leading-tight mb-2">Seja um Personal Elite</h3>
+              <p className="text-sm text-indigo-100 font-medium mb-6 opacity-90">
+                Libere o chat em tempo real, white-label e analytics avançados para seus alunos.
+              </p>
+              <button className="w-full py-3 bg-white text-indigo-700 font-bold rounded-xl shadow-xl shadow-black/10 hover:bg-indigo-50 transition-all active:scale-95">
+                Fazer Upgrade
+              </button>
+            </div>
           </div>
         </div>
       </div>

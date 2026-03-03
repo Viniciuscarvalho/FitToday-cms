@@ -26,9 +26,23 @@ import {
 import { AuthNavButtons } from '@/components/landing/AuthNavButtons';
 
 export const metadata: Metadata = {
-  title: 'FitToday - Plataforma para Personal Trainers',
+  title: 'FitToday - A Plataforma Definitiva para Personal Trainers',
   description:
-    'Gerencie seus programas de treino, alunos e pagamentos em um unico lugar. A plataforma completa para personal trainers profissionais.',
+    'Gerencie seus programas de treino, alunos e pagamentos em um único lugar. A plataforma completa para personal trainers profissionais que buscam escala e organização.',
+  keywords: ['personal trainer', 'consultoria fitness', 'gestão de alunos', 'treino online', 'fitness cms', 'stripe for trainers'],
+  openGraph: {
+    title: 'FitToday - Plataforma para Personal Trainers',
+    description: 'Gerencie seus treinos e alunos de forma profissional.',
+    images: ['https://fittoday.me/og-image.png'],
+    type: 'website',
+    locale: 'pt_BR',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FitToday - Plataforma para Personal Trainers',
+    description: 'Tudo que você precisa para profissionalizar seu trabalho como personal.',
+    images: ['https://fittoday.me/twitter-image.png'],
+  },
 };
 
 export default function SitePage() {
