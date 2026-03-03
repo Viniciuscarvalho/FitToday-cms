@@ -6,6 +6,7 @@ import { FileText, Plus, Loader2, Search, Filter } from 'lucide-react';
 import { WorkoutCard } from './WorkoutCard';
 import { UploadWorkoutModal } from './UploadWorkoutModal';
 import { WorkoutWithProgress, WorkoutStatus } from '@/types/workout';
+import { apiRequest } from '@/lib/api-client';
 
 interface Student {
   id: string;
@@ -37,13 +38,7 @@ export function WorkoutsList({ trainerId, student }: WorkoutsListProps) {
         studentId: student.id,
       });
 
-      const response = await fetch(`/api/workouts?${params}`);
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erro ao carregar treinos');
-      }
-
+      const data = await apiRequest<{ workouts: WorkoutWithProgress[] }>(`/api/workouts?${params}`);
       setWorkouts(data.workouts || []);
     } catch (err: any) {
       setError(err.message);
@@ -64,18 +59,10 @@ export function WorkoutsList({ trainerId, student }: WorkoutsListProps) {
     if (!confirm('Tem certeza que deseja arquivar este treino?')) return;
 
     try {
-      const response = await fetch(`/api/workouts/${workoutId}`, {
+      await apiRequest(`/api/workouts/${workoutId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'archived' }),
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Erro ao arquivar treino');
-      }
-
-      // Reload list
       loadWorkouts();
     } catch (err: any) {
       alert(err.message);
@@ -88,16 +75,7 @@ export function WorkoutsList({ trainerId, student }: WorkoutsListProps) {
     }
 
     try {
-      const response = await fetch(`/api/workouts/${workoutId}?hard=true`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Erro ao excluir treino');
-      }
-
-      // Reload list
+      await apiRequest(`/api/workouts/${workoutId}?hard=true`, { method: 'DELETE' });
       loadWorkouts();
     } catch (err: any) {
       alert(err.message);

@@ -14,6 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Lock,
+  BookOpen,
+  ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useState } from 'react';
@@ -21,6 +23,8 @@ import { useState } from 'react';
 const navigation = [
   { name: 'Dashboard', href: '/cms', icon: LayoutDashboard },
   { name: 'Treinos', href: '/cms/programs', icon: Dumbbell },
+  { name: 'Submissões', href: '/cms/workouts', icon: ClipboardList },
+  { name: 'Exercícios', href: '/cms/exercises', icon: BookOpen },
   { name: 'Alunos', href: '/cms/students', icon: Users },
   { name: 'Mensagens', href: '/cms/messages', icon: MessageSquare, eliteOnly: true },
   { name: 'Analytics', href: '/cms/analytics', icon: BarChart3 },
