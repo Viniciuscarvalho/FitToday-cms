@@ -59,15 +59,15 @@ service firebase.storage {
     // EXERCISE MEDIA
     // ============================================================
 
-    // Exercise thumbnails
+    // Exercise thumbnails — PUBLIC read for CDN caching
     match /exercises/{exerciseId}/thumbnail/{fileName} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isAuthenticated() && isValidImage();
     }
 
-    // Exercise videos/GIFs
+    // Exercise images/GIFs/videos — PUBLIC read for CDN caching
     match /exercises/{exerciseId}/media/{fileName} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isAuthenticated() && (isValidVideo() || isValidImage());
     }
 
@@ -112,11 +112,12 @@ service firebase.storage {
     // WORKOUT PDFs
     // ============================================================
 
-    // Workout PDF files - only trainer (owner) can write, trainer and student can read
+    // Workout files (PDF or image) — only trainer (owner) can write, trainer and student can read
     match /workout-pdfs/{trainerId}/{workoutId}/{fileName} {
       allow read: if isAuthenticated();
       allow write: if isOwner(trainerId)
-        && request.resource.contentType == 'application/pdf'
+        && (request.resource.contentType == 'application/pdf'
+            || request.resource.contentType.matches('image/.*'))
         && request.resource.size < 10 * 1024 * 1024; // 10MB max
     }
   }

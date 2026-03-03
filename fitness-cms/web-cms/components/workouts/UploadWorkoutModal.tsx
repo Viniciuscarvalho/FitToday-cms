@@ -7,6 +7,7 @@ import {
   X,
   Upload,
   FileText,
+  Image,
   Loader2,
   CheckCircle,
   AlertCircle,
@@ -47,35 +48,42 @@ export function UploadWorkoutModal({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
+  const MAX_SIZE_PDF = 10 * 1024 * 1024; // 10MB
+  const MAX_SIZE_IMAGE = 5 * 1024 * 1024; // 5MB
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const pdfFile = acceptedFiles[0];
-    if (pdfFile) {
-      if (pdfFile.type !== 'application/pdf') {
-        setError('Apenas arquivos PDF são permitidos');
+    const selected = acceptedFiles[0];
+    if (selected) {
+      if (!ALLOWED_TYPES.includes(selected.type)) {
+        setError('Apenas PDF, JPG ou PNG são permitidos');
         return;
       }
-      if (pdfFile.size > 10 * 1024 * 1024) {
-        setError('Arquivo muito grande. Máximo 10MB');
+      const maxSize = selected.type === 'application/pdf' ? MAX_SIZE_PDF : MAX_SIZE_IMAGE;
+      if (selected.size > maxSize) {
+        setError(`Arquivo muito grande. Máximo ${maxSize / (1024 * 1024)}MB`);
         return;
       }
-      setFile(pdfFile);
+      setFile(selected);
       setError(null);
 
-      // Auto-fill title from filename if empty
       if (!title) {
-        const fileName = pdfFile.name.replace('.pdf', '');
-        setTitle(fileName);
+        const baseName = selected.name.replace(/\.[^.]+$/, '');
+        setTitle(baseName);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'application/pdf': ['.pdf'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
     },
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024,
+    maxSize: MAX_SIZE_PDF,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,7 +92,7 @@ export function UploadWorkoutModal({
 
     // Validation
     if (!file) {
-      setError('Selecione um arquivo PDF');
+      setError('Selecione um arquivo PDF ou imagem');
       return;
     }
 
@@ -220,7 +228,7 @@ export function UploadWorkoutModal({
               {/* File Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Arquivo PDF *
+                  Arquivo (PDF ou imagem) *
                 </label>
                 {!file ? (
                   <div
@@ -236,17 +244,23 @@ export function UploadWorkoutModal({
                     <p className="text-gray-600 mb-1">
                       {isDragActive
                         ? 'Solte o arquivo aqui'
-                        : 'Arraste um PDF ou clique para selecionar'}
+                        : 'Arraste um PDF ou imagem, ou clique para selecionar'}
                     </p>
-                    <p className="text-sm text-gray-400">Máximo 10MB</p>
+                    <p className="text-sm text-gray-400">PDF até 10MB · JPG/PNG até 5MB</p>
                   </div>
                 ) : (
                   <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-                    <FileText className="h-10 w-10 text-red-500" />
+                    {file.type.startsWith('image/') ? (
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt="Preview"
+                        className="h-12 w-12 rounded-lg object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <FileText className="h-10 w-10 text-red-500 flex-shrink-0" />
+                    )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">
-                        {file.name}
-                      </p>
+                      <p className="font-medium text-gray-900 truncate">{file.name}</p>
                       <p className="text-sm text-gray-500">
                         {(file.size / (1024 * 1024)).toFixed(2)} MB
                       </p>

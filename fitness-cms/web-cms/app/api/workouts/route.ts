@@ -6,8 +6,9 @@ import { isWithinStudentLimit, PLANS, PlanId } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_MIME_TYPES = ['application/pdf'];
+const MAX_FILE_SIZE_PDF = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE_IMAGE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
 // POST /api/workouts - Create a new workout
 export async function POST(request: NextRequest) {
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!file) {
-      return NextResponse.json({ error: 'PDF file is required' }, { status: 400 });
+      return NextResponse.json({ error: 'File is required' }, { status: 400 });
     }
 
     if (!studentId || !title) {
@@ -53,15 +54,16 @@ export async function POST(request: NextRequest) {
     // Validate file type
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Only PDF files are allowed' },
+        { error: 'Only PDF, JPG, and PNG files are allowed' },
         { status: 400 }
       );
     }
 
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
+    // Validate file size (PDF: 10MB, image: 5MB)
+    const maxSize = file.type === 'application/pdf' ? MAX_FILE_SIZE_PDF : MAX_FILE_SIZE_IMAGE;
+    if (file.size > maxSize) {
       return NextResponse.json(
-        { error: `File size exceeds maximum of ${MAX_FILE_SIZE / (1024 * 1024)}MB` },
+        { error: `File size exceeds maximum of ${maxSize / (1024 * 1024)}MB` },
         { status: 400 }
       );
     }
