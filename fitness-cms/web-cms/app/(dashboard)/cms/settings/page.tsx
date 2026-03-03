@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   User,
   Bell,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { doc, updateDoc, Firestore } from 'firebase/firestore';
+import { updateProfile } from 'firebase/auth';
 
 type SettingsTab = 'profile' | 'notifications' | 'billing' | 'security';
 
@@ -65,6 +66,11 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Profile form state
   const [profileForm, setProfileForm] = useState<ProfileFormData>({
@@ -121,16 +127,56 @@ export default function SettingsPage() {
     handleProfileChange('specialties', newSpecialties);
   };
 
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhotoError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+      setPhotoError('Apenas JPG, PNG ou GIF são permitidos');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setPhotoError('Imagem muito grande. Máximo 2MB');
+      return;
+    }
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
   const handleSaveProfile = async () => {
     if (!user) return;
 
     try {
       setSaving(true);
-      const { db } = await import('@/lib/firebase');
+
+      let photoURL = user.photoURL;
+
+      if (photoFile) {
+        setUploadingPhoto(true);
+        const { storage } = await import('@/lib/firebase');
+        if (storage) {
+          const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+          const ext = photoFile.name.split('.').pop() || 'jpg';
+          const storageRef = ref(storage as any, `users/${user.uid}/profile/avatar.${ext}`);
+          await uploadBytes(storageRef, photoFile);
+          photoURL = await getDownloadURL(storageRef);
+        }
+        setUploadingPhoto(false);
+      }
+
+      const { db, auth } = await import('@/lib/firebase');
       if (!db) throw new Error('Firebase not configured');
+
+      if (auth?.currentUser) {
+        await updateProfile(auth.currentUser, {
+          displayName: profileForm.displayName,
+          ...(photoURL ? { photoURL } : {}),
+        });
+      }
 
       await updateDoc(doc(db as Firestore, 'users', user.uid), {
         displayName: profileForm.displayName,
+        ...(photoURL ? { photoURL } : {}),
         'profile.bio': profileForm.bio,
         'profile.specialties': profileForm.specialties,
         'profile.experience': profileForm.experience,
@@ -142,6 +188,8 @@ export default function SettingsPage() {
       });
 
       await refreshUser();
+      setPhotoFile(null);
+      setPhotoPreview(null);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
@@ -149,6 +197,7 @@ export default function SettingsPage() {
       alert('Erro ao salvar perfil');
     } finally {
       setSaving(false);
+      setUploadingPhoto(false);
     }
   };
 
@@ -180,11 +229,11 @@ export default function SettingsPage() {
       {/* Avatar */}
       <div className="flex items-center gap-6">
         <div className="relative">
-          {user?.photoURL ? (
+          {(photoPreview || user?.photoURL) ? (
             <img
-              src={user.photoURL}
+              src={photoPreview || user?.photoURL || ''}
               alt={profileForm.displayName}
-              className="w-24 h-24 rounded-full object-cover"
+              className="w-24 h-24 rounded-full object-cover border-2 border-gray-100"
             />
           ) : (
             <div className="w-24 h-24 rounded-full bg-primary-100 flex items-center justify-center">
@@ -193,15 +242,38 @@ export default function SettingsPage() {
               </span>
             </div>
           )}
-          <button className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-lg border border-gray-200 hover:bg-gray-50">
-            <Camera className="h-4 w-4 text-gray-600" />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingPhoto}
+            className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+          >
+            {uploadingPhoto ? (
+              <Loader2 className="h-4 w-4 text-gray-600 animate-spin" />
+            ) : (
+              <Camera className="h-4 w-4 text-gray-600" />
+            )}
           </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif"
+            onChange={handlePhotoSelect}
+            className="hidden"
+          />
         </div>
         <div>
           <h3 className="font-medium text-gray-900">Foto de perfil</h3>
-          <p className="text-sm text-gray-500">
-            JPG, PNG ou GIF. Máximo 2MB.
-          </p>
+          <p className="text-sm text-gray-500">JPG, PNG ou GIF. Máximo 2MB.</p>
+          {photoPreview && (
+            <p className="text-xs text-primary-600 mt-1">Nova foto selecionada — salve para confirmar</p>
+          )}
+          {photoError && (
+            <p className="flex items-center gap-1 text-xs text-red-600 mt-1">
+              <AlertCircle className="h-3 w-3" />
+              {photoError}
+            </p>
+          )}
         </div>
       </div>
 
