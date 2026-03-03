@@ -12,6 +12,8 @@ import {
   Clock,
   Activity,
   Plus,
+  MessageSquare,
+  Wallet,
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import {
