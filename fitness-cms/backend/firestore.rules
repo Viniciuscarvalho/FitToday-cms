@@ -128,7 +128,7 @@ service cloud.firestore {
     // ============================================================
 
     match /exercises/{exerciseId} {
-      // Exercícios do sistema podem ser lidos por todos
+      // Exercícios do sistema (catálogo) podem ser lidos por qualquer autenticado
       // Exercícios de trainers apenas por eles e seus alunos
       allow read: if isAuthenticated() && (
         resource.data.source == 'system' ||
@@ -137,13 +137,17 @@ service cloud.firestore {
         (isStudent() && exists(/databases/$(database)/documents/subscriptions/$(request.auth.uid + '_' + resource.data.trainerId)))
       );
 
-      // Trainers podem criar exercícios personalizados
+      // Trainers podem criar exercícios personalizados (source: 'trainer')
       allow create: if isTrainer() &&
+        request.resource.data.source == 'trainer' &&
         request.resource.data.trainerId == request.auth.uid;
 
-      // Apenas o criador pode atualizar
-      allow update: if resource.data.trainerId == request.auth.uid;
+      // Apenas o criador pode atualizar seus exercícios
+      // Exercícios do sistema são atualizados apenas via Admin SDK
+      allow update: if isAuthenticated() &&
+        resource.data.trainerId == request.auth.uid;
 
+      // Não permitir deleção (soft delete via isActive: false)
       allow delete: if false;
     }
 

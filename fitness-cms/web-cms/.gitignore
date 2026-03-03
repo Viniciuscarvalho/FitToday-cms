@@ -36,6 +36,10 @@ test-results/
 .DS_Store
 Thumbs.db
 
+# Firebase credentials
+serviceAccountKey.json
+
 # Misc
 *.pem
 .vercel
+web-cms/scripts/free-exercise-db/
