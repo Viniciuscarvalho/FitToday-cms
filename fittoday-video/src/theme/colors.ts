@@ -1,0 +1,61 @@
+export const colors = {
+  primary: {
+    50: "#ecfdf5",
+    100: "#d1fae5",
+    200: "#a7f3d0",
+    300: "#6ee7b7",
+    400: "#34d399",
+    500: "#10b981",
+    600: "#059669",
+    700: "#047857",
+    800: "#065f46",
+    900: "#064e3b",
+    950: "#022c22",
+  },
+  teal: {
+    500: "#14b8a6",
+    600: "#0d9488",
+    700: "#0f766e",
+  },
+  accent: {
+    50: "#fff7ed",
+    100: "#ffedd5",
+    200: "#fed7aa",
+    300: "#fdba74",
+    400: "#fb923c",
+    500: "#f97316",
+    600: "#ea580c",
+    700: "#c2410c",
+  },
+  gray: {
+    50: "#f9fafb",
+    100: "#f3f4f6",
+    200: "#e5e7eb",
+    300: "#d1d5db",
+    400: "#9ca3af",
+    500: "#6b7280",
+    600: "#4b5563",
+    700: "#374151",
+    800: "#1f2937",
+    900: "#111827",
+    950: "#030712",
+  },
+  white: "#ffffff",
+  black: "#000000",
+
+  // Gradientes dos stat cards do CMS
+  statGradients: {
+    students: ["#3b82f6", "#4f46e5"] as const,
+    programs: ["#a855f7", "#d946ef"] as const,
+    revenue: ["#10b981", "#0d9488"] as const,
+    rating: ["#f59e0b", "#f97316"] as const,
+  },
+
+  // Cores especificas do CMS
+  sidebar: "#030712",
+  chartPrimary: "#0d9488",
+  success: "#22c55e",
+  warning: "#f59e0b",
+  error: "#ef4444",
+  info: "#3b82f6",
+};

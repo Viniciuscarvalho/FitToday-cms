@@ -1,0 +1,31 @@
+{
+  "name": "fittoday-video",
+  "version": "1.0.0",
+  "description": "FitToday CMS Tutorial Video Series built with Remotion",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts",
+    "render:all": "for comp in 01-Intro 02-Dashboard 03-Treinos 04-Alunos 05-Mensagens 06-Analytics 07-Financeiro 08-Configuracoes 09-Outro; do npx remotion render src/index.ts $comp out/$comp.mp4; done",
+    "render:master": "remotion render src/index.ts MasterTutorial out/master-tutorial.mp4",
+    "upgrade": "remotion upgrade"
+  },
+  "dependencies": {
+    "@react-three/drei": "^9.0.0",
+    "@react-three/fiber": "^8.0.0",
+    "@remotion/google-fonts": "^4.0.0",
+    "@remotion/paths": "^4.0.0",
+    "@remotion/three": "^4.0.0",
+    "@remotion/transitions": "^4.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "remotion": "^4.0.0",
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "@remotion/bundler": "^4.0.0",
+    "@remotion/cli": "^4.0.0",
+    "@types/react": "^18.2.0",
+    "@types/three": "^0.160.0",
+    "typescript": "^5.3.0"
+  }
+}
