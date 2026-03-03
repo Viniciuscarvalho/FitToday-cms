@@ -562,6 +562,7 @@ function getNotificationDestination(data: NotificationData): string {
 
 async function createChatRoom(trainerId: string, studentId: string, programId: string) {
   const chatRef = db.collection('chats').doc();
+  const welcomeText = 'Bem-vindo! Este é o seu canal de comunicação direta com o personal trainer. Qualquer dúvida, é só mandar mensagem!';
 
   await chatRef.set({
     id: chatRef.id,
@@ -569,8 +570,9 @@ async function createChatRoom(trainerId: string, studentId: string, programId: s
     studentId,
     programId,
     isActive: true,
+    lastMessage: welcomeText,
     unreadCountTrainer: 0,
-    unreadCountStudent: 0,
+    unreadCountStudent: 1,
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
@@ -581,11 +583,95 @@ async function createChatRoom(trainerId: string, studentId: string, programId: s
     senderId: 'system',
     senderRole: 'system',
     type: 'text',
-    content: 'Bem-vindo! Este é o seu canal de comunicação direta com o personal trainer. Qualquer dúvida, é só mandar mensagem!',
+    content: welcomeText,
     status: 'sent',
-    sentAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 }
+
+/**
+ * Trigger: nova mensagem no chat → push notification para o destinatário.
+ * Atualiza lastMessage, unreadCount no chat doc e envia FCM push ao aluno.
+ */
+export const onNewChatMessage = functions.firestore
+  .document('chats/{chatId}/messages/{messageId}')
+  .onCreate(async (snap, context) => {
+    const messageData = snap.data();
+    if (!messageData) return;
+
+    const { chatId } = context.params;
+    const senderId: string = messageData.senderId;
+
+    // Skip system messages (e.g. welcome message)
+    if (senderId === 'system') return;
+
+    // Fetch parent chat document
+    const chatDoc = await db.collection('chats').doc(chatId).get();
+    if (!chatDoc.exists) return;
+
+    const chat = chatDoc.data()!;
+    const { trainerId, studentId } = chat;
+
+    // Determine recipient
+    const recipientId = senderId === trainerId ? studentId : trainerId;
+    const unreadField = recipientId === trainerId ? 'unreadCountTrainer' : 'unreadCountStudent';
+
+    // Update chat document with lastMessage and unreadCount
+    await chatDoc.ref.update({
+      lastMessage: messageData.content || '',
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      [unreadField]: admin.firestore.FieldValue.increment(1),
+    });
+
+    // Write in-app notification
+    await sendNotification(recipientId, recipientId === trainerId ? 'trainer' : 'student', {
+      type: 'new_message',
+      title: 'Nova mensagem',
+      body: (messageData.content || 'Você recebeu uma mensagem').substring(0, 100),
+      relatedEntityType: 'message',
+      relatedEntityId: chatId,
+    });
+
+    // Send FCM push to student (students use the mobile app with FCM tokens)
+    if (recipientId === studentId) {
+      try {
+        const studentDoc = await db.collection('users').doc(studentId).get();
+        const fcmToken: string | undefined = studentDoc.data()?.fcmToken;
+
+        if (fcmToken) {
+          const senderDoc = await db.collection('users').doc(senderId).get();
+          const senderName: string = senderDoc.data()?.displayName || 'Seu Personal';
+
+          await admin.messaging().send({
+            token: fcmToken,
+            notification: {
+              title: `${senderName} enviou uma mensagem`,
+              body: (messageData.content || 'Nova mensagem').substring(0, 100),
+            },
+            data: {
+              type: 'new_message',
+              chatId,
+            },
+            apns: {
+              payload: {
+                aps: {
+                  badge: 1,
+                  sound: 'default',
+                },
+              },
+            },
+          });
+        }
+      } catch (pushError: any) {
+        if (pushError?.code === 'messaging/registration-token-not-registered') {
+          console.warn(`Stale FCM token for student ${studentId}, clearing`);
+          await db.collection('users').doc(studentId).update({ fcmToken: null });
+        } else {
+          console.error('FCM push error for chat message:', pushError);
+        }
+      }
+    }
+  });
 
 
 // ============================================================

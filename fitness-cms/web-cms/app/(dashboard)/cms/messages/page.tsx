@@ -30,6 +30,7 @@ import {
   query,
   where,
   getDocs,
+  getDoc,
   orderBy,
   limit,
   addDoc,
@@ -96,32 +97,37 @@ export default function MessagesPage() {
       const { db } = await import('@/lib/firebase');
       if (!db) return;
 
-      // Load subscriptions to get students
-      const subsRef = collection(db as Firestore, 'subscriptions');
-      const subsQuery = query(
-        subsRef,
+      // Query real chat rooms from chats/ collection
+      const chatsRef = collection(db as Firestore, 'chats');
+      const chatsQuery = query(
+        chatsRef,
         where('trainerId', '==', user.uid),
-        where('status', '==', 'active')
+        orderBy('updatedAt', 'desc')
       );
-      const subsSnapshot = await getDocs(subsQuery);
+      const chatsSnapshot = await getDocs(chatsQuery);
 
-      // Create mock conversations from subscriptions
-      const conversationsList: Conversation[] = subsSnapshot.docs.map((doc, index) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          participantId: data.studentId,
-          participantName: data.studentName || `Aluno ${index + 1}`,
-          participantPhoto: data.studentPhoto,
-          lastMessage: 'Clique para iniciar uma conversa',
-          lastMessageAt: data.createdAt?.toDate?.() || new Date(),
-          unreadCount: Math.floor(Math.random() * 3),
-          isPinned: false,
-        };
-      });
+      // Build conversations from chat docs, fetching student profiles
+      const conversationsList: Conversation[] = await Promise.all(
+        chatsSnapshot.docs.map(async (chatDoc) => {
+          const data = chatDoc.data();
 
-      // Sort by last message date
-      conversationsList.sort((a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime());
+          // Fetch student profile for display name and photo
+          const studentDocRef = doc(db as Firestore, 'users', data.studentId);
+          const studentDoc = await getDoc(studentDocRef);
+          const studentData = studentDoc.exists() ? studentDoc.data() : null;
+
+          return {
+            id: chatDoc.id,
+            participantId: data.studentId,
+            participantName: studentData?.displayName || 'Aluno',
+            participantPhoto: studentData?.photoURL || undefined,
+            lastMessage: data.lastMessage || 'Clique para iniciar uma conversa',
+            lastMessageAt: data.updatedAt?.toDate?.() || new Date(),
+            unreadCount: data.unreadCountTrainer || 0,
+            isPinned: false,
+          };
+        })
+      );
 
       setConversations(conversationsList);
 
@@ -143,17 +149,24 @@ export default function MessagesPage() {
       const { db } = await import('@/lib/firebase');
       if (!db) return;
 
-      const messagesRef = collection(db as Firestore, 'conversations', conversationId, 'messages');
+      const messagesRef = collection(db as Firestore, 'chats', conversationId, 'messages');
       const messagesQuery = query(messagesRef, orderBy('createdAt', 'asc'), limit(100));
 
       // Real-time listener
       const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
-        const messagesList = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate?.() || new Date(),
-          readAt: doc.data().readAt?.toDate?.() || undefined,
-        })) as Message[];
+        const messagesList = snapshot.docs.map((msgDoc) => {
+          const data = msgDoc.data();
+          return {
+            id: msgDoc.id,
+            senderId: data.senderId,
+            content: data.content,
+            type: data.type || 'text',
+            fileUrl: data.fileUrl,
+            fileName: data.fileName,
+            createdAt: data.createdAt?.toDate?.() || data.sentAt?.toDate?.() || new Date(),
+            readAt: data.readAt?.toDate?.() || undefined,
+          } as Message;
+        });
 
         setMessages(messagesList);
       });
@@ -183,14 +196,14 @@ export default function MessagesPage() {
 
       // Add message to Firestore
       await addDoc(
-        collection(db as Firestore, 'conversations', selectedConversation.id, 'messages'),
+        collection(db as Firestore, 'chats', selectedConversation.id, 'messages'),
         messageData
       );
 
-      // Update last message in conversation
-      await updateDoc(doc(db as Firestore, 'conversations', selectedConversation.id), {
+      // Update last message in chat doc (Cloud Function handles unreadCount)
+      await updateDoc(doc(db as Firestore, 'chats', selectedConversation.id), {
         lastMessage: newMessage.trim(),
-        lastMessageAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
       });
 
       // Add to local state immediately for better UX
