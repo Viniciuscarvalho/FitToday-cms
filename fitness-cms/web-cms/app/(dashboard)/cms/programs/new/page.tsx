@@ -10,7 +10,6 @@ import {
   Image,
   Calendar,
   Dumbbell,
-  DollarSign,
   Save,
   Loader2,
 } from 'lucide-react';
@@ -22,7 +21,6 @@ import { BasicInfoStep } from '@/components/program-builder/BasicInfoStep';
 import { MediaStep } from '@/components/program-builder/MediaStep';
 import { ScheduleStep } from '@/components/program-builder/ScheduleStep';
 import { WorkoutsStep } from '@/components/program-builder/WorkoutsStep';
-import { PricingStep } from '@/components/program-builder/PricingStep';
 
 export interface ProgramFormData {
   // Basic Info
@@ -64,10 +62,6 @@ export interface ProgramFormData {
     }[];
   }[];
 
-  // Pricing
-  price: number;
-  originalPrice: number;
-  currency: string;
 }
 
 const steps = [
@@ -75,7 +69,6 @@ const steps = [
   { id: 'media', name: 'Mídia', icon: Image },
   { id: 'schedule', name: 'Cronograma', icon: Calendar },
   { id: 'workouts', name: 'Treinos', icon: Dumbbell },
-  { id: 'pricing', name: 'Preço', icon: DollarSign },
 ];
 
 const initialFormData: ProgramFormData = {
@@ -95,9 +88,6 @@ const initialFormData: ProgramFormData = {
   workoutsPerWeek: 4,
   averageWorkoutDuration: 60,
   weeks: [],
-  price: 0,
-  originalPrice: 0,
-  currency: 'BRL',
 };
 
 export default function NewProgramPage() {
@@ -144,11 +134,6 @@ export default function NewProgramPage() {
         break;
       case 3: // Workouts
         // Workouts validation can be more complex
-        break;
-      case 4: // Pricing
-        if (formData.price < 0) {
-          newErrors.price = 'Preço não pode ser negativo';
-        }
         break;
     }
 
@@ -198,12 +183,6 @@ export default function NewProgramPage() {
       includesNutrition: false,
       includesSupplements: false,
       hasVideoGuides: !!formData.previewVideo,
-    },
-    pricing: {
-      type: 'one_time' as const,
-      price: formData.price,
-      currency: formData.currency,
-      ...(formData.originalPrice ? { originalPrice: formData.originalPrice } : {}),
     },
     weeks: formData.weeks,
     status,
@@ -293,14 +272,6 @@ export default function NewProgramPage() {
       case 3:
         return (
           <WorkoutsStep
-            data={formData}
-            onChange={updateFormData}
-            errors={errors}
-          />
-        );
-      case 4:
-        return (
-          <PricingStep
             data={formData}
             onChange={updateFormData}
             errors={errors}

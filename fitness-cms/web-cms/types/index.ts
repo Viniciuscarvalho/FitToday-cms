@@ -164,7 +164,7 @@ export interface WorkoutProgram {
     includesSupplements: boolean;
     hasVideoGuides: boolean;
   };
-  pricing: {
+  pricing?: {
     type: 'one_time' | 'subscription';
     price: number;
     currency: 'BRL' | 'USD';
@@ -257,34 +257,59 @@ export type MuscleGroup =
   | 'lower_back'
   | 'traps'
   | 'lats'
-  | 'rhomboids';
+  | 'rhomboids'
+  | 'full_body';
+
+export type ExerciseCategory =
+  | 'chest'
+  | 'back'
+  | 'shoulders'
+  | 'biceps'
+  | 'triceps'
+  | 'forearms'
+  | 'core'
+  | 'quadriceps'
+  | 'hamstrings'
+  | 'glutes'
+  | 'calves'
+  | 'full_body'
+  | 'cardio'
+  | 'stretching';
 
 export interface Exercise {
   id: string;
-  name: string;
-  alternativeNames?: string[];
-  description: string;
+  name: {
+    en: string;
+    pt: string;
+  };
+  aliases: string[];
+  description?: string;
+  category: ExerciseCategory;
   muscleGroups: {
     primary: MuscleGroup[];
     secondary: MuscleGroup[];
   };
-  category: string;
-  equipment: string[];
+  equipment: string;
+  force?: 'push' | 'pull' | 'static';
+  level: 'beginner' | 'intermediate' | 'advanced';
+  mechanic?: 'compound' | 'isolation';
+  instructions: {
+    en: string[];
+    pt: string[];
+  };
   media: {
     thumbnailURL: string;
+    images: string[];
     gifURL?: string;
     videoURL?: string;
   };
-  instructions: {
-    setup: string;
-    execution: string[];
-    tips: string[];
-    commonMistakes: string[];
-  };
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  isCompound: boolean;
   source: 'system' | 'trainer';
   trainerId?: string;
+  isActive: boolean;
+  isApproved?: boolean;
+  wgerBaseId?: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ============================================================
@@ -417,24 +442,20 @@ export interface ProgressEntry {
 
 export interface Chat {
   id: string;
-  participants: string[];
   trainerId: string;
   studentId: string;
-  lastMessage?: {
-    text: string;
-    sentBy: string;
-    sentAt: Timestamp;
-  };
-  unreadCount: Record<string, number>;
+  lastMessage?: string;
+  unreadCountTrainer: number;
+  unreadCountStudent: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
 
 export interface ChatMessage {
   id: string;
-  text: string;
-  sentBy: string;
-  sentAt: Timestamp;
+  content: string;
+  senderId: string;
+  createdAt: Timestamp;
   readAt?: Timestamp;
   type: 'text' | 'image' | 'file';
   mediaUrl?: string;

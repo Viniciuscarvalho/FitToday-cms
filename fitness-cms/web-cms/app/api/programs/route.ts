@@ -230,12 +230,6 @@ export async function POST(request: NextRequest) {
         includesSupplements: body.content?.includesSupplements || false,
         hasVideoGuides: body.content?.hasVideoGuides || false,
       },
-      pricing: {
-        type: body.pricing?.type || 'one_time',
-        price: body.pricing?.price || 0,
-        currency: body.pricing?.currency || 'BRL',
-        ...(body.pricing?.originalPrice ? { originalPrice: body.pricing.originalPrice } : {}),
-      },
       stats: {
         totalSales: 0,
         activeStudents: 0,

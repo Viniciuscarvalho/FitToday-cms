@@ -128,13 +128,6 @@ export default function ProgramsPage() {
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
   const getStatusBadge = (status: string) => {
     const styles = {
       draft: 'bg-gray-100 text-gray-600',
@@ -331,14 +324,11 @@ export default function ProgramsPage() {
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                <div className="flex items-center pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-1 text-sm text-gray-500">
                     <Users className="h-4 w-4" />
                     <span>{program.stats?.activeStudents || 0} alunos</span>
                   </div>
-                  <span className="font-semibold text-primary-600">
-                    {formatCurrency(program.pricing?.price || 0)}
-                  </span>
                 </div>
               </div>
             </div>

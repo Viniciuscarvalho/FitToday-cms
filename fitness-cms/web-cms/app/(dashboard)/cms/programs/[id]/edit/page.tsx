@@ -10,7 +10,6 @@ import {
   Image,
   Calendar,
   Dumbbell,
-  DollarSign,
   Save,
   Loader2,
   Archive,
@@ -25,7 +24,6 @@ import { BasicInfoStep } from '@/components/program-builder/BasicInfoStep';
 import { MediaStep } from '@/components/program-builder/MediaStep';
 import { ScheduleStep } from '@/components/program-builder/ScheduleStep';
 import { WorkoutsStep } from '@/components/program-builder/WorkoutsStep';
-import { PricingStep } from '@/components/program-builder/PricingStep';
 import { ProgramFormData } from '../../new/page';
 
 const steps = [
@@ -33,7 +31,6 @@ const steps = [
   { id: 'media', name: 'Mídia', icon: Image },
   { id: 'schedule', name: 'Cronograma', icon: Calendar },
   { id: 'workouts', name: 'Treinos', icon: Dumbbell },
-  { id: 'pricing', name: 'Preço', icon: DollarSign },
 ];
 
 const initialFormData: ProgramFormData = {
@@ -53,9 +50,6 @@ const initialFormData: ProgramFormData = {
   workoutsPerWeek: 4,
   averageWorkoutDuration: 60,
   weeks: [],
-  price: 0,
-  originalPrice: 0,
-  currency: 'BRL',
 };
 
 export default function EditProgramPage() {
@@ -106,9 +100,6 @@ export default function EditProgramPage() {
           workoutsPerWeek: data.duration?.daysPerWeek || data.workoutsPerWeek || 4,
           averageWorkoutDuration: data.duration?.avgSessionMinutes || data.averageWorkoutDuration || 60,
           weeks: data.weeks || [],
-          price: data.pricing?.price || data.price || 0,
-          originalPrice: data.pricing?.originalPrice || data.originalPrice || 0,
-          currency: data.pricing?.currency || data.currency || 'BRL',
         });
       } catch (error: any) {
         console.error('Error loading program:', error);
@@ -150,11 +141,6 @@ export default function EditProgramPage() {
         }
         if (formData.workoutsPerWeek < 1 || formData.workoutsPerWeek > 7) {
           newErrors.workoutsPerWeek = 'Treinos por semana deve ser entre 1 e 7';
-        }
-        break;
-      case 4:
-        if (formData.price < 0) {
-          newErrors.price = 'Preço não pode ser negativo';
         }
         break;
     }
@@ -206,12 +192,6 @@ export default function EditProgramPage() {
       includesSupplements: false,
       hasVideoGuides: !!formData.previewVideo,
     },
-    pricing: {
-      type: 'one_time' as const,
-      price: formData.price,
-      currency: formData.currency as 'BRL' | 'USD',
-      ...(formData.originalPrice ? { originalPrice: formData.originalPrice } : {}),
-    },
     weeks: formData.weeks,
     status,
   });
@@ -258,7 +238,7 @@ export default function EditProgramPage() {
 
     if (newStatus === 'published') {
       // Validate all steps before publishing
-      for (let i = 0; i <= 4; i++) {
+      for (let i = 0; i <= 3; i++) {
         if (!validateStep(i)) {
           setCurrentStep(i);
           return;
@@ -314,14 +294,6 @@ export default function EditProgramPage() {
       case 3:
         return (
           <WorkoutsStep
-            data={formData}
-            onChange={updateFormData}
-            errors={errors}
-          />
-        );
-      case 4:
-        return (
-          <PricingStep
             data={formData}
             onChange={updateFormData}
             errors={errors}
