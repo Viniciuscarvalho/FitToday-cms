@@ -141,15 +141,24 @@ export async function POST(
       );
     }
 
-    // Verify student has/had a workout relationship with this trainer
-    const workoutRelation = await adminDb
-      .collection('workouts')
-      .where('trainerId', '==', trainerId)
-      .where('studentId', '==', authResult.uid)
-      .limit(1)
-      .get();
+    // Verify student has/had a relationship with this trainer.
+    // Check subscriptions (app-connected students) OR workouts (CMS-assigned).
+    const [subscriptionRelation, workoutRelation] = await Promise.all([
+      adminDb
+        .collection('subscriptions')
+        .where('trainerId', '==', trainerId)
+        .where('studentId', '==', authResult.uid)
+        .limit(1)
+        .get(),
+      adminDb
+        .collection('workouts')
+        .where('trainerId', '==', trainerId)
+        .where('studentId', '==', authResult.uid)
+        .limit(1)
+        .get(),
+    ]);
 
-    if (workoutRelation.empty) {
+    if (subscriptionRelation.empty && workoutRelation.empty) {
       return NextResponse.json(
         { error: 'You must be a student of this trainer to leave a review', code: 'NOT_ENROLLED' },
         { status: 403 }
