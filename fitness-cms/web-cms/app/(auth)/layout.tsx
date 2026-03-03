@@ -1,5 +1,3 @@
-import { Dumbbell } from 'lucide-react';
-
 import { Dumbbell, Star, Users, TrendingUp } from 'lucide-react';
 
 export default function AuthLayout({
