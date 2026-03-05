@@ -7,15 +7,15 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <div className="min-h-screen bg-brand-background text-brand-textSecondary">
+      <header className="bg-brand-background border-b border-brand-outline px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Link href="/site" className="flex items-center gap-2 font-bold text-xl text-gray-900">
+          <Link href="/" className="flex items-center gap-2 font-bold text-xl text-white">
             FitToday
           </Link>
           <Link
             href="/login"
-            className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-sm text-brand-textTertiary hover:text-white transition-colors"
           >
             Entrar
           </Link>
@@ -23,12 +23,12 @@ export default function PrivacyPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Política de Privacidade</h1>
-        <p className="text-gray-500 mb-10">Última atualização: fevereiro de 2026</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Política de Privacidade</h1>
+        <p className="text-brand-textTertiary mb-10">Última atualização: março de 2026</p>
 
-        <div className="space-y-8 text-gray-700 leading-relaxed">
+        <div className="space-y-8 leading-relaxed">
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">1. Introdução</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">1. Introdução</h2>
             <p>
               A FitToday valoriza a privacidade dos seus usuários. Esta Política de Privacidade
               descreve como coletamos, usamos, armazenamos e protegemos suas informações pessoais
@@ -38,7 +38,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">2. Dados que Coletamos</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">2. Dados que Coletamos</h2>
             <p>Coletamos os seguintes tipos de dados:</p>
             <ul className="list-disc list-inside mt-3 space-y-2">
               <li>
@@ -65,7 +65,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">3. Como Usamos seus Dados</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">3. Como Usamos seus Dados</h2>
             <p>Utilizamos seus dados para:</p>
             <ul className="list-disc list-inside mt-3 space-y-1">
               <li>Fornecer e melhorar nossos serviços;</li>
@@ -77,7 +77,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">4. Compartilhamento de Dados</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">4. Compartilhamento de Dados</h2>
             <p>Seus dados podem ser compartilhados com:</p>
             <ul className="list-disc list-inside mt-3 space-y-2">
               <li>
@@ -86,7 +86,7 @@ export default function PrivacyPage() {
                   href="https://stripe.com/br/privacy"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-primary-600 hover:text-primary-700 underline"
+                  className="text-brand-primary hover:text-brand-secondary underline"
                 >
                   Política de Privacidade da Stripe
                 </a>
@@ -106,7 +106,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">5. Armazenamento e Segurança</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">5. Armazenamento e Segurança</h2>
             <p>
               Seus dados são armazenados em servidores seguros do Firebase (Google Cloud Platform),
               com criptografia em trânsito (TLS) e em repouso. Implementamos medidas técnicas e
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">6. Seus Direitos (LGPD)</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">6. Seus Direitos (LGPD)</h2>
             <p>De acordo com a LGPD, você tem o direito de:</p>
             <ul className="list-disc list-inside mt-3 space-y-1">
               <li>Confirmar a existência de tratamento dos seus dados;</li>
@@ -128,17 +128,17 @@ export default function PrivacyPage() {
             <p className="mt-3">
               Para exercer seus direitos, entre em contato pelo email{' '}
               <a
-                href="mailto:privacidade@fittoday.com.br"
-                className="text-primary-600 hover:text-primary-700 underline"
+                href="mailto:privacidade@fittoday.me"
+                className="text-brand-primary hover:text-brand-secondary underline"
               >
-                privacidade@fittoday.com.br
+                privacidade@fittoday.me
               </a>
               .
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">7. Cookies</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">7. Cookies</h2>
             <p>
               Utilizamos cookies essenciais para manter sua sessão autenticada na plataforma.
               Não utilizamos cookies de rastreamento ou publicidade de terceiros.
@@ -146,7 +146,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">8. Retenção de Dados</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">8. Retenção de Dados</h2>
             <p>
               Mantemos seus dados pelo tempo necessário para fornecer nossos serviços e cumprir
               obrigações legais. Após o encerramento da sua conta, seus dados são excluídos em
@@ -155,7 +155,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">9. Alterações nesta Política</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">9. Alterações nesta Política</h2>
             <p>
               Podemos atualizar esta Política de Privacidade periodicamente. Notificaremos você
               por email sobre alterações significativas. Recomendamos revisar esta política
@@ -164,28 +164,28 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">10. Contato</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">10. Contato</h2>
             <p>
               Para dúvidas sobre esta Política de Privacidade ou sobre o tratamento dos seus
               dados, entre em contato pelo email{' '}
               <a
-                href="mailto:privacidade@fittoday.com.br"
-                className="text-primary-600 hover:text-primary-700 underline"
+                href="mailto:privacidade@fittoday.me"
+                className="text-brand-primary hover:text-brand-secondary underline"
               >
-                privacidade@fittoday.com.br
+                privacidade@fittoday.me
               </a>
               .
             </p>
           </section>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+        <div className="mt-12 pt-8 border-t border-brand-outline flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-brand-textTertiary">
           <p>© 2026 FitToday. Todos os direitos reservados.</p>
           <div className="flex gap-6">
-            <Link href="/terms" className="hover:text-gray-700 transition-colors">
+            <Link href="/terms" className="hover:text-white transition-colors">
               Termos de Uso
             </Link>
-            <Link href="/site" className="hover:text-gray-700 transition-colors">
+            <Link href="/" className="hover:text-white transition-colors">
               Página Inicial
             </Link>
           </div>

@@ -119,9 +119,13 @@ async function downloadImage(url) {
  * The directory name in free-exercise-db is the original exercise name (capitalized, with spaces).
  */
 function findLocalImages(exerciseName) {
-  // free-exercise-db stores images in folders named after the exercise
-  // e.g., "exercises/Barbell Bench Press/0.jpg"
-  const dirPath = join(FREE_DB_EXERCISES_DIR, exerciseName);
+  // free-exercise-db folder names replace spaces, slashes, parens, commas with underscores
+  // e.g., "3/4 Sit-Up" → "3_4_Sit-Up", "Butt Lift (Bridge)" → "Butt_Lift_Bridge"
+  const folderName = exerciseName
+    .replace(/[/ (),]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '');
+  const dirPath = join(FREE_DB_EXERCISES_DIR, folderName);
 
   if (!existsSync(dirPath)) {
     return [];
