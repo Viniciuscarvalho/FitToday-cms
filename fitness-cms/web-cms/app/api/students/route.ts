@@ -1,6 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
-import { FieldValue, Firestore } from 'firebase-admin/firestore';
+import { FieldValue, Firestore, Timestamp } from 'firebase-admin/firestore';
+
+/**
+ * Recursively converts Firestore Timestamp objects to ISO date strings
+ * so the iOS Swift Codable decoder receives plain strings instead of
+ * {_seconds, _nanoseconds} dictionaries.
+ */
+function serializeFirestoreData(data: Record<string, any>): Record<string, any> {
+  const result: Record<string, any> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value instanceof Timestamp) {
+      result[key] = value.toDate().toISOString();
+    } else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      result[key] = serializeFirestoreData(value);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -83,7 +102,7 @@ export async function POST(request: NextRequest) {
       const updatedDoc = await adminDb.collection('users').doc(uid).get();
       return NextResponse.json({
         id: uid,
-        ...updatedDoc.data(),
+        ...serializeFirestoreData(updatedDoc.data() || {}),
         created: false,
       });
     }
@@ -112,8 +131,10 @@ export async function POST(request: NextRequest) {
       await ensureSubscriptionLink(adminDb, uid, trainerId);
     }
 
+    // Re-fetch so Timestamp sentinels are resolved before serializing
+    const createdDoc = await adminDb.collection('users').doc(uid).get();
     return NextResponse.json(
-      { id: uid, ...studentData, created: true },
+      { id: uid, ...serializeFirestoreData(createdDoc.data() || {}), created: true },
       { status: 201 }
     );
   } catch (error: any) {
