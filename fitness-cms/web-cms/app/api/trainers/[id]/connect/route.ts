@@ -4,7 +4,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 
 export const dynamic = 'force-dynamic';
 
-// POST /api/trainers/[id]/connect - Student requests connection with a trainer
+// POST /api/trainers/[id]/connect - Student requests connection with a trainer (pending approval)
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -14,7 +14,6 @@ export async function POST(
       return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
     }
 
-    // Verify the student is authenticated
     const authResult = await verifyAuthRequest(request.headers.get('authorization'));
     if (!authResult.isAuthenticated || !authResult.uid) {
       return NextResponse.json(
@@ -23,7 +22,6 @@ export async function POST(
       );
     }
 
-    // Only students can request connections
     if (authResult.role !== 'student') {
       return NextResponse.json(
         { error: 'Only students can connect to a trainer', code: 'FORBIDDEN' },
@@ -34,7 +32,6 @@ export async function POST(
     const { id: trainerId } = await params;
     const studentId = authResult.uid;
 
-    // Prevent self-connection
     if (studentId === trainerId) {
       return NextResponse.json(
         { error: 'Cannot connect to yourself', code: 'FORBIDDEN' },
@@ -44,14 +41,18 @@ export async function POST(
 
     // Verify trainer exists and is active
     const trainerDoc = await adminDb.collection('users').doc(trainerId).get();
-    if (!trainerDoc.exists || trainerDoc.data()?.role !== 'trainer' || trainerDoc.data()?.status !== 'active') {
+    if (
+      !trainerDoc.exists ||
+      trainerDoc.data()?.role !== 'trainer' ||
+      trainerDoc.data()?.status !== 'active'
+    ) {
       return NextResponse.json(
         { error: 'Trainer not found', code: 'TRAINER_NOT_FOUND' },
         { status: 404 }
       );
     }
 
-    // Check if connection already exists
+    // Check if a connection already exists (any status)
     const existing = await adminDb
       .collection('trainerStudents')
       .where('trainerId', '==', trainerId)
@@ -60,53 +61,85 @@ export async function POST(
       .get();
 
     if (!existing.empty) {
-      // Already connected — return the existing record
       const doc = existing.docs[0];
-      return NextResponse.json({ id: doc.id, ...doc.data(), alreadyConnected: true });
+      const data = doc.data();
+
+      if (data.status === 'active') {
+        return NextResponse.json({ id: doc.id, ...data, alreadyConnected: true });
+      }
+
+      if (data.status === 'pending') {
+        return NextResponse.json(
+          { id: doc.id, ...data, alreadyPending: true },
+          { status: 200 }
+        );
+      }
+
+      // If previously rejected, allow re-request by resetting to pending
+      await doc.ref.update({
+        status: 'pending',
+        updatedAt: FieldValue.serverTimestamp(),
+        respondedAt: null,
+      });
+
+      return NextResponse.json({ id: doc.id, trainerId, studentId, status: 'pending' });
     }
 
-    // Create the connection document in trainerStudents
+    // Get optional message from student
+    let message: string | undefined;
+    try {
+      const body = await request.json();
+      message = body?.message?.trim()?.substring(0, 500) || undefined;
+    } catch {
+      // no body is fine
+    }
+
+    // Create the connection request as pending
     const connectionRef = adminDb.collection('trainerStudents').doc();
     await connectionRef.set({
       trainerId,
       studentId,
-      status: 'active',
+      status: 'pending',
       source: 'app_request',
+      message: message ?? null,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
+      respondedAt: null,
     });
 
-    // Also ensure a subscriptions link exists (used by CMS to show the student)
-    const existingSubscription = await adminDb
-      .collection('subscriptions')
-      .where('trainerId', '==', trainerId)
-      .where('studentId', '==', studentId)
-      .limit(1)
-      .get();
+    // Send in-app notification to trainer
+    const notificationRef = adminDb
+      .collection('users')
+      .doc(trainerId)
+      .collection('notifications')
+      .doc();
 
-    if (existingSubscription.empty) {
-      await adminDb.collection('subscriptions').add({
-        trainerId,
-        studentId,
-        status: 'active',
-        source: 'app_request',
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-    }
+    const studentDoc = await adminDb.collection('users').doc(studentId).get();
+    const studentName = studentDoc.data()?.displayName || 'Um aluno';
 
-    // Update the student's user document with the trainerId
-    await adminDb.collection('users').doc(studentId).update({
-      trainerId,
-      updatedAt: FieldValue.serverTimestamp(),
+    await notificationRef.set({
+      id: notificationRef.id,
+      userId: trainerId,
+      userRole: 'trainer',
+      type: 'connection_request',
+      title: 'Nova solicitação de conexão',
+      body: `${studentName} quer se conectar com você.`,
+      action: {
+        type: 'navigate',
+        destination: '/cms/connections',
+      },
+      relatedEntityType: 'connection',
+      relatedEntityId: connectionRef.id,
+      isRead: false,
+      createdAt: FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json(
-      { id: connectionRef.id, trainerId, studentId, status: 'active' },
+      { id: connectionRef.id, trainerId, studentId, status: 'pending' },
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Error creating trainer connection:', error);
+    console.error('Error creating trainer connection request:', error);
     return NextResponse.json(
       { error: error.message || 'Failed to connect to trainer' },
       { status: 500 }
@@ -114,7 +147,7 @@ export async function POST(
   }
 }
 
-// GET /api/trainers/[id]/connect - Check if current student is connected to this trainer
+// GET /api/trainers/[id]/connect - Check connection status for the current student
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -135,24 +168,27 @@ export async function GET(
     const { id: trainerId } = await params;
     const studentId = authResult.uid;
 
-    const [trainerStudentsSnap, subscriptionsSnap] = await Promise.all([
-      adminDb
-        .collection('trainerStudents')
-        .where('trainerId', '==', trainerId)
-        .where('studentId', '==', studentId)
-        .limit(1)
-        .get(),
-      adminDb
-        .collection('subscriptions')
-        .where('trainerId', '==', trainerId)
-        .where('studentId', '==', studentId)
-        .limit(1)
-        .get(),
-    ]);
+    const snap = await adminDb
+      .collection('trainerStudents')
+      .where('trainerId', '==', trainerId)
+      .where('studentId', '==', studentId)
+      .limit(1)
+      .get();
 
-    const isConnected = !trainerStudentsSnap.empty || !subscriptionsSnap.empty;
+    if (snap.empty) {
+      return NextResponse.json({ isConnected: false, status: null, trainerId, studentId });
+    }
 
-    return NextResponse.json({ isConnected, trainerId, studentId });
+    const doc = snap.docs[0];
+    const data = doc.data();
+
+    return NextResponse.json({
+      isConnected: data.status === 'active',
+      status: data.status,
+      connectionId: doc.id,
+      trainerId,
+      studentId,
+    });
   } catch (error: any) {
     console.error('Error checking trainer connection:', error);
     return NextResponse.json(

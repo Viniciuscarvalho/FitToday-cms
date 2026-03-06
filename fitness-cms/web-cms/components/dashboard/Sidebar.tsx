@@ -16,9 +16,11 @@ import {
   Lock,
   BookOpen,
   ClipboardList,
+  UserPlus,
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { collection, query, where, onSnapshot, Firestore } from 'firebase/firestore';
 
 const navigation = [
   { name: 'Dashboard', href: '/cms', icon: LayoutDashboard },
@@ -26,6 +28,7 @@ const navigation = [
   { name: 'Submissões', href: '/cms/workouts', icon: ClipboardList },
   { name: 'Exercícios', href: '/cms/exercises', icon: BookOpen },
   { name: 'Alunos', href: '/cms/students', icon: Users },
+  { name: 'Solicitações', href: '/cms/connections', icon: UserPlus, badge: true },
   { name: 'Mensagens', href: '/cms/messages', icon: MessageSquare, eliteOnly: true },
   { name: 'Analytics', href: '/cms/analytics', icon: BarChart3 },
   { name: 'Financeiro', href: '/cms/finances', icon: Wallet },
@@ -36,6 +39,26 @@ export function Sidebar() {
   const pathname = usePathname();
   const { signOut, trainer, user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    let unsubscribe: (() => void) | undefined;
+
+    import('@/lib/firebase').then(({ db }) => {
+      if (!db) return;
+      const q = query(
+        collection(db as Firestore, 'trainerStudents'),
+        where('trainerId', '==', user.uid),
+        where('status', '==', 'pending')
+      );
+      unsubscribe = onSnapshot(q, (snap) => {
+        setPendingCount(snap.size);
+      });
+    });
+
+    return () => unsubscribe?.();
+  }, [user]);
 
   const isActive = (href: string) => {
     if (href === '/cms') return pathname === '/cms';
@@ -87,6 +110,7 @@ export function Sidebar() {
           const active = isActive(item.href);
           const trainerPlan = trainer?.subscription?.plan || 'starter';
           const isLocked = item.eliteOnly && trainerPlan !== 'elite';
+          const hasBadge = item.badge && pendingCount > 0;
           return (
             <Link
               key={item.name}
@@ -98,11 +122,18 @@ export function Sidebar() {
               }`}
               title={collapsed ? item.name : undefined}
             >
-              <item.icon
-                className={`h-5 w-5 flex-shrink-0 transition-transform duration-300 ${
-                  active ? 'text-primary-400 scale-110' : 'text-gray-500 group-hover:scale-110'
-                }`}
-              />
+              <div className="relative flex-shrink-0">
+                <item.icon
+                  className={`h-5 w-5 transition-transform duration-300 ${
+                    active ? 'text-primary-400 scale-110' : 'text-gray-500 group-hover:scale-110'
+                  }`}
+                />
+                {collapsed && hasBadge && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full border border-gray-950">
+                    {pendingCount > 9 ? '9+' : pendingCount}
+                  </span>
+                )}
+              </div>
               {!collapsed && (
                 <span className="flex-1 flex items-center justify-between">
                   <span className="tracking-wide">{item.name}</span>
@@ -111,6 +142,11 @@ export function Sidebar() {
                       <Lock className="h-2.5 w-2.5" />
                       Elite
                     </div>
+                  )}
+                  {hasBadge && (
+                    <span className="flex items-center justify-center h-5 min-w-[20px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full">
+                      {pendingCount > 9 ? '9+' : pendingCount}
+                    </span>
                   )}
                 </span>
               )}

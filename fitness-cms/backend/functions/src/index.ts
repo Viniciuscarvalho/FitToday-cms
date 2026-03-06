@@ -590,6 +590,59 @@ async function createChatRoom(trainerId: string, studentId: string, programId: s
 }
 
 /**
+ * Trigger: nova solicitação de conexão (trainerStudents com status=pending)
+ * → push notification via FCM para o trainer.
+ */
+export const onConnectionRequest = functions.firestore
+  .document('trainerStudents/{connectionId}')
+  .onCreate(async (snap) => {
+    const data = snap.data();
+    if (!data || data.status !== 'pending') return;
+
+    const { trainerId, studentId } = data;
+
+    try {
+      // Fetch trainer FCM token
+      const trainerDoc = await db.collection('users').doc(trainerId).get();
+      const fcmToken: string | undefined = trainerDoc.data()?.fcmToken;
+
+      if (!fcmToken) return;
+
+      // Fetch student name for the notification
+      const studentDoc = await db.collection('users').doc(studentId).get();
+      const studentName: string = studentDoc.data()?.displayName || 'Um aluno';
+
+      await admin.messaging().send({
+        token: fcmToken,
+        notification: {
+          title: 'Nova solicitação de conexão',
+          body: `${studentName} quer se conectar com você.`,
+        },
+        data: {
+          type: 'connection_request',
+          connectionId: snap.id,
+          studentId,
+        },
+        apns: {
+          payload: {
+            aps: {
+              badge: 1,
+              sound: 'default',
+            },
+          },
+        },
+      });
+    } catch (pushError: any) {
+      if (pushError?.code === 'messaging/registration-token-not-registered') {
+        console.warn(`Stale FCM token for trainer ${trainerId}, clearing`);
+        await db.collection('users').doc(trainerId).update({ fcmToken: null });
+      } else {
+        console.error('FCM push error for connection request:', pushError);
+      }
+    }
+  });
+
+/**
  * Trigger: nova mensagem no chat → push notification para o destinatário.
  * Atualiza lastMessage, unreadCount no chat doc e envia FCM push ao aluno.
  */
