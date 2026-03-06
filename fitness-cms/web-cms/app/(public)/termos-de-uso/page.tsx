@@ -148,7 +148,7 @@ export default function TermsPage() {
         <div className="mt-12 pt-8 border-t border-brand-outline flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-brand-textTertiary">
           <p>© 2026 FitToday. Todos os direitos reservados.</p>
           <div className="flex gap-6">
-            <Link href="/privacy" className="hover:text-white transition-colors">
+            <Link href="/politica-privacidade" className="hover:text-white transition-colors">
               Política de Privacidade
             </Link>
             <Link href="/" className="hover:text-white transition-colors">
