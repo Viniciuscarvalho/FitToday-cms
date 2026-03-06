@@ -219,6 +219,7 @@ export default function ProfilePage() {
             type="text"
             value={form.displayName}
             onChange={(e) => setForm((prev) => ({ ...prev, displayName: e.target.value }))}
+            placeholder="Seu nome completo"
             className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all"
           />
         </div>
@@ -244,6 +245,7 @@ export default function ProfilePage() {
             max="50"
             value={form.experience}
             onChange={(e) => setForm((prev) => ({ ...prev, experience: parseInt(e.target.value) || 0 }))}
+            placeholder="0"
             className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all"
           />
         </div>
@@ -285,6 +287,7 @@ export default function ProfilePage() {
               type="text"
               value={form.city}
               onChange={(e) => setForm((prev) => ({ ...prev, city: e.target.value }))}
+              placeholder="Sua cidade"
               className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all"
             />
           </div>
@@ -294,6 +297,7 @@ export default function ProfilePage() {
               type="text"
               value={form.state}
               onChange={(e) => setForm((prev) => ({ ...prev, state: e.target.value }))}
+              placeholder="UF"
               className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all"
             />
           </div>

@@ -286,6 +286,7 @@ export default function SettingsPage() {
           type="text"
           value={profileForm.displayName}
           onChange={(e) => handleProfileChange('displayName', e.target.value)}
+          placeholder="Seu nome completo"
           className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all"
         />
       </div>
@@ -319,6 +320,7 @@ export default function SettingsPage() {
           onChange={(e) =>
             handleProfileChange('experience', parseInt(e.target.value) || 0)
           }
+          placeholder="0"
           className="w-32 px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all"
         />
       </div>
