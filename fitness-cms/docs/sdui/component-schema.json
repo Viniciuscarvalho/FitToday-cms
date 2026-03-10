@@ -1,0 +1,1091 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fittoday.app/sdui/v1/schema.json",
+  "title": "FitToday SDUI Schema",
+  "description": "JSON Schema for FitToday Server-Driven UI component tree, response envelope, actions, and design tokens.",
+
+  "$defs": {
+
+    "SpacingToken": {
+      "type": "string",
+      "enum": ["none", "xs", "sm", "md", "lg", "xl"],
+      "description": "Spacing token mapped to platform-specific values (none=0, xs=4, sm=8, md=16, lg=24, xl=32)"
+    },
+
+    "ColorToken": {
+      "type": "string",
+      "enum": [
+        "primary", "primary-light", "primary-dark",
+        "secondary", "secondary-light", "secondary-dark",
+        "surface", "surface-variant",
+        "background",
+        "error", "success", "warning", "info",
+        "on-primary", "on-secondary", "on-surface", "on-background", "on-error",
+        "muted", "accent"
+      ]
+    },
+
+    "RadiusToken": {
+      "type": "string",
+      "enum": ["none", "sm", "md", "lg", "full"]
+    },
+
+    "ShadowToken": {
+      "type": "string",
+      "enum": ["none", "sm", "md", "lg"]
+    },
+
+    "TextStyle": {
+      "type": "string",
+      "enum": ["heading-1", "heading-2", "heading-3", "body", "body-bold", "body-small", "caption", "overline"]
+    },
+
+    "Alignment": {
+      "type": "string",
+      "enum": ["leading", "center", "trailing"]
+    },
+
+    "ContentMode": {
+      "type": "string",
+      "enum": ["fill", "fit", "stretch"]
+    },
+
+    "ComponentStyle": {
+      "type": "object",
+      "description": "Shared style properties applicable to any component via design tokens.",
+      "properties": {
+        "padding": { "$ref": "#/$defs/SpacingToken" },
+        "paddingHorizontal": { "$ref": "#/$defs/SpacingToken" },
+        "paddingVertical": { "$ref": "#/$defs/SpacingToken" },
+        "margin": { "$ref": "#/$defs/SpacingToken" },
+        "backgroundColor": { "$ref": "#/$defs/ColorToken" },
+        "cornerRadius": { "$ref": "#/$defs/RadiusToken" },
+        "shadow": { "$ref": "#/$defs/ShadowToken" },
+        "border": {
+          "type": "object",
+          "properties": {
+            "color": { "$ref": "#/$defs/ColorToken" },
+            "width": { "type": "number", "minimum": 0 }
+          },
+          "required": ["color", "width"]
+        },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "hidden": { "type": "boolean", "default": false }
+      },
+      "additionalProperties": false
+    },
+
+    "SDUIAction": {
+      "description": "An action triggered by user interaction or system events.",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "navigate" },
+            "destination": { "type": "string" },
+            "params": { "type": "object", "additionalProperties": { "type": "string" } },
+            "transition": { "type": "string", "enum": ["push", "present", "replace"], "default": "push" }
+          },
+          "required": ["type", "destination"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "navigate-back" }
+          },
+          "required": ["type"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "open-url" },
+            "url": { "type": "string", "format": "uri" },
+            "inApp": { "type": "boolean", "default": true }
+          },
+          "required": ["type", "url"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "api-call" },
+            "method": { "type": "string", "enum": ["GET", "POST", "PUT", "DELETE"] },
+            "endpoint": { "type": "string" },
+            "body": { "type": "object" },
+            "onSuccess": { "$ref": "#/$defs/SDUIAction" },
+            "onError": { "$ref": "#/$defs/SDUIAction" }
+          },
+          "required": ["type", "method", "endpoint"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "refresh-screen" }
+          },
+          "required": ["type"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "show-sheet" },
+            "content": { "$ref": "#/$defs/SDUIComponent" },
+            "detents": {
+              "type": "array",
+              "items": { "type": "string", "enum": ["medium", "large"] }
+            }
+          },
+          "required": ["type", "content"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "show-alert" },
+            "title": { "type": "string" },
+            "message": { "type": "string" },
+            "actions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": { "type": "string" },
+                  "style": { "type": "string", "enum": ["default", "cancel", "destructive"] },
+                  "action": { "$ref": "#/$defs/SDUIAction" }
+                },
+                "required": ["label"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["type", "title"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "dismiss" }
+          },
+          "required": ["type"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "share" },
+            "content": { "type": "string" },
+            "url": { "type": "string", "format": "uri" }
+          },
+          "required": ["type", "content"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "haptic" },
+            "style": { "type": "string", "enum": ["light", "medium", "heavy", "success", "error", "warning"] }
+          },
+          "required": ["type", "style"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "analytics" },
+            "event": { "type": "string" },
+            "params": { "type": "object", "additionalProperties": { "type": "string" } }
+          },
+          "required": ["type", "event"],
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "ActionBindings": {
+      "type": "object",
+      "description": "Event-to-action bindings for interactive components.",
+      "properties": {
+        "onTap": { "$ref": "#/$defs/SDUIAction" },
+        "onLongPress": { "$ref": "#/$defs/SDUIAction" },
+        "onAppear": { "$ref": "#/$defs/SDUIAction" },
+        "onDisappear": { "$ref": "#/$defs/SDUIAction" },
+        "onChange": { "$ref": "#/$defs/SDUIAction" },
+        "onSubmit": { "$ref": "#/$defs/SDUIAction" }
+      },
+      "additionalProperties": false
+    },
+
+    "SDUIComponent": {
+      "description": "A discriminated union of all SDUI component types. The 'type' field determines the component kind.",
+      "oneOf": [
+        { "$ref": "#/$defs/VStack" },
+        { "$ref": "#/$defs/HStack" },
+        { "$ref": "#/$defs/ScrollView" },
+        { "$ref": "#/$defs/Section" },
+        { "$ref": "#/$defs/Grid" },
+        { "$ref": "#/$defs/Spacer" },
+        { "$ref": "#/$defs/Divider" },
+        { "$ref": "#/$defs/Text" },
+        { "$ref": "#/$defs/Image" },
+        { "$ref": "#/$defs/Avatar" },
+        { "$ref": "#/$defs/Icon" },
+        { "$ref": "#/$defs/Badge" },
+        { "$ref": "#/$defs/ProgressBar" },
+        { "$ref": "#/$defs/ProgressRing" },
+        { "$ref": "#/$defs/StatRow" },
+        { "$ref": "#/$defs/Button" },
+        { "$ref": "#/$defs/Link" },
+        { "$ref": "#/$defs/TextInput" },
+        { "$ref": "#/$defs/Toggle" },
+        { "$ref": "#/$defs/Slider" },
+        { "$ref": "#/$defs/Picker" },
+        { "$ref": "#/$defs/Checkbox" },
+        { "$ref": "#/$defs/Form" },
+        { "$ref": "#/$defs/SearchBar" },
+        { "$ref": "#/$defs/TabBar" },
+        { "$ref": "#/$defs/NavigationLink" },
+        { "$ref": "#/$defs/ActionSheet" },
+        { "$ref": "#/$defs/BottomSheet" },
+        { "$ref": "#/$defs/WorkoutCard" },
+        { "$ref": "#/$defs/ProgramCard" },
+        { "$ref": "#/$defs/ExerciseItem" },
+        { "$ref": "#/$defs/SetTracker" },
+        { "$ref": "#/$defs/StreakCounter" },
+        { "$ref": "#/$defs/TrainerCard" },
+        { "$ref": "#/$defs/PdfViewer" },
+        { "$ref": "#/$defs/MeasurementEntry" }
+      ]
+    },
+
+    "VStack": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "vstack" },
+        "id": { "type": "string" },
+        "spacing": { "$ref": "#/$defs/SpacingToken" },
+        "alignment": { "$ref": "#/$defs/Alignment" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/SDUIComponent" } },
+        "style": { "$ref": "#/$defs/ComponentStyle" },
+        "actions": { "$ref": "#/$defs/ActionBindings" }
+      },
+      "required": ["type", "children"],
+      "additionalProperties": false
+    },
+
+    "HStack": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "hstack" },
+        "id": { "type": "string" },
+        "spacing": { "$ref": "#/$defs/SpacingToken" },
+        "alignment": { "type": "string", "enum": ["top", "center", "bottom"] },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/SDUIComponent" } },
+        "style": { "$ref": "#/$defs/ComponentStyle" },
+        "actions": { "$ref": "#/$defs/ActionBindings" }
+      },
+      "required": ["type", "children"],
+      "additionalProperties": false
+    },
+
+    "ScrollView": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "scroll-view" },
+        "id": { "type": "string" },
+        "direction": { "type": "string", "enum": ["vertical", "horizontal"], "default": "vertical" },
+        "showsIndicator": { "type": "boolean", "default": true },
+        "refreshable": { "type": "boolean", "default": false },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/SDUIComponent" } },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "children"],
+      "additionalProperties": false
+    },
+
+    "Section": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "section" },
+        "id": { "type": "string" },
+        "header": { "$ref": "#/$defs/SDUIComponent" },
+        "footer": { "$ref": "#/$defs/SDUIComponent" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/SDUIComponent" } },
+        "collapsible": { "type": "boolean", "default": false },
+        "collapsed": { "type": "boolean", "default": false },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "children"],
+      "additionalProperties": false
+    },
+
+    "Grid": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "grid" },
+        "id": { "type": "string" },
+        "columns": { "type": "integer", "minimum": 1, "maximum": 6, "default": 2 },
+        "spacing": { "$ref": "#/$defs/SpacingToken" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/SDUIComponent" } },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "columns", "children"],
+      "additionalProperties": false
+    },
+
+    "Spacer": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "spacer" },
+        "id": { "type": "string" },
+        "height": { "type": "number", "minimum": 0 },
+        "flexible": { "type": "boolean", "default": true }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+
+    "Divider": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "divider" },
+        "id": { "type": "string" },
+        "color": { "$ref": "#/$defs/ColorToken" },
+        "thickness": { "type": "number", "minimum": 0, "default": 1 },
+        "insets": { "$ref": "#/$defs/SpacingToken" }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+
+    "Text": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "text" },
+        "id": { "type": "string" },
+        "content": { "type": "string" },
+        "textStyle": { "$ref": "#/$defs/TextStyle" },
+        "color": { "$ref": "#/$defs/ColorToken" },
+        "alignment": { "$ref": "#/$defs/Alignment" },
+        "maxLines": { "type": "integer", "minimum": 1 },
+        "selectable": { "type": "boolean", "default": false },
+        "style": { "$ref": "#/$defs/ComponentStyle" },
+        "actions": { "$ref": "#/$defs/ActionBindings" }
+      },
+      "required": ["type", "content"],
+      "additionalProperties": false
+    },
+
+    "Image": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "image" },
+        "id": { "type": "string" },
+        "url": { "type": "string" },
+        "alt": { "type": "string" },
+        "aspectRatio": { "type": "number" },
+        "contentMode": { "$ref": "#/$defs/ContentMode" },
+        "placeholder": { "type": "string", "enum": ["shimmer", "blur", "color"] },
+        "cornerRadius": { "$ref": "#/$defs/RadiusToken" },
+        "style": { "$ref": "#/$defs/ComponentStyle" },
+        "actions": { "$ref": "#/$defs/ActionBindings" }
+      },
+      "required": ["type", "url"],
+      "additionalProperties": false
+    },
+
+    "Avatar": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "avatar" },
+        "id": { "type": "string" },
+        "url": { "type": "string" },
+        "fallbackInitials": { "type": "string", "maxLength": 2 },
+        "size": { "type": "string", "enum": ["sm", "md", "lg", "xl"] },
+        "showBorder": { "type": "boolean", "default": false },
+        "online": { "type": "boolean" },
+        "actions": { "$ref": "#/$defs/ActionBindings" }
+      },
+      "required": ["type", "size"],
+      "additionalProperties": false
+    },
+
+    "Icon": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "icon" },
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "size": { "type": "number", "minimum": 8 },
+        "color": { "$ref": "#/$defs/ColorToken" },
+        "system": { "type": "boolean", "default": true, "description": "true = SF Symbol, false = custom asset" }
+      },
+      "required": ["type", "name"],
+      "additionalProperties": false
+    },
+
+    "Badge": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "badge" },
+        "id": { "type": "string" },
+        "text": { "type": "string" },
+        "variant": { "type": "string", "enum": ["info", "success", "warning", "error", "neutral"] },
+        "icon": { "type": "string" }
+      },
+      "required": ["type", "text", "variant"],
+      "additionalProperties": false
+    },
+
+    "ProgressBar": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "progress-bar" },
+        "id": { "type": "string" },
+        "value": { "type": "number", "minimum": 0, "maximum": 1 },
+        "color": { "$ref": "#/$defs/ColorToken" },
+        "trackColor": { "$ref": "#/$defs/ColorToken" },
+        "label": { "type": "string" },
+        "showPercentage": { "type": "boolean", "default": false },
+        "height": { "type": "number", "minimum": 2 },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "value"],
+      "additionalProperties": false
+    },
+
+    "ProgressRing": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "progress-ring" },
+        "id": { "type": "string" },
+        "value": { "type": "number", "minimum": 0, "maximum": 1 },
+        "size": { "type": "number", "minimum": 20 },
+        "lineWidth": { "type": "number", "minimum": 1 },
+        "color": { "$ref": "#/$defs/ColorToken" },
+        "trackColor": { "$ref": "#/$defs/ColorToken" },
+        "label": { "type": "string" },
+        "centerContent": { "$ref": "#/$defs/SDUIComponent" }
+      },
+      "required": ["type", "value", "size"],
+      "additionalProperties": false
+    },
+
+    "StatRow": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "stat-row" },
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "value": { "type": "string" },
+        "icon": { "type": "string" },
+        "trend": { "type": "string", "enum": ["up", "down", "neutral"] },
+        "trendValue": { "type": "string" },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "label", "value"],
+      "additionalProperties": false
+    },
+
+    "Button": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "button" },
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "buttonStyle": { "type": "string", "enum": ["primary", "secondary", "outline", "destructive", "ghost"] },
+        "size": { "type": "string", "enum": ["sm", "md", "lg"], "default": "md" },
+        "icon": { "type": "string" },
+        "iconPosition": { "type": "string", "enum": ["leading", "trailing"], "default": "leading" },
+        "loading": { "type": "boolean", "default": false },
+        "disabled": { "type": "boolean", "default": false },
+        "fullWidth": { "type": "boolean", "default": false },
+        "actions": { "$ref": "#/$defs/ActionBindings" },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "label", "buttonStyle"],
+      "additionalProperties": false
+    },
+
+    "Link": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "link" },
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "textStyle": { "$ref": "#/$defs/TextStyle" },
+        "color": { "$ref": "#/$defs/ColorToken" },
+        "actions": { "$ref": "#/$defs/ActionBindings" }
+      },
+      "required": ["type", "label"],
+      "additionalProperties": false
+    },
+
+    "TextInput": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "text-input" },
+        "id": { "type": "string" },
+        "fieldId": { "type": "string", "description": "Form field identifier for submission" },
+        "label": { "type": "string" },
+        "placeholder": { "type": "string" },
+        "value": { "type": "string" },
+        "keyboardType": { "type": "string", "enum": ["default", "email", "number", "decimal", "phone", "url"], "default": "default" },
+        "secure": { "type": "boolean", "default": false },
+        "multiline": { "type": "boolean", "default": false },
+        "maxLength": { "type": "integer", "minimum": 1 },
+        "validation": {
+          "type": "object",
+          "properties": {
+            "required": { "type": "boolean" },
+            "pattern": { "type": "string" },
+            "minLength": { "type": "integer" },
+            "maxLength": { "type": "integer" },
+            "errorMessage": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "actions": { "$ref": "#/$defs/ActionBindings" },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "fieldId"],
+      "additionalProperties": false
+    },
+
+    "Toggle": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "toggle" },
+        "id": { "type": "string" },
+        "fieldId": { "type": "string" },
+        "label": { "type": "string" },
+        "isOn": { "type": "boolean", "default": false },
+        "actions": { "$ref": "#/$defs/ActionBindings" }
+      },
+      "required": ["type", "fieldId", "label"],
+      "additionalProperties": false
+    },
+
+    "Slider": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "slider" },
+        "id": { "type": "string" },
+        "fieldId": { "type": "string" },
+        "label": { "type": "string" },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "value": { "type": "number" },
+        "step": { "type": "number", "minimum": 0 },
+        "showValue": { "type": "boolean", "default": true },
+        "unit": { "type": "string" },
+        "actions": { "$ref": "#/$defs/ActionBindings" }
+      },
+      "required": ["type", "fieldId", "min", "max", "value"],
+      "additionalProperties": false
+    },
+
+    "Picker": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "picker" },
+        "id": { "type": "string" },
+        "fieldId": { "type": "string" },
+        "label": { "type": "string" },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "value": { "type": "string" },
+              "label": { "type": "string" },
+              "icon": { "type": "string" }
+            },
+            "required": ["value", "label"],
+            "additionalProperties": false
+          }
+        },
+        "selected": { "type": "string" },
+        "pickerStyle": { "type": "string", "enum": ["wheel", "segmented", "menu"], "default": "menu" },
+        "actions": { "$ref": "#/$defs/ActionBindings" }
+      },
+      "required": ["type", "fieldId", "options"],
+      "additionalProperties": false
+    },
+
+    "Checkbox": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "checkbox" },
+        "id": { "type": "string" },
+        "fieldId": { "type": "string" },
+        "label": { "type": "string" },
+        "isChecked": { "type": "boolean", "default": false },
+        "actions": { "$ref": "#/$defs/ActionBindings" }
+      },
+      "required": ["type", "fieldId", "label"],
+      "additionalProperties": false
+    },
+
+    "Form": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "form" },
+        "id": { "type": "string" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/SDUIComponent" } },
+        "submitAction": { "$ref": "#/$defs/SDUIAction" },
+        "submitLabel": { "type": "string", "default": "Enviar" },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "children", "submitAction"],
+      "additionalProperties": false
+    },
+
+    "SearchBar": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "search-bar" },
+        "id": { "type": "string" },
+        "placeholder": { "type": "string" },
+        "value": { "type": "string" },
+        "suggestions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "actions": { "$ref": "#/$defs/ActionBindings" }
+      },
+      "required": ["type"],
+      "additionalProperties": false
+    },
+
+    "TabBar": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "tab-bar" },
+        "id": { "type": "string" },
+        "tabs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "icon": { "type": "string" },
+              "screenId": { "type": "string" },
+              "badge": { "type": "string" }
+            },
+            "required": ["label", "icon", "screenId"],
+            "additionalProperties": false
+          }
+        },
+        "selectedIndex": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["type", "tabs"],
+      "additionalProperties": false
+    },
+
+    "NavigationLink": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "navigation-link" },
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "icon": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "trailing": { "$ref": "#/$defs/SDUIComponent" },
+        "showChevron": { "type": "boolean", "default": true },
+        "actions": { "$ref": "#/$defs/ActionBindings" },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "label"],
+      "additionalProperties": false
+    },
+
+    "ActionSheet": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "action-sheet" },
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": { "type": "string" },
+              "icon": { "type": "string" },
+              "style": { "type": "string", "enum": ["default", "destructive", "cancel"] },
+              "action": { "$ref": "#/$defs/SDUIAction" }
+            },
+            "required": ["label"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["type", "options"],
+      "additionalProperties": false
+    },
+
+    "BottomSheet": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "bottom-sheet" },
+        "id": { "type": "string" },
+        "content": { "$ref": "#/$defs/SDUIComponent" },
+        "detents": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["small", "medium", "large"] },
+          "default": ["medium"]
+        },
+        "showDragIndicator": { "type": "boolean", "default": true },
+        "dismissible": { "type": "boolean", "default": true }
+      },
+      "required": ["type", "content"],
+      "additionalProperties": false
+    },
+
+    "WorkoutCard": {
+      "type": "object",
+      "description": "Domain-specific: Workout summary card for student workout lists.",
+      "properties": {
+        "type": { "const": "workout-card" },
+        "id": { "type": "string" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "workoutId": { "type": "string" },
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "trainerName": { "type": "string" },
+            "trainerAvatarUrl": { "type": "string" },
+            "progress": { "type": "number", "minimum": 0, "maximum": 1 },
+            "totalDays": { "type": "integer" },
+            "completedDays": { "type": "integer" },
+            "daysRemaining": { "type": "integer" },
+            "thumbnailUrl": { "type": "string" },
+            "status": { "type": "string", "enum": ["active", "completed", "archived"] },
+            "startDate": { "type": "string", "format": "date" },
+            "streak": { "type": "integer" }
+          },
+          "required": ["workoutId", "title", "status"],
+          "additionalProperties": false
+        },
+        "actions": { "$ref": "#/$defs/ActionBindings" },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "data"],
+      "additionalProperties": false
+    },
+
+    "ProgramCard": {
+      "type": "object",
+      "description": "Domain-specific: Program summary card for marketplace and discovery.",
+      "properties": {
+        "type": { "const": "program-card" },
+        "id": { "type": "string" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "programId": { "type": "string" },
+            "title": { "type": "string" },
+            "subtitle": { "type": "string" },
+            "coverUrl": { "type": "string" },
+            "trainerName": { "type": "string" },
+            "trainerAvatarUrl": { "type": "string" },
+            "category": { "type": "string" },
+            "difficulty": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] },
+            "durationWeeks": { "type": "integer" },
+            "daysPerWeek": { "type": "integer" },
+            "rating": { "type": "number", "minimum": 0, "maximum": 5 },
+            "totalReviews": { "type": "integer" },
+            "price": { "type": "string", "description": "Pre-formatted price string (e.g., 'R$ 97,00/mes')" },
+            "originalPrice": { "type": "string" },
+            "activeStudents": { "type": "integer" }
+          },
+          "required": ["programId", "title", "coverUrl"],
+          "additionalProperties": false
+        },
+        "actions": { "$ref": "#/$defs/ActionBindings" },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "data"],
+      "additionalProperties": false
+    },
+
+    "ExerciseItem": {
+      "type": "object",
+      "description": "Domain-specific: Exercise row in a workout exercise list.",
+      "properties": {
+        "type": { "const": "exercise-item" },
+        "id": { "type": "string" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "exerciseId": { "type": "string" },
+            "name": { "type": "string" },
+            "thumbnailUrl": { "type": "string" },
+            "gifUrl": { "type": "string" },
+            "sets": { "type": "integer" },
+            "reps": { "type": "string" },
+            "restSeconds": { "type": "integer" },
+            "weight": { "type": "string" },
+            "tempo": { "type": "string" },
+            "rpe": { "type": "number" },
+            "techniques": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "notes": { "type": "string" },
+            "muscleGroups": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "completed": { "type": "boolean" }
+          },
+          "required": ["exerciseId", "name"],
+          "additionalProperties": false
+        },
+        "actions": { "$ref": "#/$defs/ActionBindings" },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "data"],
+      "additionalProperties": false
+    },
+
+    "SetTracker": {
+      "type": "object",
+      "description": "Domain-specific: Interactive set/rep logger for active workout tracking.",
+      "properties": {
+        "type": { "const": "set-tracker" },
+        "id": { "type": "string" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "exerciseId": { "type": "string" },
+            "exerciseName": { "type": "string" },
+            "setNumber": { "type": "integer" },
+            "totalSets": { "type": "integer" },
+            "targetReps": { "type": "string" },
+            "targetWeight": { "type": "string" },
+            "completedReps": { "type": "integer" },
+            "completedWeight": { "type": "number" },
+            "restSeconds": { "type": "integer" },
+            "isCompleted": { "type": "boolean" }
+          },
+          "required": ["exerciseId", "setNumber", "totalSets"],
+          "additionalProperties": false
+        },
+        "actions": { "$ref": "#/$defs/ActionBindings" }
+      },
+      "required": ["type", "data"],
+      "additionalProperties": false
+    },
+
+    "StreakCounter": {
+      "type": "object",
+      "description": "Domain-specific: Visual display of workout streak information.",
+      "properties": {
+        "type": { "const": "streak-counter" },
+        "id": { "type": "string" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "currentStreak": { "type": "integer", "minimum": 0 },
+            "longestStreak": { "type": "integer", "minimum": 0 },
+            "icon": { "type": "string", "default": "flame.fill" },
+            "label": { "type": "string" },
+            "weekdays": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "day": { "type": "string" },
+                  "completed": { "type": "boolean" }
+                },
+                "required": ["day", "completed"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["currentStreak", "longestStreak"],
+          "additionalProperties": false
+        },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "data"],
+      "additionalProperties": false
+    },
+
+    "TrainerCard": {
+      "type": "object",
+      "description": "Domain-specific: Trainer profile summary card.",
+      "properties": {
+        "type": { "const": "trainer-card" },
+        "id": { "type": "string" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "trainerId": { "type": "string" },
+            "name": { "type": "string" },
+            "photoUrl": { "type": "string" },
+            "coverPhotoUrl": { "type": "string" },
+            "bio": { "type": "string" },
+            "specialties": { "type": "array", "items": { "type": "string" } },
+            "rating": { "type": "number", "minimum": 0, "maximum": 5 },
+            "totalReviews": { "type": "integer" },
+            "totalStudents": { "type": "integer" },
+            "location": { "type": "string" },
+            "verified": { "type": "boolean" }
+          },
+          "required": ["trainerId", "name"],
+          "additionalProperties": false
+        },
+        "actions": { "$ref": "#/$defs/ActionBindings" },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "data"],
+      "additionalProperties": false
+    },
+
+    "PdfViewer": {
+      "type": "object",
+      "description": "Domain-specific: In-app PDF document viewer for workout PDFs.",
+      "properties": {
+        "type": { "const": "pdf-viewer" },
+        "id": { "type": "string" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "pdfUrl": { "type": "string", "format": "uri" },
+            "title": { "type": "string" },
+            "allowDownload": { "type": "boolean", "default": true },
+            "allowShare": { "type": "boolean", "default": true },
+            "initialPage": { "type": "integer", "minimum": 1, "default": 1 }
+          },
+          "required": ["pdfUrl"],
+          "additionalProperties": false
+        },
+        "actions": { "$ref": "#/$defs/ActionBindings" }
+      },
+      "required": ["type", "data"],
+      "additionalProperties": false
+    },
+
+    "MeasurementEntry": {
+      "type": "object",
+      "description": "Domain-specific: Body measurement input for progress tracking.",
+      "properties": {
+        "type": { "const": "measurement-entry" },
+        "id": { "type": "string" },
+        "data": {
+          "type": "object",
+          "properties": {
+            "measurementType": {
+              "type": "string",
+              "enum": ["weight", "bodyFat", "muscleMass", "chest", "waist", "hips", "rightArm", "leftArm", "rightThigh", "leftThigh", "rightCalf", "leftCalf"]
+            },
+            "label": { "type": "string" },
+            "value": { "type": "number" },
+            "previousValue": { "type": "number" },
+            "unit": { "type": "string" },
+            "icon": { "type": "string" },
+            "trend": { "type": "string", "enum": ["up", "down", "neutral"] }
+          },
+          "required": ["measurementType", "label", "unit"],
+          "additionalProperties": false
+        },
+        "actions": { "$ref": "#/$defs/ActionBindings" },
+        "style": { "$ref": "#/$defs/ComponentStyle" }
+      },
+      "required": ["type", "data"],
+      "additionalProperties": false
+    },
+
+    "SDUIScreen": {
+      "type": "object",
+      "description": "A complete screen definition composed of SDUI components.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "showNavigationBar": { "type": "boolean", "default": true },
+        "navigationBarActions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SDUIComponent" }
+        },
+        "refreshPolicy": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["time-based", "event-based", "manual"] },
+            "intervalSeconds": { "type": "integer", "minimum": 10 }
+          },
+          "required": ["type"],
+          "additionalProperties": false
+        },
+        "cachePolicy": {
+          "type": "object",
+          "properties": {
+            "maxAgeSeconds": { "type": "integer", "minimum": 0 },
+            "staleWhileRevalidate": { "type": "boolean", "default": false }
+          },
+          "required": ["maxAgeSeconds"],
+          "additionalProperties": false
+        },
+        "layout": { "$ref": "#/$defs/SDUIComponent" },
+        "floatingAction": { "$ref": "#/$defs/SDUIComponent" },
+        "emptyState": {
+          "type": "object",
+          "properties": {
+            "icon": { "type": "string" },
+            "title": { "type": "string" },
+            "message": { "type": "string" },
+            "action": { "$ref": "#/$defs/SDUIComponent" }
+          },
+          "required": ["title"],
+          "additionalProperties": false
+        },
+        "errorState": {
+          "type": "object",
+          "properties": {
+            "title": { "type": "string" },
+            "message": { "type": "string" },
+            "retryAction": { "$ref": "#/$defs/SDUIAction" }
+          },
+          "required": ["title"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["id", "title", "layout"],
+      "additionalProperties": false
+    }
+  },
+
+  "type": "object",
+  "description": "Root SDUI response envelope.",
+  "properties": {
+    "sdui": {
+      "type": "object",
+      "properties": {
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+$" },
+        "screen": { "$ref": "#/$defs/SDUIScreen" }
+      },
+      "required": ["version", "screen"],
+      "additionalProperties": false
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "requestId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "schemaVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "minClientVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" }
+      },
+      "required": ["requestId", "timestamp", "schemaVersion"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["sdui", "meta"],
+  "additionalProperties": false
+}
