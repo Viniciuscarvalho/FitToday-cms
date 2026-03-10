@@ -26,21 +26,29 @@ import {
 import { AuthNavButtons } from '@/components/landing/AuthNavButtons';
 
 export const metadata: Metadata = {
-  title: 'FitToday - A Plataforma Definitiva para Personal Trainers',
+  title: 'FitToday - Software de Gestão para Personal Trainers',
   description:
-    'Gerencie seus programas de treino, alunos e pagamentos em um único lugar. A plataforma completa para personal trainers profissionais que buscam escala e organização.',
-  keywords: ['personal trainer', 'consultoria fitness', 'gestão de alunos', 'treino online', 'fitness cms', 'stripe for trainers'],
+    'A plataforma definitiva para personal trainers profissionais. Crie programas de treino, gerencie alunos e receba pagamentos com total controle e escalabilidade.',
+  keywords: [
+    'personal trainer',
+    'gestão de alunos fitness',
+    'app para personal trainer',
+    'montar treinos online',
+    'consultoria fitness online',
+    'stripe para personal trainers',
+    'fittoday',
+  ],
   openGraph: {
-    title: 'FitToday - Plataforma para Personal Trainers',
-    description: 'Gerencie seus treinos e alunos de forma profissional.',
+    title: 'FitToday - Gestão Completa para Personal Trainers',
+    description: 'Profissionalize seus treinos e escale sua consultoria fitness.',
     images: ['https://fittoday.me/og-image.png'],
     type: 'website',
     locale: 'pt_BR',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FitToday - Plataforma para Personal Trainers',
-    description: 'Tudo que você precisa para profissionalizar seu trabalho como personal.',
+    title: 'FitToday - A Plataforma do Personal Trainer Moderno',
+    description: 'Tudo o que você precisa para gerenciar sua consultoria em um só lugar.',
     images: ['https://fittoday.me/twitter-image.png'],
   },
 };
@@ -81,341 +89,285 @@ export default function SitePage() {
       </header>
 
       {/* ====== HERO ====== */}
-      <section className="relative min-h-screen flex items-center justify-center pt-20">
-        <Image
-          src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
-          alt="Interior de academia moderna"
-          fill
-          className="object-cover"
-          priority
-          sizes="100vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-brand-background/80 via-brand-background/60 to-brand-background" />
+      <section className="relative min-h-[90vh] flex flex-col items-center justify-center pt-32 pb-20 px-4">
+        {/* Animated Glow Background */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-brand-primary/10 rounded-full blur-[140px] opacity-40 pointer-events-none" />
+        <div className="absolute bottom-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-brand-accent/5 rounded-full blur-[120px] opacity-30 pointer-events-none" />
 
-        <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-          }}
-        />
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <div className="animate-fade-in-up inline-flex items-center gap-2 px-4 py-1.5 bg-white/[0.08] backdrop-blur-sm border border-white/[0.1] rounded-full text-sm text-brand-secondary font-medium mb-8">
-            <Zap className="w-3.5 h-3.5" />
-            Plataforma completa para personal trainers
+        <div className="relative z-10 max-w-7xl mx-auto text-center">
+          <div className="animate-fade-in-up inline-flex items-center gap-2 px-4 py-1.5 bg-white/[0.05] backdrop-blur-md border border-white/[0.08] rounded-full text-sm text-brand-secondary font-medium mb-8">
+            <span className="flex h-2 w-2 rounded-full bg-brand-secondary animate-pulse" />
+            O Sistema Operacional para sua Consultoria Fitness
           </div>
 
-          <h1 className="font-display animate-fade-in-up animation-delay-100 text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold text-white leading-[0.95] tracking-tight mb-6">
-            Seus treinos.
+          <h1 className="font-display animate-fade-in-up animation-delay-100 text-5xl sm:text-7xl lg:text-8xl font-bold text-white leading-[1.05] tracking-tight mb-8 max-w-5xl mx-auto">
+            Escale sua consultoria.
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-brand-secondary to-brand-accent">
-              Seu negócio.
+              Domine seu mercado.
             </span>
           </h1>
 
-          <p className="animate-fade-in-up animation-delay-200 text-lg sm:text-xl text-brand-textSecondary max-w-2xl mx-auto leading-relaxed mb-10">
-            Crie programas de treino, acompanhe seus alunos e receba
-            pagamentos de forma segura. Tudo que você precisa para
-            profissionalizar seu trabalho.
+          <p className="animate-fade-in-up animation-delay-200 text-lg sm:text-xl text-brand-textSecondary max-w-2xl mx-auto leading-relaxed mb-12">
+            A plataforma completa para personal trainers que buscam 
+            profissionalismo e eficiência. Crie treinos ilimitados, gerencie 
+            alunos e automatize seus ganhos em um só lugar.
           </p>
 
-          <div className="animate-fade-in-up animation-delay-300 flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+          <div className="animate-fade-in-up animation-delay-300 flex flex-col sm:flex-row items-center justify-center gap-5 mb-24">
             <Link
               href="/register"
-              className="group w-full sm:w-auto px-8 py-4 bg-brand-primary hover:bg-blue-600 text-white font-semibold rounded-full transition-all duration-300 flex items-center justify-center gap-2 shadow-2xl shadow-brand-primary/30 hover:shadow-blue-600/40 hover:scale-[1.02]"
+              className="group w-full sm:w-auto px-10 py-5 bg-brand-primary hover:bg-blue-600 text-white font-bold rounded-2xl transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_0_40px_-10px_rgba(59,130,246,0.5)] hover:scale-[1.02]"
             >
-              Comece Gratuitamente
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+              Começar Agora — Grátis
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <a
-              href="#como-funciona"
-              className="w-full sm:w-auto px-8 py-4 border border-white/20 text-white font-medium rounded-full hover:bg-white/[0.06] transition-all duration-300 text-center"
+              href="#funcionalidades"
+              className="w-full sm:w-auto px-10 py-5 bg-white/[0.03] border border-white/[0.08] text-white font-semibold rounded-2xl hover:bg-white/[0.06] transition-all duration-300 text-center"
             >
-              Saiba Mais
+              Ver Funcionalidades
             </a>
           </div>
 
-          <div className="animate-fade-in-up animation-delay-400 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-brand-textTertiary">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-brand-primary" />
-              Plano grátis disponível
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-brand-primary" />
-              Pagamentos via Stripe
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-brand-primary" />
-              Apps iOS e Android
+          {/* Product Preview / Dashboard Peek */}
+          <div className="animate-fade-in-up animation-delay-400 relative max-w-5xl mx-auto mt-20">
+            <div className="absolute -inset-[1px] bg-gradient-to-b from-white/10 to-transparent rounded-[32px] pointer-events-none" />
+            <div className="relative bg-brand-backgroundElevated/50 backdrop-blur-sm border border-white/[0.08] rounded-[32px] p-2 sm:p-4 overflow-hidden shadow-2xl">
+              <div className="bg-brand-background rounded-[24px] overflow-hidden border border-white/[0.05] aspect-[16/10] sm:aspect-video relative group">
+                 <Image
+                  src="https://images.unsplash.com/photo-1593079831268-3381b0db4a77?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=90"
+                  alt="Dashboard Preview"
+                  fill
+                  className="object-cover opacity-80 group-hover:scale-105 transition-transform duration-1000"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-brand-background via-transparent to-transparent opacity-60" />
+                
+                {/* Float Elements for "Dashboard feel" */}
+                <div className="absolute top-8 left-8 p-4 bg-brand-surface/90 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl hidden md:block">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-brand-primary/20 rounded-xl flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-brand-primary" />
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-brand-textTertiary uppercase font-bold tracking-widest">Crescimento Mensal</div>
+                      <div className="text-lg font-bold text-white">+24% este mês</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="absolute bottom-8 right-8 p-4 bg-brand-surface/90 backdrop-blur-lg border border-white/10 rounded-2xl shadow-2xl hidden md:block">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-brand-accent/20 rounded-xl flex items-center justify-center">
+                      <Users className="w-5 h-5 text-brand-accent" />
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-brand-textTertiary uppercase font-bold tracking-widest">Atividade Alunos</div>
+                      <div className="text-lg font-bold text-white">12 Treinos hoje</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-brand-background to-transparent" />
       </section>
 
-      {/* ====== STATS ====== */}
-      <section className="relative z-10 bg-brand-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-            <StatCard number="500+" label="Trainers Ativos" icon={<Users className="w-5 h-5" />} />
-            <StatCard number="2.000+" label="Alunos Cadastrados" icon={<TrendingUp className="w-5 h-5" />} />
-            <StatCard number="10K+" label="Treinos Enviados" icon={<Dumbbell className="w-5 h-5" />} />
-            <StatCard number="R$ 1M+" label="Processados" icon={<Wallet className="w-5 h-5" />} />
-          </div>
-        </div>
-      </section>
-
-      {/* ====== TWO-FLOW EXPLAINER ====== */}
-      <section className="py-24 sm:py-32 bg-brand-background">
+      {/* ====== CORE BENEFITS (Replaces Stats) ====== */}
+      <section className="relative z-10 bg-brand-background py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 lg:mb-20">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-sm font-medium mb-4">
-              <Repeat className="w-3.5 h-3.5" />
-              Dois Fluxos, Uma Plataforma
-            </div>
-            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mb-4">
-              Entenda como o{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-secondary">
-                FitToday funciona
-              </span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <BenefitCard 
+              title="Escalabilidade Real" 
+              description="Gerencie 10 ou 1000 alunos com a mesma facilidade. Nossos processos automatizados eliminam o trabalho manual."
+              icon={<TrendingUp className="w-6 h-6" />}
+            />
+            <BenefitCard 
+              title="Profissionalismo" 
+              description="Sua marca elevada com uma interface premium para seus alunos acessarem treinos e acompanharem o progresso."
+              icon={<Award className="w-6 h-6" />}
+            />
+            <BenefitCard 
+              title="Controle Financeiro" 
+              description="Dashboard completo para acompanhar suas receitas, planos e comissões de forma transparente e segura."
+              icon={<Wallet className="w-6 h-6" />}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ====== PAYMENT FLOWS EXPLAINED ====== */}
+      <section id="como-funciona" className="py-24 sm:py-32 bg-brand-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-20">
+            <h2 className="font-display text-4xl sm:text-5xl font-bold text-white tracking-tight mb-6">
+              Transparência total nos <span className="text-brand-primary">pagamentos</span>
             </h2>
-            <p className="text-brand-textSecondary text-lg max-w-2xl mx-auto">
-              O FitToday opera com dois modelos de receita complementares,
-              dando transparência total para trainers e alunos.
+            <p className="text-brand-textSecondary text-lg max-w-2xl mx-auto leading-relaxed">
+              Entenda como funciona a relação financeira entre você, seus alunos e a plataforma. Sem taxas escondidas, sem complicação.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-12 max-w-5xl mx-auto">
-            {/* Flow 1: SaaS */}
-            <div className="relative bg-brand-backgroundElevated border border-brand-outline rounded-3xl p-8 lg:p-10 text-white overflow-hidden">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-brand-primary/10 rounded-full blur-[80px]" />
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+            {/* Flow 1: Subscription */}
+            <div className="group relative bg-brand-backgroundElevated border border-white/5 rounded-[40px] p-10 hover:border-brand-primary/20 transition-all duration-500 overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-primary/5 rounded-full blur-3xl group-hover:bg-brand-primary/10 transition-colors" />
+              
               <div className="relative">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 text-brand-primary rounded-full text-xs font-semibold uppercase tracking-wider mb-6">
-                  <CreditCard className="w-3.5 h-3.5" />
-                  Fluxo 1 — Assinatura SaaS
+                <div className="w-14 h-14 bg-brand-primary/10 rounded-2xl flex items-center justify-center mb-8 border border-brand-primary/20">
+                  <Repeat className="w-7 h-7 text-brand-primary" />
                 </div>
 
-                <h3 className="font-display text-2xl font-bold mb-3">
-                  Você assina, você usa
-                </h3>
+                <h3 className="font-display text-2xl font-bold text-white mb-4">Sua Assinatura FitToday</h3>
                 <p className="text-brand-textSecondary leading-relaxed mb-8">
-                  O personal trainer paga uma assinatura mensal para acessar
-                  todas as ferramentas da plataforma. Esse valor vai direto
-                  para a FitToday.
+                  Você paga uma mensalidade fixa para utilizar a plataforma. O processamento é feito via <strong>Stripe</strong> com total segurança.
                 </p>
 
-                <div className="bg-brand-surface border border-brand-outlineVariant rounded-2xl p-6 mb-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center border border-brand-primary/20">
-                      <Users className="w-5 h-5 text-brand-primary" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-brand-textSecondary">Personal Trainer</div>
-                      <div className="font-semibold text-white">Paga R$ 97/mês</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center my-3">
-                    <ArrowRight className="w-5 h-5 text-brand-primary" />
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-brand-accent/10 rounded-xl flex items-center justify-center border border-brand-accent/20">
-                      <Dumbbell className="w-5 h-5 text-brand-accent" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-brand-textSecondary">FitToday</div>
-                      <div className="font-semibold text-white">Recebe R$ 94,56 líquido</div>
-                    </div>
-                  </div>
+                <div className="space-y-4 mb-10">
+                  <FlowStep icon={<CheckCircle className="w-4 h-4 text-brand-primary" />} text="Assinatura mensal ou anual" />
+                  <FlowStep icon={<CheckCircle className="w-4 h-4 text-brand-primary" />} text="Pagamento via Cartão ou Pix" />
+                  <FlowStep icon={<CheckCircle className="w-4 h-4 text-brand-primary" />} text="Acesso imediato a todas as ferramentas" />
                 </div>
 
-                <ul className="space-y-2.5 text-sm text-brand-textSecondary">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-brand-primary flex-shrink-0" />
-                    Relação direta: trainer → FitToday
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-brand-primary flex-shrink-0" />
-                    Stripe Subscriptions
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-brand-primary flex-shrink-0" />
-                    Taxa Stripe: ~2,2% por transação
-                  </li>
-                </ul>
+                <div className="pt-8 border-t border-white/5 flex items-center justify-between">
+                  <div className="text-sm font-semibold text-brand-textTertiary uppercase tracking-widest">Processado por</div>
+                  <div className="flex items-center gap-2 opacity-60">
+                    <span className="text-white font-bold">stripe</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Flow 2: Marketplace */}
-            <div className="relative bg-brand-surface border border-brand-outlineVariant rounded-3xl p-8 lg:p-10 text-white overflow-hidden">
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-brand-accent/10 rounded-full blur-[80px]" />
+            {/* Flow 2: Direct */}
+            <div className="group relative bg-brand-backgroundElevated border border-white/5 rounded-[40px] p-10 hover:border-brand-accent/20 transition-all duration-500 overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full blur-3xl group-hover:bg-brand-accent/10 transition-colors" />
+              
               <div className="relative">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-accent/10 border border-brand-accent/20 text-brand-accent rounded-full text-xs font-semibold uppercase tracking-wider mb-6">
-                  <Wallet className="w-3.5 h-3.5" />
-                  Fluxo 2 — Contratação
+                <div className="w-14 h-14 bg-brand-accent/10 rounded-2xl flex items-center justify-center mb-8 border border-brand-accent/20">
+                  <UserPlus className="w-7 h-7 text-brand-accent" />
                 </div>
 
-                <h3 className="font-display text-2xl font-bold mb-3">
-                  Aluno contrata, trainer recebe
-                </h3>
+                <h3 className="font-display text-2xl font-bold text-white mb-4">Pagamento Direto do Aluno</h3>
                 <p className="text-brand-textSecondary leading-relaxed mb-8">
-                  Quando um aluno quer contratar um personal, ele é redirecionado
-                  pelo app para entrar em contato via WhatsApp ou outro canal do
-                  trainer. O pagamento é feito fora do app, de forma direta.
+                  Seus alunos contratam você diretamente. Você define como quer receber (WhatsApp, Pix, etc). <strong>Taxa zero</strong> de intermediação para você.
                 </p>
 
-                <div className="bg-brand-backgroundElevated border border-brand-outline rounded-2xl p-6 mb-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-10 h-10 bg-brand-accent/10 rounded-xl flex items-center justify-center border border-brand-accent/20">
-                      <Smartphone className="w-5 h-5 text-brand-accent" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-brand-textSecondary">Aluno no App</div>
-                      <div className="font-semibold text-white">Vê perfil do personal</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-center my-3">
-                    <ArrowRight className="w-5 h-5 text-brand-accent" />
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center border border-brand-primary/20">
-                      <MessageSquare className="w-5 h-5 text-brand-primary" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-brand-textSecondary">Contato direto</div>
-                      <div className="font-semibold text-white">Via WhatsApp ou canal do trainer</div>
-                    </div>
-                  </div>
+                <div className="space-y-4 mb-10">
+                  <FlowStep icon={<CheckCircle className="w-4 h-4 text-brand-accent" />} text="O aluno te encontra no app" />
+                  <FlowStep icon={<CheckCircle className="w-4 h-4 text-brand-accent" />} text="Contato direto via seu link preferido" />
+                  <FlowStep icon={<CheckCircle className="w-4 h-4 text-brand-accent" />} text="Você recebe 100% do valor do treino" />
                 </div>
 
-                <ul className="space-y-2.5 text-sm text-brand-textSecondary">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-brand-primary flex-shrink-0" />
-                    Aluno não faz pagamento pelo app
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-brand-primary flex-shrink-0" />
-                    Contato direto via WhatsApp ou link
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-brand-primary flex-shrink-0" />
-                    Trainer define seu próprio canal de contato
-                  </li>
-                </ul>
+                <div className="pt-8 border-t border-white/5 flex items-center justify-between">
+                  <div className="text-sm font-semibold text-brand-textTertiary uppercase tracking-widest">Relacionamento</div>
+                  <div className="text-white font-bold text-sm">Direto com você</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ====== FEATURES ====== */}
-      <section id="funcionalidades" className="py-24 sm:py-32 bg-brand-background">
+      {/* ====== THE PLATFORM (TRAINER) ====== */}
+      <section id="funcionalidades" className="py-24 sm:py-32 bg-brand-background overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-sm font-medium mb-4">
-              <Star className="w-3.5 h-3.5" />
-              Funcionalidades
-            </div>
-            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
-              Tudo que você precisa,{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-secondary">
-                nada que não precisa
-              </span>
-            </h2>
-          </div>
-
-          {/* Feature 1: Programs */}
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-24 lg:mb-32">
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/10">
-              <Image
-                src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Personal trainer orientando aluna"
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
-            </div>
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-xs font-semibold uppercase tracking-wider mb-4">
-                <FileText className="w-3.5 h-3.5" />
-                Programas de Treino
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-xs font-bold uppercase tracking-wider mb-6">
+                Para o Trainer
               </div>
-              <h3 className="font-display text-2xl sm:text-3xl font-bold text-white mb-4">
-                Monte treinos profissionais em minutos
-              </h3>
-              <p className="text-brand-textSecondary text-lg leading-relaxed mb-8">
-                Crie programas completos com exercícios, séries, repetições e envie
-                PDFs personalizados. Seus alunos acessam tudo pelo app.
+              <h2 className="font-display text-4xl sm:text-5xl font-bold text-white tracking-tight mb-8">
+                Sua Central de Comando <span className="text-brand-primary">Completa</span>
+              </h2>
+              <p className="text-brand-textSecondary text-lg leading-relaxed mb-10">
+                Gerencie sua consultoria com ferramentas de nível empresarial. 
+                Do cadastro de alunos ao recebimento de pagamentos, tudo em uma interface intuitiva.
               </p>
-              <ul className="space-y-4">
-                <FeatureBullet icon={<Dumbbell className="w-4 h-4" />} text="Programas com exercícios personalizados" />
-                <FeatureBullet icon={<FileText className="w-4 h-4" />} text="Envio de treinos em PDF" />
-                <FeatureBullet icon={<Smartphone className="w-4 h-4" />} text="Alunos recebem direto no app" />
-                <FeatureBullet icon={<Clock className="w-4 h-4" />} text="Defina duração e periodização" />
-              </ul>
+              
+              <div className="grid sm:grid-cols-2 gap-6">
+                <div className="p-6 bg-brand-backgroundElevated rounded-2xl border border-white/5">
+                  <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center mb-4">
+                    <FileText className="w-5 h-5 text-brand-primary" />
+                  </div>
+                  <h4 className="text-white font-bold mb-2">Programas Dinâmicos</h4>
+                  <p className="text-brand-textSecondary text-sm">Crie treinos com mídias e instruções detalhadas.</p>
+                </div>
+                <div className="p-6 bg-brand-backgroundElevated rounded-2xl border border-white/5">
+                  <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center mb-4">
+                    <BarChart3 className="w-5 h-5 text-brand-primary" />
+                  </div>
+                  <h4 className="text-white font-bold mb-2">Analytics Real</h4>
+                  <p className="text-brand-textSecondary text-sm">Acompanhe faturamento e engajamento dos alunos.</p>
+                </div>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="absolute -inset-4 bg-brand-primary/20 rounded-[40px] blur-3xl opacity-20" />
+              <div className="relative aspect-video bg-brand-surface rounded-[32px] border border-white/10 overflow-hidden shadow-2xl">
+                <Image
+                  src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                  alt="Trainer Dashboard"
+                  fill
+                  className="object-cover opacity-90"
+                />
+              </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Feature 2: Students (reversed) */}
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-24 lg:mb-32">
-            <div className="order-2 lg:order-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-xs font-semibold uppercase tracking-wider mb-4">
-                <Users className="w-3.5 h-3.5" />
-                Gestão de Alunos
+      {/* ====== THE APP (STUDENT) ====== */}
+      <section className="py-24 sm:py-32 bg-brand-backgroundElevated">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="order-2 lg:order-1 relative flex justify-center">
+               <div className="absolute inset-0 bg-brand-accent/20 rounded-full blur-[120px] opacity-20" />
+               <div className="relative w-full max-w-[320px] aspect-[9/19] bg-[#000] rounded-[60px] border-[8px] border-[#1A1A1A] overflow-hidden shadow-[0_0_100px_-20px_rgba(251,113,133,0.3)]">
+                 <Image
+                    src="https://images.unsplash.com/photo-1510017803434-a899398421b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                    alt="Student App Mobile"
+                    fill
+                    className="object-cover opacity-80"
+                 />
+                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                 <div className="absolute bottom-10 left-6 right-6">
+                    <div className="text-white font-bold text-xl mb-1">Seu Treino de Hoje</div>
+                    <div className="text-brand-accent text-sm font-medium">Peito & Tríceps • 45 min</div>
+                 </div>
+               </div>
+            </div>
+            <div className="order-1 lg:order-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-accent/10 text-brand-accent rounded-full text-xs font-bold uppercase tracking-wider mb-6">
+                Para o Aluno
               </div>
-              <h3 className="font-display text-2xl sm:text-3xl font-bold text-white mb-4">
-                Acompanhe cada aluno de perto
-              </h3>
-              <p className="text-brand-textSecondary text-lg leading-relaxed mb-8">
-                Visualize o progresso, histórico de treinos e mantenha
-                comunicação direta com cada aluno pela plataforma.
+              <h2 className="font-display text-4xl sm:text-5xl font-bold text-white tracking-tight mb-8">
+                Uma Experiência <span className="text-brand-accent">Premium</span> no Bolso
+              </h2>
+              <p className="text-brand-textSecondary text-lg leading-relaxed mb-10">
+                Seus alunos recebem um aplicativo moderno para acompanhar os treinos, 
+                ver vídeos de execução e registrar progresso. É a sua consultoria, no celular deles.
               </p>
-              <ul className="space-y-4">
-                <FeatureBullet icon={<BarChart3 className="w-4 h-4" />} text="Dashboard de progresso individual" />
-                <FeatureBullet icon={<MessageSquare className="w-4 h-4" />} text="Mensagens diretas com alunos" />
-                <FeatureBullet icon={<TrendingUp className="w-4 h-4" />} text="Histórico completo de treinos" />
-                <FeatureBullet icon={<Award className="w-4 h-4" />} text="Feedback e avaliação de treinos" />
-              </ul>
-            </div>
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/10 order-1 lg:order-2">
-              <Image
-                src="https://images.unsplash.com/photo-1549060279-7e168fcee0c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Atleta treinando com determinação"
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
-            </div>
-          </div>
-
-          {/* Feature 3: Payments */}
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/10">
-              <Image
-                src="https://images.unsplash.com/photo-1576678927484-cc907957088c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Pessoa treinando com intensidade"
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-              />
-            </div>
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-xs font-semibold uppercase tracking-wider mb-4">
-                <Wallet className="w-3.5 h-3.5" />
-                Financeiro
-              </div>
-              <h3 className="font-display text-2xl sm:text-3xl font-bold text-white mb-4">
-                Receba pagamentos sem complicação
-              </h3>
-              <p className="text-brand-textSecondary text-lg leading-relaxed mb-8">
-                Pagamentos seguros via Stripe com suporte a Pix, boleto e cartão.
-                Acompanhe receitas e repasses em tempo real.
-              </p>
-              <ul className="space-y-4">
-                <FeatureBullet icon={<CreditCard className="w-4 h-4" />} text="Pix, boleto e cartão de crédito" />
-                <FeatureBullet icon={<Shield className="w-4 h-4" />} text="Processado pelo Stripe com segurança" />
-                <FeatureBullet icon={<TrendingUp className="w-4 h-4" />} text="Dashboard financeiro em tempo real" />
-                <FeatureBullet icon={<Wallet className="w-4 h-4" />} text="Repasse automático na sua conta" />
+              
+              <ul className="space-y-6">
+                <li className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-brand-accent/10 rounded-2xl flex items-center justify-center flex-shrink-0 border border-brand-accent/20">
+                    <Smartphone className="w-6 h-6 text-brand-accent" />
+                  </div>
+                  <div>
+                    <h4 className="text-white font-bold mb-1">Acesso Offline</h4>
+                    <p className="text-brand-textSecondary text-sm">Visualize treinos mesmo sem conexão com a internet na academia.</p>
+                  </div>
+                </li>
+                <li className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-brand-accent/10 rounded-2xl flex items-center justify-center flex-shrink-0 border border-brand-accent/20">
+                    <MessageSquare className="w-6 h-6 text-brand-accent" />
+                  </div>
+                  <div>
+                    <h4 className="text-white font-bold mb-1">Feedback em Tempo Real</h4>
+                    <p className="text-brand-textSecondary text-sm">Seus alunos podem enviar feedbacks logo após cada sessão de treino.</p>
+                  </div>
+                </li>
               </ul>
             </div>
           </div>
@@ -423,7 +375,7 @@ export default function SitePage() {
       </section>
 
       {/* ====== HOW IT WORKS ====== */}
-      <section id="como-funciona" className="py-24 sm:py-32 bg-brand-background relative overflow-hidden">
+      <section className="py-24 sm:py-32 bg-brand-background relative overflow-hidden">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-primary/5 rounded-full blur-[120px]" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-brand-accent/5 rounded-full blur-[100px]" />
 
@@ -463,146 +415,104 @@ export default function SitePage() {
         </div>
       </section>
 
-      {/* ====== PRICING (Arrows-style) ====== */}
+      {/* ====== PRICING ====== */}
       <section id="precos" className="py-24 sm:py-32 bg-brand-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 text-brand-primary rounded-full text-sm font-medium mb-4">
-              <Star className="w-3.5 h-3.5" />
-              Preços
-            </div>
-            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mb-4">
-              Escolha o plano ideal para você
+            <h2 className="font-display text-4xl sm:text-5xl font-bold text-white tracking-tight mb-4">
+              Planos que crescem com <span className="text-brand-primary">você</span>
             </h2>
             <p className="text-brand-textSecondary text-lg max-w-xl mx-auto">
-              Comece grátis e faça upgrade conforme seu negócio cresce.
+              Comece sem custos e profissionalize sua consultoria conforme sua base de alunos aumenta.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto items-start">
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto items-start">
             {/* Starter Plan */}
-            <div className="bg-brand-backgroundElevated rounded-3xl border border-brand-outline overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
-              <div className="px-8 pt-8 pb-6">
-                <div className="text-sm font-semibold text-brand-textTertiary uppercase tracking-wider mb-3">Starter</div>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="font-display text-4xl lg:text-5xl font-extrabold text-white">Grátis</span>
+            <div className="bg-brand-backgroundElevated/50 backdrop-blur-sm rounded-[32px] border border-white/5 p-8 flex flex-col h-full">
+              <div className="mb-8">
+                <div className="text-brand-textTertiary text-sm font-bold uppercase tracking-widest mb-4">Starter</div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-bold text-white">Grátis</span>
                 </div>
-                <p className="text-brand-textSecondary text-sm mb-2">+ 10% de comissão</p>
-                <p className="text-brand-textTertiary text-xs mb-8">Para começar sem compromisso</p>
-                <Link
-                  href="/register"
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 border border-brand-outlineVariant text-white font-semibold rounded-xl hover:bg-brand-surface transition-colors"
-                >
-                  Comece Grátis
-                </Link>
+                <p className="text-brand-textSecondary text-sm mt-2">+ 10% de taxa por transação</p>
               </div>
-              <div className="px-8 pb-8">
-                <div className="text-xs font-semibold text-brand-textTertiary uppercase tracking-wider mb-4 pt-6 border-t border-brand-outline">O que inclui</div>
-                <ul className="space-y-3">
-                  <PricingItem text="Até 5 alunos ativos" included />
-                  <PricingItem text="Até 3 programas de treino" included />
-                  <PricingItem text="Envio de treinos em PDF" included />
-                  <PricingItem text="Dashboard básico" included />
-                  <PricingItem text="Apps iOS e Android" included />
-                  <PricingItem text="Analytics avançado" included={false} />
-                  <PricingItem text="Alunos ilimitados" included={false} />
-                  <PricingItem text="White-label" included={false} />
-                </ul>
-                <div className="mt-6 pt-4 border-t border-brand-outline">
-                  <p className="text-xs text-brand-textSecondary">
-                    <span className="font-semibold text-brand-accent">10% de comissão</span> sobre vendas de programas
-                  </p>
-                </div>
-              </div>
+              
+              <ul className="space-y-4 mb-10 flex-grow">
+                <PricingItem text="Até 5 alunos ativos" included />
+                <PricingItem text="Programas ilimitados" included />
+                <PricingItem text="App para alunos" included />
+                <PricingItem text="Dashboard básico" included />
+              </ul>
+
+              <Link
+                href="/register"
+                className="w-full py-4 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl transition-all text-center border border-white/5"
+              >
+                Começar Grátis
+              </Link>
             </div>
 
-            {/* Pro Plan (highlighted) */}
-            <div className="relative">
-              <div className="absolute -inset-[1px] bg-gradient-to-b from-brand-primary via-brand-secondary to-brand-accent rounded-3xl" />
-              <div className="relative bg-brand-surface rounded-3xl overflow-hidden">
-                <div className="bg-gradient-to-r from-brand-primary to-blue-600 px-8 py-2.5 text-center">
-                  <span className="text-xs font-bold text-white uppercase tracking-widest">Recomendado</span>
-                </div>
-                <div className="px-8 pt-8 pb-6">
-                  <div className="text-sm font-semibold text-brand-primary uppercase tracking-wider mb-3">Pro</div>
-                  <div className="flex items-baseline gap-1 mb-1">
-                    <span className="font-display text-4xl lg:text-5xl font-extrabold text-white">R$ 97</span>
-                    <span className="text-brand-textSecondary text-sm font-medium">/mês</span>
-                  </div>
-                  <p className="text-brand-textSecondary text-sm mb-2">+ 5% de comissão</p>
-                  <p className="text-brand-textTertiary text-xs mb-8">Para trainers que querem crescer</p>
-                  <Link
-                    href="/register"
-                    className="group w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-brand-primary hover:bg-blue-600 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-brand-primary/25 hover:shadow-blue-600/30"
-                  >
-                    Assinar Pro
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                  </Link>
-                </div>
-                <div className="px-8 pb-8">
-                  <div className="text-xs font-semibold text-brand-textTertiary uppercase tracking-wider mb-4 pt-6 border-t border-brand-outline">Tudo do Starter, mais</div>
-                  <ul className="space-y-3">
-                    <PricingItem text="Alunos ilimitados" included highlight />
-                    <PricingItem text="Programas ilimitados" included highlight />
-                    <PricingItem text="Analytics avançado" included highlight />
-                    <PricingItem text="Comissão reduzida (5%)" included highlight />
-                    <PricingItem text="Chat direto com alunos" included highlight />
-                    <PricingItem text="Acompanhamento de progresso" included />
-                    <PricingItem text="White-label" included={false} />
-                    <PricingItem text="Suporte prioritário" included={false} />
-                  </ul>
-                  <div className="mt-6 pt-4 border-t border-brand-outline">
-                    <p className="text-xs text-brand-textSecondary">
-                      <span className="font-semibold text-brand-primary">5% de comissão</span> sobre vendas de programas
-                    </p>
-                  </div>
-                </div>
+            {/* Pro Plan */}
+            <div className="relative bg-brand-surface rounded-[40px] p-8 border border-brand-primary/30 flex flex-col h-full shadow-[0_0_50px_-12px_rgba(59,130,246,0.3)] scale-105 z-10">
+              <div className="absolute top-0 right-8 -translate-y-1/2 bg-brand-primary text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 rounded-full">
+                Mais Popular
               </div>
+              <div className="mb-8">
+                <div className="text-brand-primary text-sm font-bold uppercase tracking-widest mb-4">Pro</div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-sm text-brand-textSecondary">R$</span>
+                  <span className="text-5xl font-bold text-white">97</span>
+                  <span className="text-brand-textSecondary font-medium">/mês</span>
+                </div>
+                <p className="text-brand-textSecondary text-sm mt-2">+ 5% de taxa por transação</p>
+              </div>
+              
+              <ul className="space-y-4 mb-10 flex-grow">
+                <PricingItem text="Alunos ilimitados" included highlight />
+                <PricingItem text="Analytics avançado" included highlight />
+                <PricingItem text="Suporte prioritário" included highlight />
+                <PricingItem text="Sem limites de programas" included />
+                <PricingItem text="Chat direto no app" included />
+              </ul>
+
+              <Link
+                href="/register"
+                className="w-full py-4 bg-brand-primary hover:bg-blue-600 text-white font-bold rounded-2xl transition-all text-center shadow-lg shadow-brand-primary/20"
+              >
+                Assinar Pro
+              </Link>
             </div>
 
             {/* Elite Plan */}
-            <div className="bg-brand-backgroundElevated rounded-3xl border border-brand-outline overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
-              <div className="bg-brand-background px-8 py-2.5 text-center">
-                <span className="text-xs font-bold text-brand-accent uppercase tracking-widest">Sem comissão</span>
-              </div>
-              <div className="px-8 pt-8 pb-6">
-                <div className="text-sm font-semibold text-white uppercase tracking-wider mb-3">Elite</div>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="font-display text-4xl lg:text-5xl font-extrabold text-white">R$ 197</span>
-                  <span className="text-brand-textSecondary text-sm font-medium">/mês</span>
+            <div className="bg-brand-backgroundElevated/50 backdrop-blur-sm rounded-[32px] border border-white/5 p-8 flex flex-col h-full">
+              <div className="mb-8">
+                <div className="text-brand-accent text-sm font-bold uppercase tracking-widest mb-4">Elite</div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-sm text-brand-textSecondary">R$</span>
+                  <span className="text-5xl font-bold text-white">197</span>
+                  <span className="text-brand-textSecondary font-medium">/mês</span>
                 </div>
-                <p className="text-brand-textSecondary text-sm mb-2">0% de comissão</p>
-                <p className="text-brand-textTertiary text-xs mb-8">Para trainers que querem o máximo</p>
-                <Link
-                  href="/register"
-                  className="group w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-white text-brand-background font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-white/10"
-                >
-                  Assinar Elite
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
+                <p className="text-brand-textSecondary text-sm mt-2">0% de taxa adicional</p>
               </div>
-              <div className="px-8 pb-8">
-                <div className="text-xs font-semibold text-brand-textTertiary uppercase tracking-wider mb-4 pt-6 border-t border-brand-outline">Tudo do Pro, mais</div>
-                <ul className="space-y-3">
-                  <PricingItem text="Zero comissão sobre vendas" included highlight />
-                  <PricingItem text="White-label completo" included highlight />
-                  <PricingItem text="Suporte prioritário" included highlight />
-                  <PricingItem text="Alunos ilimitados" included />
-                  <PricingItem text="Programas ilimitados" included />
-                  <PricingItem text="Analytics avançado" included />
-                  <PricingItem text="Chat direto com alunos" included />
-                  <PricingItem text="Acompanhamento de progresso" included />
-                </ul>
-                <div className="mt-6 pt-4 border-t border-brand-outline">
-                  <p className="text-xs text-brand-textSecondary">
-                    <span className="font-semibold text-white">0% de comissão</span> — você fica com tudo
-                  </p>
-                </div>
-              </div>
+              
+              <ul className="space-y-4 mb-10 flex-grow">
+                <PricingItem text="Tudo do plano Pro" included highlight />
+                <PricingItem text="Taxa zero da plataforma" included highlight />
+                <PricingItem text="White-label completo" included />
+                <PricingItem text="Gerente de conta" included />
+              </ul>
+
+              <Link
+                href="/register"
+                className="w-full py-4 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl transition-all text-center border border-white/5"
+              >
+                Falar com Consultor
+              </Link>
             </div>
           </div>
 
-          <p className="text-center text-sm text-brand-textTertiary mt-8 max-w-lg mx-auto">
+          <p className="text-center text-sm text-brand-textTertiary mt-12 max-w-lg mx-auto">
             Todos os planos incluem apps iOS e Android para seus alunos.
             Alunos não fazem pagamentos pelo app — contratam diretamente com o personal.
           </p>
@@ -747,6 +657,35 @@ export default function SitePage() {
 }
 
 /* ====== HELPER COMPONENTS ====== */
+
+function BenefitCard({
+  title,
+  description,
+  icon,
+}: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="bg-brand-backgroundElevated/50 backdrop-blur-sm rounded-[32px] p-8 border border-white/[0.05] hover:border-brand-primary/20 transition-all group">
+      <div className="w-12 h-12 bg-brand-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform border border-brand-primary/20">
+        <div className="text-brand-primary">{icon}</div>
+      </div>
+      <h3 className="font-display text-xl font-bold text-white mb-3">{title}</h3>
+      <p className="text-brand-textSecondary leading-relaxed">{description}</p>
+    </div>
+  );
+}
+
+function FlowStep({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex-shrink-0">{icon}</div>
+      <span className="text-brand-textSecondary text-sm font-medium">{text}</span>
+    </div>
+  );
+}
 
 function StatCard({
   number,
