@@ -17,6 +17,7 @@ import {
   BookOpen,
   ClipboardList,
   UserPlus,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useState, useEffect } from 'react';
@@ -29,6 +30,7 @@ const navigation = [
   { name: 'Exercícios', href: '/cms/exercises', icon: BookOpen },
   { name: 'Alunos', href: '/cms/students', icon: Users },
   { name: 'Solicitações', href: '/cms/connections', icon: UserPlus, badge: true },
+  { name: 'Notificacoes', href: '/cms/notifications', icon: Bell, badge: true, badgeType: 'notifications' },
   { name: 'Mensagens', href: '/cms/messages', icon: MessageSquare, eliteOnly: true },
   { name: 'Analytics', href: '/cms/analytics', icon: BarChart3 },
   { name: 'Financeiro', href: '/cms/finances', icon: Wallet },
@@ -40,10 +42,12 @@ export function Sidebar() {
   const { signOut, trainer, user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [notificationsCount, setNotificationsCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
     let unsubscribe: (() => void) | undefined;
+    let unsubNotif: (() => void) | undefined;
 
     import('@/lib/firebase').then(({ db }) => {
       if (!db) return;
@@ -55,9 +59,20 @@ export function Sidebar() {
       unsubscribe = onSnapshot(q, (snap) => {
         setPendingCount(snap.size);
       });
+
+      const notifQ = query(
+        collection(db as Firestore, 'users', user.uid, 'notifications'),
+        where('isRead', '==', false)
+      );
+      unsubNotif = onSnapshot(notifQ, (snap) => {
+        setNotificationsCount(snap.size);
+      });
     });
 
-    return () => unsubscribe?.();
+    return () => {
+      unsubscribe?.();
+      unsubNotif?.();
+    };
   }, [user]);
 
   const isActive = (href: string) => {
@@ -110,7 +125,8 @@ export function Sidebar() {
           const active = isActive(item.href);
           const trainerPlan = trainer?.subscription?.plan || 'starter';
           const isLocked = item.eliteOnly && trainerPlan !== 'elite';
-          const hasBadge = item.badge && pendingCount > 0;
+          const badgeCount = (item as any).badgeType === 'notifications' ? notificationsCount : pendingCount;
+          const hasBadge = item.badge && badgeCount > 0;
           return (
             <Link
               key={item.name}
@@ -130,7 +146,7 @@ export function Sidebar() {
                 />
                 {collapsed && hasBadge && (
                   <span className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold rounded-full border border-gray-950">
-                    {pendingCount > 9 ? '9+' : pendingCount}
+                    {badgeCount > 9 ? '9+' : badgeCount}
                   </span>
                 )}
               </div>
@@ -145,7 +161,7 @@ export function Sidebar() {
                   )}
                   {hasBadge && (
                     <span className="flex items-center justify-center h-5 min-w-[20px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full">
-                      {pendingCount > 9 ? '9+' : pendingCount}
+                      {badgeCount > 9 ? '9+' : badgeCount}
                     </span>
                   )}
                 </span>
