@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, deleteWorkoutPDF, generateSignedUrl, verifyTrainerRequest } from '@/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { Workout, WorkoutWithProgress } from '@/types/workout';
 
 export const dynamic = 'force-dynamic';
@@ -135,7 +135,14 @@ export async function PATCH(
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
         if (field === 'startDate' && body[field]) {
-          updateData[field] = new Date(body[field]);
+          const parsed = new Date(body[field]);
+          if (isNaN(parsed.getTime())) {
+            return NextResponse.json(
+              { error: 'Invalid startDate format. Use ISO date (YYYY-MM-DD)' },
+              { status: 400 }
+            );
+          }
+          updateData[field] = Timestamp.fromDate(parsed);
         } else {
           updateData[field] = body[field];
         }

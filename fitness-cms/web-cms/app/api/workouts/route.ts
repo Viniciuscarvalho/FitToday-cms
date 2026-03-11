@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, uploadWorkoutPDF, sendWorkoutNotification, verifyTrainerRequest } from '@/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { Workout, WorkoutProgress, CreateWorkoutResponse, WorkoutListResponse } from '@/types/workout';
 import { isWithinStudentLimit, PLANS, PlanId } from '@/lib/constants';
 
@@ -72,6 +72,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
     }
 
+    if (startDate) {
+      const parsed = new Date(startDate);
+      if (isNaN(parsed.getTime())) {
+        return NextResponse.json(
+          { error: 'Invalid startDate format. Use ISO date (YYYY-MM-DD)' },
+          { status: 400 }
+        );
+      }
+    }
+
     // Check student limit based on trainer's plan
     const trainerDoc = await adminDb.collection('users').doc(trainerId).get();
     const trainerData = trainerDoc.data();
@@ -122,7 +132,8 @@ export async function POST(request: NextRequest) {
       : 28; // Default to 4 weeks
 
     // Create workout document
-    const workoutData: Omit<Workout, 'id' | 'createdAt' | 'updatedAt'> & {
+    const workoutData: Omit<Workout, 'id' | 'createdAt' | 'updatedAt' | 'startDate'> & {
+      startDate?: FirebaseFirestore.Timestamp;
       createdAt: FirebaseFirestore.FieldValue;
       updatedAt: FirebaseFirestore.FieldValue;
     } = {
@@ -134,7 +145,7 @@ export async function POST(request: NextRequest) {
       pdfPath,
       durationWeeks: parsedDurationWeeks,
       totalDays: parsedTotalDays,
-      startDate: startDate ? new Date(startDate) as any : undefined,
+      startDate: startDate ? Timestamp.fromDate(new Date(startDate)) : undefined,
       status: 'active',
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
