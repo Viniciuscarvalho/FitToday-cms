@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { UserPlus, Check, X, Clock, Users, MessageCircle, RefreshCw } from 'lucide-react';
+import { UserPlus, Check, X, Clock, Users, MessageCircle, RefreshCw, Ban } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 import { apiRequest } from '@/lib/api-client';
 
@@ -15,14 +15,14 @@ interface Student {
 interface ConnectionRequest {
   id: string;
   studentId: string;
-  status: 'pending' | 'active' | 'rejected';
+  status: 'pending' | 'active' | 'rejected' | 'cancelled';
   source: string;
   message: string | null;
   createdAt: { _seconds: number } | null;
   student: Student | null;
 }
 
-type TabStatus = 'pending' | 'active' | 'rejected';
+type TabStatus = 'pending' | 'active' | 'rejected' | 'cancelled';
 
 export default function ConnectionsPage() {
   const { user } = useAuth();
@@ -96,6 +96,7 @@ export default function ConnectionsPage() {
     { label: 'Pendentes', value: 'pending', icon: <Clock className="h-4 w-4" /> },
     { label: 'Aceitas', value: 'active', icon: <Check className="h-4 w-4" /> },
     { label: 'Recusadas', value: 'rejected', icon: <X className="h-4 w-4" /> },
+    { label: 'Canceladas', value: 'cancelled', icon: <Ban className="h-4 w-4" /> },
   ];
 
   return (
@@ -152,6 +153,8 @@ export default function ConnectionsPage() {
               <UserPlus className="h-8 w-8 text-gray-400" />
             ) : tab === 'active' ? (
               <Users className="h-8 w-8 text-gray-400" />
+            ) : tab === 'cancelled' ? (
+              <Ban className="h-8 w-8 text-gray-400" />
             ) : (
               <X className="h-8 w-8 text-gray-400" />
             )}
@@ -161,6 +164,8 @@ export default function ConnectionsPage() {
               ? 'Nenhuma solicitação pendente'
               : tab === 'active'
               ? 'Nenhuma conexão aceita ainda'
+              : tab === 'cancelled'
+              ? 'Nenhuma conexão cancelada'
               : 'Nenhuma solicitação recusada'}
           </h3>
           <p className="text-sm text-gray-500">
@@ -168,6 +173,8 @@ export default function ConnectionsPage() {
               ? 'Quando um aluno solicitar conexão pelo app, aparecerá aqui.'
               : tab === 'active'
               ? 'As conexões aceitas aparecem aqui e na lista de Alunos.'
+              : tab === 'cancelled'
+              ? 'Conexões que foram canceladas aparecerão aqui.'
               : 'Solicitações que você recusou aparecerão aqui.'}
           </p>
         </div>
@@ -266,6 +273,13 @@ export default function ConnectionsPage() {
                 <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 rounded-full flex-shrink-0">
                   <X className="h-3.5 w-3.5" />
                   Recusado
+                </span>
+              )}
+
+              {tab === 'cancelled' && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-orange-600 bg-orange-50 rounded-full flex-shrink-0">
+                  <Ban className="h-3.5 w-3.5" />
+                  Cancelado
                 </span>
               )}
             </div>

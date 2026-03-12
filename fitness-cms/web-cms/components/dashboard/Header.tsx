@@ -76,7 +76,13 @@ export function Header() {
     switch (type) {
       case 'connection_request':
         return <UserPlus className="h-5 w-5 text-blue-600" />;
+      case 'connection_accepted':
+        return <CheckCircle className="h-5 w-5 text-emerald-600" />;
+      case 'connection_rejected':
+      case 'connection_cancelled':
+        return <Bell className="h-5 w-5 text-orange-600" />;
       case 'workout_completed':
+      case 'new_workout':
         return <Dumbbell className="h-5 w-5 text-primary-600" />;
       case 'payment':
         return <CheckCircle className="h-5 w-5 text-emerald-600" />;
@@ -89,7 +95,13 @@ export function Header() {
     switch (type) {
       case 'connection_request':
         return 'bg-blue-100';
+      case 'connection_accepted':
+        return 'bg-emerald-100';
+      case 'connection_rejected':
+      case 'connection_cancelled':
+        return 'bg-orange-100';
       case 'workout_completed':
+      case 'new_workout':
         return 'bg-primary-100';
       case 'payment':
         return 'bg-emerald-100';
@@ -201,9 +213,13 @@ export function Header() {
                       className={`px-6 py-4 hover:bg-gray-50 cursor-pointer border-b border-gray-50 transition-colors ${!n.isRead ? 'bg-primary-50/30' : ''}`}
                     >
                       <div className="flex gap-4">
-                        <div className={`w-10 h-10 ${getNotificationIconBg(n.type)} rounded-xl flex items-center justify-center shrink-0`}>
-                          {getNotificationIcon(n.type)}
-                        </div>
+                        {n.actor?.avatar ? (
+                          <img src={n.actor.avatar} alt={n.actor.name} className="w-10 h-10 rounded-xl object-cover shrink-0" />
+                        ) : (
+                          <div className={`w-10 h-10 ${getNotificationIconBg(n.type)} rounded-xl flex items-center justify-center shrink-0`}>
+                            {getNotificationIcon(n.type)}
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-gray-900 leading-snug">{n.title}</p>
                           {n.body && (

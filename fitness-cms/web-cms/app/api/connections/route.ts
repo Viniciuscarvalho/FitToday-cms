@@ -3,7 +3,7 @@ import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/connections?status=pending|active|rejected
+// GET /api/connections?status=pending|active|rejected|cancelled
 // Returns connection requests for the authenticated trainer, enriched with student info.
 export async function GET(request: NextRequest) {
   try {
@@ -59,6 +59,9 @@ export async function GET(request: NextRequest) {
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
           respondedAt: data.respondedAt ?? null,
+          cancelledAt: data.cancelledAt ?? null,
+          cancelledBy: data.cancelledBy ?? null,
+          cancellationReason: data.cancellationReason ?? null,
           student: student
             ? {
                 uid: student.uid,

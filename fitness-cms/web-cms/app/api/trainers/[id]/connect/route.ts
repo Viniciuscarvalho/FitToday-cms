@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { createNotification } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,14 +76,22 @@ export async function POST(
         );
       }
 
-      // If previously rejected, allow re-request by resetting to pending
-      await doc.ref.update({
-        status: 'pending',
-        updatedAt: FieldValue.serverTimestamp(),
-        respondedAt: null,
-      });
+      // If previously rejected or cancelled, allow re-request by resetting to pending
+      if (data.status === 'rejected' || data.status === 'cancelled') {
+        await doc.ref.update({
+          status: 'pending',
+          updatedAt: FieldValue.serverTimestamp(),
+          respondedAt: null,
+          cancelledAt: null,
+          cancelledBy: null,
+          cancellationReason: null,
+        });
 
-      return NextResponse.json({ id: doc.id, trainerId, studentId, status: 'pending' });
+        return NextResponse.json({ id: doc.id, trainerId, studentId, status: 'pending' });
+      }
+
+      // Unknown status — return current state
+      return NextResponse.json({ id: doc.id, ...data });
     }
 
     // Get optional message from student
@@ -107,31 +116,28 @@ export async function POST(
       respondedAt: null,
     });
 
-    // Send in-app notification to trainer
-    const notificationRef = adminDb
-      .collection('users')
-      .doc(trainerId)
-      .collection('notifications')
-      .doc();
-
+    // Send in-app notification to trainer using standardized schema
     const studentDoc = await adminDb.collection('users').doc(studentId).get();
-    const studentName = studentDoc.data()?.displayName || 'Um aluno';
+    const studentData = studentDoc.data();
+    const studentName = studentData?.displayName || 'Um aluno';
 
-    await notificationRef.set({
-      id: notificationRef.id,
+    await createNotification({
+      type: 'connection_request',
       userId: trainerId,
       userRole: 'trainer',
-      type: 'connection_request',
       title: 'Nova solicitação de conexão',
       body: `${studentName} quer se conectar com você.`,
+      actor: {
+        id: studentId,
+        name: studentName,
+        avatar: studentData?.photoURL || undefined,
+      },
       action: {
         type: 'navigate',
         destination: '/cms/connections',
       },
       relatedEntityType: 'connection',
       relatedEntityId: connectionRef.id,
-      isRead: false,
-      createdAt: FieldValue.serverTimestamp(),
     });
 
     return NextResponse.json(
