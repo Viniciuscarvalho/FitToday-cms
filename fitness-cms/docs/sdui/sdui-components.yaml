@@ -1,0 +1,1130 @@
+# FitToday SDUI Component Library Specification
+# Version: 1.0.0
+# Date: 2026-03-10
+#
+# This file defines all 36 SDUI components organized by category.
+# Each component includes: type identifier, description, properties
+# (with types, required/optional, defaults), and example usage.
+#
+# Categories:
+#   - layout (7 components)
+#   - content (8 components)
+#   - interactive (9 components)
+#   - navigation (4 components)
+#   - domain-fitness (8 components)
+
+schema_version: "1.0.0"
+
+design_tokens:
+  spacing:
+    none: 0
+    xs: 4
+    sm: 8
+    md: 16
+    lg: 24
+    xl: 32
+  colors:
+    - primary
+    - primary-light
+    - primary-dark
+    - secondary
+    - secondary-light
+    - secondary-dark
+    - surface
+    - surface-variant
+    - background
+    - error
+    - success
+    - warning
+    - info
+    - on-primary
+    - on-secondary
+    - on-surface
+    - on-background
+    - on-error
+    - muted
+    - accent
+  radius:
+    none: 0
+    sm: 4
+    md: 8
+    lg: 16
+    full: 9999
+  shadow:
+    - none
+    - sm
+    - md
+    - lg
+  text_styles:
+    - heading-1
+    - heading-2
+    - heading-3
+    - body
+    - body-bold
+    - body-small
+    - caption
+    - overline
+
+actions:
+  - type: navigate
+    description: Push or present a new screen
+    params:
+      destination: { type: string, required: true }
+      params: { type: "map<string, string>", required: false }
+      transition: { type: enum, values: [push, present, replace], default: push }
+
+  - type: navigate-back
+    description: Pop the current screen from the navigation stack
+
+  - type: open-url
+    description: Open a URL in the in-app browser or external browser
+    params:
+      url: { type: string, required: true }
+      inApp: { type: boolean, default: true }
+
+  - type: api-call
+    description: Make an authenticated API request
+    params:
+      method: { type: enum, values: [GET, POST, PUT, DELETE], required: true }
+      endpoint: { type: string, required: true }
+      body: { type: object, required: false }
+      onSuccess: { type: SDUIAction, required: false }
+      onError: { type: SDUIAction, required: false }
+
+  - type: refresh-screen
+    description: Re-fetch the current screen from the server
+
+  - type: show-sheet
+    description: Present a bottom sheet with SDUI content
+    params:
+      content: { type: SDUIComponent, required: true }
+      detents: { type: "enum[]", values: [medium, large], default: [medium] }
+
+  - type: show-alert
+    description: Display a native alert dialog
+    params:
+      title: { type: string, required: true }
+      message: { type: string, required: false }
+      actions: { type: "AlertAction[]", required: false }
+
+  - type: dismiss
+    description: Dismiss the current sheet, alert, or modal
+
+  - type: share
+    description: Open the native share sheet
+    params:
+      content: { type: string, required: true }
+      url: { type: string, required: false }
+
+  - type: haptic
+    description: Trigger haptic feedback
+    params:
+      style: { type: enum, values: [light, medium, heavy, success, error, warning], required: true }
+
+  - type: analytics
+    description: Track an analytics event
+    params:
+      event: { type: string, required: true }
+      params: { type: "map<string, string>", required: false }
+
+# =============================================================================
+# LAYOUT COMPONENTS (7)
+# =============================================================================
+
+components:
+
+  # ---------------------------------------------------------------------------
+  # Layout
+  # ---------------------------------------------------------------------------
+
+  - type: vstack
+    category: layout
+    description: Vertical stack that arranges children top-to-bottom
+    properties:
+      id: { type: string, required: false }
+      spacing: { type: SpacingToken, default: md }
+      alignment: { type: enum, values: [leading, center, trailing], default: leading }
+      children: { type: "SDUIComponent[]", required: true }
+      style: { type: ComponentStyle, required: false }
+      actions: { type: ActionBindings, required: false }
+    example:
+      type: vstack
+      spacing: md
+      alignment: leading
+      children:
+        - type: text
+          content: "Meus Treinos"
+          textStyle: heading-1
+        - type: text
+          content: "3 treinos ativos"
+          textStyle: body-small
+          color: muted
+
+  - type: hstack
+    category: layout
+    description: Horizontal stack that arranges children left-to-right
+    properties:
+      id: { type: string, required: false }
+      spacing: { type: SpacingToken, default: md }
+      alignment: { type: enum, values: [top, center, bottom], default: center }
+      children: { type: "SDUIComponent[]", required: true }
+      style: { type: ComponentStyle, required: false }
+      actions: { type: ActionBindings, required: false }
+    example:
+      type: hstack
+      spacing: sm
+      alignment: center
+      children:
+        - type: avatar
+          url: "https://example.com/trainer.jpg"
+          size: md
+          fallbackInitials: CS
+        - type: vstack
+          spacing: xs
+          children:
+            - type: text
+              content: "Carlos Silva"
+              textStyle: body-bold
+            - type: text
+              content: "Personal Trainer"
+              textStyle: caption
+              color: muted
+
+  - type: scroll-view
+    category: layout
+    description: Scrollable container for content that exceeds screen bounds
+    properties:
+      id: { type: string, required: false }
+      direction: { type: enum, values: [vertical, horizontal], default: vertical }
+      showsIndicator: { type: boolean, default: true }
+      refreshable: { type: boolean, default: false }
+      children: { type: "SDUIComponent[]", required: true }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: scroll-view
+      direction: vertical
+      refreshable: true
+      children:
+        - type: section
+          id: active-workouts
+          header:
+            type: text
+            content: "Treinos Ativos"
+            textStyle: heading-2
+          children:
+            - type: workout-card
+              data:
+                workoutId: "w1"
+                title: "Treino A - Superior"
+                status: active
+                progress: 0.65
+
+  - type: section
+    category: layout
+    description: Semantic grouping with optional header and footer
+    properties:
+      id: { type: string, required: false }
+      header: { type: SDUIComponent, required: false }
+      footer: { type: SDUIComponent, required: false }
+      children: { type: "SDUIComponent[]", required: true }
+      collapsible: { type: boolean, default: false }
+      collapsed: { type: boolean, default: false }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: section
+      id: today-exercises
+      collapsible: true
+      header:
+        type: hstack
+        children:
+          - type: text
+            content: "Exercicios de Hoje"
+            textStyle: heading-3
+          - type: spacer
+            flexible: true
+          - type: badge
+            text: "6 exercicios"
+            variant: info
+      children:
+        - type: exercise-item
+          data:
+            exerciseId: "e1"
+            name: "Supino Reto"
+            sets: 4
+            reps: "8-12"
+
+  - type: grid
+    category: layout
+    description: Grid layout for arranging cards and items in columns
+    properties:
+      id: { type: string, required: false }
+      columns: { type: integer, required: true, min: 1, max: 6, default: 2 }
+      spacing: { type: SpacingToken, default: md }
+      children: { type: "SDUIComponent[]", required: true }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: grid
+      columns: 2
+      spacing: md
+      children:
+        - type: program-card
+          data:
+            programId: "p1"
+            title: "Hipertrofia 12 Semanas"
+            coverUrl: "https://example.com/cover.jpg"
+        - type: program-card
+          data:
+            programId: "p2"
+            title: "Emagrecimento Express"
+            coverUrl: "https://example.com/cover2.jpg"
+
+  - type: spacer
+    category: layout
+    description: Flexible or fixed-height spacing between components
+    properties:
+      id: { type: string, required: false }
+      height: { type: number, required: false, description: "Fixed height in points. Ignored if flexible=true." }
+      flexible: { type: boolean, default: true }
+    example:
+      type: spacer
+      flexible: true
+
+  - type: divider
+    category: layout
+    description: Visual separator line between content sections
+    properties:
+      id: { type: string, required: false }
+      color: { type: ColorToken, default: muted }
+      thickness: { type: number, default: 1 }
+      insets: { type: SpacingToken, default: none }
+    example:
+      type: divider
+      color: muted
+      thickness: 0.5
+      insets: md
+
+  # ---------------------------------------------------------------------------
+  # Content
+  # ---------------------------------------------------------------------------
+
+  - type: text
+    category: content
+    description: Styled text display with design token-based typography
+    properties:
+      id: { type: string, required: false }
+      content: { type: string, required: true }
+      textStyle: { type: TextStyle, default: body }
+      color: { type: ColorToken, default: on-surface }
+      alignment: { type: enum, values: [leading, center, trailing], default: leading }
+      maxLines: { type: integer, required: false }
+      selectable: { type: boolean, default: false }
+      style: { type: ComponentStyle, required: false }
+      actions: { type: ActionBindings, required: false }
+    example:
+      type: text
+      content: "Treino A - Membros Superiores"
+      textStyle: heading-2
+      color: on-surface
+
+  - type: image
+    category: content
+    description: Remote or local image with aspect ratio control
+    properties:
+      id: { type: string, required: false }
+      url: { type: string, required: true }
+      alt: { type: string, required: false }
+      aspectRatio: { type: number, required: false, description: "Width/Height ratio (e.g., 1.78 for 16:9)" }
+      contentMode: { type: enum, values: [fill, fit, stretch], default: fill }
+      placeholder: { type: enum, values: [shimmer, blur, color], default: shimmer }
+      cornerRadius: { type: RadiusToken, default: none }
+      style: { type: ComponentStyle, required: false }
+      actions: { type: ActionBindings, required: false }
+    example:
+      type: image
+      url: "https://storage.googleapis.com/fittoday/exercises/bench-press.jpg"
+      alt: "Supino Reto com Barra"
+      aspectRatio: 1.5
+      contentMode: fill
+      cornerRadius: md
+
+  - type: avatar
+    category: content
+    description: Circular user avatar with fallback initials
+    properties:
+      id: { type: string, required: false }
+      url: { type: string, required: false }
+      fallbackInitials: { type: string, required: false, maxLength: 2 }
+      size: { type: enum, values: [sm, md, lg, xl], required: true }
+      showBorder: { type: boolean, default: false }
+      online: { type: boolean, required: false }
+      actions: { type: ActionBindings, required: false }
+    example:
+      type: avatar
+      url: "https://example.com/trainer-photo.jpg"
+      fallbackInitials: CS
+      size: lg
+      showBorder: true
+
+  - type: icon
+    category: content
+    description: SF Symbol or custom icon asset
+    properties:
+      id: { type: string, required: false }
+      name: { type: string, required: true, description: "SF Symbol name or custom asset name" }
+      size: { type: number, default: 20 }
+      color: { type: ColorToken, default: on-surface }
+      system: { type: boolean, default: true, description: "true = SF Symbol, false = custom asset" }
+    example:
+      type: icon
+      name: "flame.fill"
+      size: 24
+      color: warning
+
+  - type: badge
+    category: content
+    description: Status indicator or label chip
+    properties:
+      id: { type: string, required: false }
+      text: { type: string, required: true }
+      variant: { type: enum, values: [info, success, warning, error, neutral], required: true }
+      icon: { type: string, required: false }
+    example:
+      type: badge
+      text: "Ativo"
+      variant: success
+      icon: "checkmark.circle.fill"
+
+  - type: progress-bar
+    category: content
+    description: Linear progress indicator with optional label
+    properties:
+      id: { type: string, required: false }
+      value: { type: number, required: true, min: 0, max: 1 }
+      color: { type: ColorToken, default: primary }
+      trackColor: { type: ColorToken, default: surface-variant }
+      label: { type: string, required: false }
+      showPercentage: { type: boolean, default: false }
+      height: { type: number, default: 8 }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: progress-bar
+      value: 0.65
+      color: primary
+      label: "Progresso do Treino"
+      showPercentage: true
+
+  - type: progress-ring
+    category: content
+    description: Circular progress indicator
+    properties:
+      id: { type: string, required: false }
+      value: { type: number, required: true, min: 0, max: 1 }
+      size: { type: number, required: true }
+      lineWidth: { type: number, default: 8 }
+      color: { type: ColorToken, default: primary }
+      trackColor: { type: ColorToken, default: surface-variant }
+      label: { type: string, required: false }
+      centerContent: { type: SDUIComponent, required: false }
+    example:
+      type: progress-ring
+      value: 0.75
+      size: 120
+      lineWidth: 10
+      color: success
+      centerContent:
+        type: vstack
+        alignment: center
+        children:
+          - type: text
+            content: "75%"
+            textStyle: heading-2
+          - type: text
+            content: "concluido"
+            textStyle: caption
+
+  - type: stat-row
+    category: content
+    description: Label-value pair for displaying statistics
+    properties:
+      id: { type: string, required: false }
+      label: { type: string, required: true }
+      value: { type: string, required: true }
+      icon: { type: string, required: false }
+      trend: { type: enum, values: [up, down, neutral], required: false }
+      trendValue: { type: string, required: false }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: stat-row
+      label: "Sequencia Atual"
+      value: "12 dias"
+      icon: "flame.fill"
+      trend: up
+      trendValue: "+3"
+
+  # ---------------------------------------------------------------------------
+  # Interactive
+  # ---------------------------------------------------------------------------
+
+  - type: button
+    category: interactive
+    description: Action button with multiple visual styles
+    properties:
+      id: { type: string, required: false }
+      label: { type: string, required: true }
+      buttonStyle: { type: enum, values: [primary, secondary, outline, destructive, ghost], required: true }
+      size: { type: enum, values: [sm, md, lg], default: md }
+      icon: { type: string, required: false }
+      iconPosition: { type: enum, values: [leading, trailing], default: leading }
+      loading: { type: boolean, default: false }
+      disabled: { type: boolean, default: false }
+      fullWidth: { type: boolean, default: false }
+      actions: { type: ActionBindings, required: false }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: button
+      label: "Iniciar Treino"
+      buttonStyle: primary
+      size: lg
+      icon: "play.fill"
+      fullWidth: true
+      actions:
+        onTap:
+          type: navigate
+          destination: workout-active
+          params:
+            id: "w1"
+
+  - type: link
+    category: interactive
+    description: Navigable text link
+    properties:
+      id: { type: string, required: false }
+      label: { type: string, required: true }
+      textStyle: { type: TextStyle, default: body }
+      color: { type: ColorToken, default: primary }
+      actions: { type: ActionBindings, required: false }
+    example:
+      type: link
+      label: "Ver todos os treinos"
+      color: primary
+      actions:
+        onTap:
+          type: navigate
+          destination: student-workouts
+
+  - type: text-input
+    category: interactive
+    description: Text input field with validation
+    properties:
+      id: { type: string, required: false }
+      fieldId: { type: string, required: true, description: "Identifier for form submission" }
+      label: { type: string, required: false }
+      placeholder: { type: string, required: false }
+      value: { type: string, required: false }
+      keyboardType: { type: enum, values: [default, email, number, decimal, phone, url], default: default }
+      secure: { type: boolean, default: false }
+      multiline: { type: boolean, default: false }
+      maxLength: { type: integer, required: false }
+      validation:
+        required: { type: boolean, required: false }
+        pattern: { type: string, required: false }
+        minLength: { type: integer, required: false }
+        maxLength: { type: integer, required: false }
+        errorMessage: { type: string, required: false }
+      actions: { type: ActionBindings, required: false }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: text-input
+      fieldId: feedback-message
+      label: "Mensagem"
+      placeholder: "Como foi o treino de hoje?"
+      multiline: true
+      maxLength: 500
+      validation:
+        required: true
+        minLength: 10
+        errorMessage: "Minimo de 10 caracteres"
+
+  - type: toggle
+    category: interactive
+    description: On/off switch
+    properties:
+      id: { type: string, required: false }
+      fieldId: { type: string, required: true }
+      label: { type: string, required: true }
+      isOn: { type: boolean, default: false }
+      actions: { type: ActionBindings, required: false }
+    example:
+      type: toggle
+      fieldId: notifications-enabled
+      label: "Receber lembretes de treino"
+      isOn: true
+      actions:
+        onChange:
+          type: api-call
+          method: PUT
+          endpoint: "/api/mobile/v1/preferences"
+
+  - type: slider
+    category: interactive
+    description: Value slider for numeric ranges
+    properties:
+      id: { type: string, required: false }
+      fieldId: { type: string, required: true }
+      label: { type: string, required: false }
+      min: { type: number, required: true }
+      max: { type: number, required: true }
+      value: { type: number, required: true }
+      step: { type: number, required: false }
+      showValue: { type: boolean, default: true }
+      unit: { type: string, required: false }
+      actions: { type: ActionBindings, required: false }
+    example:
+      type: slider
+      fieldId: difficulty-rating
+      label: "Dificuldade"
+      min: 1
+      max: 10
+      value: 5
+      step: 1
+      unit: "/10"
+
+  - type: picker
+    category: interactive
+    description: Selection picker with multiple display styles
+    properties:
+      id: { type: string, required: false }
+      fieldId: { type: string, required: true }
+      label: { type: string, required: false }
+      options:
+        - value: { type: string, required: true }
+          label: { type: string, required: true }
+          icon: { type: string, required: false }
+      selected: { type: string, required: false }
+      pickerStyle: { type: enum, values: [wheel, segmented, menu], default: menu }
+      actions: { type: ActionBindings, required: false }
+    example:
+      type: picker
+      fieldId: difficulty
+      label: "Como foi a dificuldade?"
+      pickerStyle: segmented
+      selected: adequate
+      options:
+        - value: too_easy
+          label: "Facil"
+          icon: "face.smiling"
+        - value: adequate
+          label: "Adequado"
+          icon: "hand.thumbsup"
+        - value: too_hard
+          label: "Dificil"
+          icon: "flame.fill"
+
+  - type: checkbox
+    category: interactive
+    description: Boolean checkbox with label
+    properties:
+      id: { type: string, required: false }
+      fieldId: { type: string, required: true }
+      label: { type: string, required: true }
+      isChecked: { type: boolean, default: false }
+      actions: { type: ActionBindings, required: false }
+    example:
+      type: checkbox
+      fieldId: "day-3-complete"
+      label: "Dia 3 - Pernas"
+      isChecked: true
+      actions:
+        onChange:
+          type: api-call
+          method: POST
+          endpoint: "/api/mobile/v1/progress"
+          body:
+            dayNumber: 3
+            completed: true
+
+  - type: form
+    category: interactive
+    description: Form container that collects field values and submits via action
+    properties:
+      id: { type: string, required: false }
+      children: { type: "SDUIComponent[]", required: true }
+      submitAction: { type: SDUIAction, required: true }
+      submitLabel: { type: string, default: "Enviar" }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: form
+      submitLabel: "Enviar Feedback"
+      submitAction:
+        type: api-call
+        method: POST
+        endpoint: "/api/mobile/v1/feedback"
+        onSuccess:
+          type: show-alert
+          title: "Enviado!"
+          message: "Seu feedback foi recebido."
+      children:
+        - type: picker
+          fieldId: difficulty
+          label: "Dificuldade"
+          pickerStyle: segmented
+          options:
+            - value: too_easy
+              label: "Facil"
+            - value: adequate
+              label: "Adequado"
+            - value: too_hard
+              label: "Dificil"
+        - type: text-input
+          fieldId: message
+          label: "Comentario"
+          placeholder: "Conte como foi o treino..."
+          multiline: true
+
+  - type: search-bar
+    category: interactive
+    description: Search input with optional suggestions
+    properties:
+      id: { type: string, required: false }
+      placeholder: { type: string, default: "Buscar..." }
+      value: { type: string, required: false }
+      suggestions: { type: "string[]", required: false }
+      actions: { type: ActionBindings, required: false }
+    example:
+      type: search-bar
+      placeholder: "Buscar exercicio..."
+      suggestions:
+        - "Supino"
+        - "Agachamento"
+        - "Rosca"
+      actions:
+        onSubmit:
+          type: navigate
+          destination: exercise-search-results
+
+  # ---------------------------------------------------------------------------
+  # Navigation
+  # ---------------------------------------------------------------------------
+
+  - type: tab-bar
+    category: navigation
+    description: Bottom tab navigation for app-level screen switching
+    properties:
+      id: { type: string, required: false }
+      tabs:
+        - label: { type: string, required: true }
+          icon: { type: string, required: true }
+          screenId: { type: string, required: true }
+          badge: { type: string, required: false }
+      selectedIndex: { type: integer, default: 0 }
+    example:
+      type: tab-bar
+      selectedIndex: 0
+      tabs:
+        - label: "Home"
+          icon: "house.fill"
+          screenId: student-home
+        - label: "Treinos"
+          icon: "dumbbell.fill"
+          screenId: student-workouts
+          badge: "3"
+        - label: "Progresso"
+          icon: "chart.line.uptrend.xyaxis"
+          screenId: student-progress
+        - label: "Perfil"
+          icon: "person.fill"
+          screenId: student-profile
+
+  - type: navigation-link
+    category: navigation
+    description: Row that pushes a new screen when tapped
+    properties:
+      id: { type: string, required: false }
+      label: { type: string, required: true }
+      icon: { type: string, required: false }
+      subtitle: { type: string, required: false }
+      trailing: { type: SDUIComponent, required: false }
+      showChevron: { type: boolean, default: true }
+      actions: { type: ActionBindings, required: false }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: navigation-link
+      label: "Historico de Treinos"
+      icon: "clock.arrow.circlepath"
+      subtitle: "Ver treinos anteriores"
+      showChevron: true
+      actions:
+        onTap:
+          type: navigate
+          destination: workout-history
+
+  - type: action-sheet
+    category: navigation
+    description: Bottom action sheet with options list
+    properties:
+      id: { type: string, required: false }
+      title: { type: string, required: false }
+      message: { type: string, required: false }
+      options:
+        - label: { type: string, required: true }
+          icon: { type: string, required: false }
+          style: { type: enum, values: [default, destructive, cancel], default: default }
+          action: { type: SDUIAction, required: false }
+    example:
+      type: action-sheet
+      title: "Opcoes do Treino"
+      options:
+        - label: "Compartilhar"
+          icon: "square.and.arrow.up"
+          action:
+            type: share
+            content: "Confira meu treino no FitToday!"
+        - label: "Arquivar"
+          icon: "archivebox"
+          style: destructive
+          action:
+            type: api-call
+            method: PUT
+            endpoint: "/api/mobile/v1/workouts/w1/archive"
+        - label: "Cancelar"
+          style: cancel
+
+  - type: bottom-sheet
+    category: navigation
+    description: Draggable bottom panel with SDUI content
+    properties:
+      id: { type: string, required: false }
+      content: { type: SDUIComponent, required: true }
+      detents: { type: "enum[]", values: [small, medium, large], default: [medium] }
+      showDragIndicator: { type: boolean, default: true }
+      dismissible: { type: boolean, default: true }
+    example:
+      type: bottom-sheet
+      detents: [medium, large]
+      showDragIndicator: true
+      content:
+        type: vstack
+        spacing: md
+        style:
+          padding: lg
+        children:
+          - type: text
+            content: "Detalhes do Exercicio"
+            textStyle: heading-2
+          - type: image
+            url: "https://example.com/exercise-demo.gif"
+            aspectRatio: 1.78
+            cornerRadius: md
+          - type: text
+            content: "Deite no banco plano, segure a barra com as maos afastadas..."
+            textStyle: body
+
+  # ---------------------------------------------------------------------------
+  # Domain-Specific: Fitness
+  # ---------------------------------------------------------------------------
+
+  - type: workout-card
+    category: domain-fitness
+    description: Workout summary card displaying title, trainer, progress, and status
+    properties:
+      id: { type: string, required: false }
+      data:
+        workoutId: { type: string, required: true }
+        title: { type: string, required: true }
+        description: { type: string, required: false }
+        trainerName: { type: string, required: false }
+        trainerAvatarUrl: { type: string, required: false }
+        progress: { type: number, min: 0, max: 1, required: false }
+        totalDays: { type: integer, required: false }
+        completedDays: { type: integer, required: false }
+        daysRemaining: { type: integer, required: false }
+        thumbnailUrl: { type: string, required: false }
+        status: { type: enum, values: [active, completed, archived], required: true }
+        startDate: { type: date, required: false }
+        streak: { type: integer, required: false }
+      actions: { type: ActionBindings, required: false }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: workout-card
+      data:
+        workoutId: "w1"
+        title: "Treino A - Membros Superiores"
+        trainerName: "Carlos Silva"
+        trainerAvatarUrl: "https://example.com/carlos.jpg"
+        progress: 0.65
+        totalDays: 30
+        completedDays: 19
+        daysRemaining: 11
+        status: active
+        streak: 5
+      actions:
+        onTap:
+          type: navigate
+          destination: workout-detail
+          params:
+            id: "w1"
+
+  - type: program-card
+    category: domain-fitness
+    description: Program marketplace card with cover image, pricing, and ratings
+    properties:
+      id: { type: string, required: false }
+      data:
+        programId: { type: string, required: true }
+        title: { type: string, required: true }
+        subtitle: { type: string, required: false }
+        coverUrl: { type: string, required: true }
+        trainerName: { type: string, required: false }
+        trainerAvatarUrl: { type: string, required: false }
+        category: { type: string, required: false }
+        difficulty: { type: enum, values: [beginner, intermediate, advanced], required: false }
+        durationWeeks: { type: integer, required: false }
+        daysPerWeek: { type: integer, required: false }
+        rating: { type: number, min: 0, max: 5, required: false }
+        totalReviews: { type: integer, required: false }
+        price: { type: string, required: false, description: "Pre-formatted (e.g. 'R$ 97,00/mes')" }
+        originalPrice: { type: string, required: false }
+        activeStudents: { type: integer, required: false }
+      actions: { type: ActionBindings, required: false }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: program-card
+      data:
+        programId: "p1"
+        title: "Hipertrofia 12 Semanas"
+        subtitle: "Programa completo para ganho de massa"
+        coverUrl: "https://example.com/program-cover.jpg"
+        trainerName: "Carlos Silva"
+        difficulty: intermediate
+        durationWeeks: 12
+        daysPerWeek: 5
+        rating: 4.8
+        totalReviews: 142
+        price: "R$ 97,00/mes"
+        originalPrice: "R$ 147,00/mes"
+        activeStudents: 89
+      actions:
+        onTap:
+          type: navigate
+          destination: program-detail
+          params:
+            id: "p1"
+
+  - type: exercise-item
+    category: domain-fitness
+    description: Exercise row showing name, sets, reps, and optional media
+    properties:
+      id: { type: string, required: false }
+      data:
+        exerciseId: { type: string, required: true }
+        name: { type: string, required: true }
+        thumbnailUrl: { type: string, required: false }
+        gifUrl: { type: string, required: false }
+        sets: { type: integer, required: false }
+        reps: { type: string, required: false }
+        restSeconds: { type: integer, required: false }
+        weight: { type: string, required: false }
+        tempo: { type: string, required: false }
+        rpe: { type: number, required: false }
+        techniques: { type: "string[]", required: false }
+        notes: { type: string, required: false }
+        muscleGroups: { type: "string[]", required: false }
+        completed: { type: boolean, required: false }
+      actions: { type: ActionBindings, required: false }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: exercise-item
+      data:
+        exerciseId: "e1"
+        name: "Supino Reto com Barra"
+        thumbnailUrl: "https://example.com/bench-press.jpg"
+        sets: 4
+        reps: "8-12"
+        restSeconds: 90
+        weight: "60kg"
+        techniques: ["drop_set"]
+        muscleGroups: ["chest", "triceps", "shoulders"]
+        completed: false
+      actions:
+        onTap:
+          type: show-sheet
+          detents: [medium, large]
+          content:
+            type: vstack
+            children:
+              - type: image
+                url: "https://example.com/bench-press.gif"
+                aspectRatio: 1.5
+              - type: text
+                content: "Instrucoes detalhadas..."
+                textStyle: body
+
+  - type: set-tracker
+    category: domain-fitness
+    description: Interactive set/rep logger for active workout tracking
+    properties:
+      id: { type: string, required: false }
+      data:
+        exerciseId: { type: string, required: true }
+        exerciseName: { type: string, required: false }
+        setNumber: { type: integer, required: true }
+        totalSets: { type: integer, required: true }
+        targetReps: { type: string, required: false }
+        targetWeight: { type: string, required: false }
+        completedReps: { type: integer, required: false }
+        completedWeight: { type: number, required: false }
+        restSeconds: { type: integer, required: false }
+        isCompleted: { type: boolean, required: false }
+      actions: { type: ActionBindings, required: false }
+    example:
+      type: set-tracker
+      data:
+        exerciseId: "e1"
+        exerciseName: "Supino Reto"
+        setNumber: 2
+        totalSets: 4
+        targetReps: "8-12"
+        targetWeight: "60kg"
+        completedReps: 10
+        completedWeight: 60
+        restSeconds: 90
+        isCompleted: true
+      actions:
+        onChange:
+          type: api-call
+          method: POST
+          endpoint: "/api/mobile/v1/sets"
+          body:
+            exerciseId: "e1"
+            setNumber: 2
+
+  - type: streak-counter
+    category: domain-fitness
+    description: Visual workout streak display with optional weekly view
+    properties:
+      id: { type: string, required: false }
+      data:
+        currentStreak: { type: integer, required: true, min: 0 }
+        longestStreak: { type: integer, required: true, min: 0 }
+        icon: { type: string, default: "flame.fill" }
+        label: { type: string, required: false }
+        weekdays:
+          - day: { type: string, required: true }
+            completed: { type: boolean, required: true }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: streak-counter
+      data:
+        currentStreak: 12
+        longestStreak: 21
+        icon: "flame.fill"
+        label: "dias seguidos"
+        weekdays:
+          - day: "Seg"
+            completed: true
+          - day: "Ter"
+            completed: true
+          - day: "Qua"
+            completed: true
+          - day: "Qui"
+            completed: false
+          - day: "Sex"
+            completed: false
+          - day: "Sab"
+            completed: false
+          - day: "Dom"
+            completed: false
+
+  - type: trainer-card
+    category: domain-fitness
+    description: Trainer profile summary with stats and specialties
+    properties:
+      id: { type: string, required: false }
+      data:
+        trainerId: { type: string, required: true }
+        name: { type: string, required: true }
+        photoUrl: { type: string, required: false }
+        coverPhotoUrl: { type: string, required: false }
+        bio: { type: string, required: false }
+        specialties: { type: "string[]", required: false }
+        rating: { type: number, min: 0, max: 5, required: false }
+        totalReviews: { type: integer, required: false }
+        totalStudents: { type: integer, required: false }
+        location: { type: string, required: false }
+        verified: { type: boolean, required: false }
+      actions: { type: ActionBindings, required: false }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: trainer-card
+      data:
+        trainerId: "t1"
+        name: "Carlos Silva"
+        photoUrl: "https://example.com/carlos.jpg"
+        bio: "Personal Trainer certificado com 10 anos de experiencia"
+        specialties: ["Hipertrofia", "Funcional", "Emagrecimento"]
+        rating: 4.9
+        totalReviews: 87
+        totalStudents: 45
+        location: "Sao Paulo, SP"
+        verified: true
+      actions:
+        onTap:
+          type: navigate
+          destination: trainer-profile
+          params:
+            id: "t1"
+
+  - type: pdf-viewer
+    category: domain-fitness
+    description: In-app PDF document viewer for workout PDFs
+    properties:
+      id: { type: string, required: false }
+      data:
+        pdfUrl: { type: string, required: true }
+        title: { type: string, required: false }
+        allowDownload: { type: boolean, default: true }
+        allowShare: { type: boolean, default: true }
+        initialPage: { type: integer, default: 1 }
+      actions: { type: ActionBindings, required: false }
+    example:
+      type: pdf-viewer
+      data:
+        pdfUrl: "https://storage.googleapis.com/fittoday/workouts/w1/workout.pdf"
+        title: "Treino A - Membros Superiores"
+        allowDownload: true
+        allowShare: true
+        initialPage: 1
+
+  - type: measurement-entry
+    category: domain-fitness
+    description: Body measurement input with trend indicator
+    properties:
+      id: { type: string, required: false }
+      data:
+        measurementType:
+          type: enum
+          values: [weight, bodyFat, muscleMass, chest, waist, hips, rightArm, leftArm, rightThigh, leftThigh, rightCalf, leftCalf]
+          required: true
+        label: { type: string, required: true }
+        value: { type: number, required: false }
+        previousValue: { type: number, required: false }
+        unit: { type: string, required: true }
+        icon: { type: string, required: false }
+        trend: { type: enum, values: [up, down, neutral], required: false }
+      actions: { type: ActionBindings, required: false }
+      style: { type: ComponentStyle, required: false }
+    example:
+      type: measurement-entry
+      data:
+        measurementType: weight
+        label: "Peso"
+        value: 78.5
+        previousValue: 80.2
+        unit: "kg"
+        icon: "scalemass"
+        trend: down
+      actions:
+        onChange:
+          type: api-call
+          method: POST
+          endpoint: "/api/mobile/v1/measurements"
