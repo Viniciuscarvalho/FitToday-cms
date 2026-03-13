@@ -45,7 +45,7 @@ export async function POST(
     if (
       !trainerDoc.exists ||
       trainerDoc.data()?.role !== 'trainer' ||
-      trainerDoc.data()?.isActive !== true
+      trainerDoc.data()?.status !== 'active'
     ) {
       return NextResponse.json(
         { error: 'Trainer not found', code: 'TRAINER_NOT_FOUND' },
