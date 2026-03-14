@@ -1,354 +1,593 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe, PLATFORM_FEE_PERCENT, calculatePlatformFee } from '@/lib/stripe';
+import { stripe, calculatePlatformFee } from '@/lib/stripe';
 import { adminDb } from '@/lib/firebase-admin';
 import Stripe from 'stripe';
 import { FieldValue } from 'firebase-admin/firestore';
 
-// Disable body parsing, we need the raw body for webhook signature verification
 export const dynamic = 'force-dynamic';
 
-// Types for Firestore documents
-interface SubscriptionDocument {
-  id: string;
-  studentId: string;
-  trainerId: string;
-  programId: string;
-  stripeSubscriptionId?: string;
-  stripePaymentIntentId?: string;
-  stripeCheckoutSessionId: string;
-  status: 'active' | 'canceled' | 'past_due' | 'expired';
-  type: 'one_time' | 'monthly' | 'quarterly' | 'yearly';
-  price: number;
-  platformFee: number;
-  trainerEarnings: number;
-  currency: string;
-  startDate: FirebaseFirestore.Timestamp;
-  currentPeriodEnd?: FirebaseFirestore.Timestamp;
-  createdAt: FirebaseFirestore.Timestamp;
+// ============================================================
+// HELPERS — shared utilities
+// ============================================================
+
+function calculatePeriodEnd(session: Stripe.Checkout.Session): Date {
+  const now = new Date();
+  if (session.mode === 'payment') {
+    now.setFullYear(now.getFullYear() + 100);
+  } else {
+    now.setMonth(now.getMonth() + 1);
+  }
+  return now;
 }
 
-interface TransactionDocument {
-  id: string;
-  subscriptionId: string;
-  trainerId: string;
-  studentId: string;
-  programId: string;
-  type: 'purchase' | 'renewal' | 'refund';
-  grossAmount: number;
-  platformFee: number;
-  netAmount: number;
-  currency: string;
-  status: 'succeeded' | 'pending' | 'failed';
-  stripePaymentIntentId?: string;
-  stripeInvoiceId?: string;
-  createdAt: FirebaseFirestore.Timestamp;
+async function sendNotification(
+  userId: string,
+  userRole: 'trainer' | 'student',
+  data: {
+    type: string;
+    title: string;
+    body: string;
+    relatedEntityType?: string;
+    relatedEntityId?: string;
+  }
+) {
+  if (!adminDb) return;
+
+  const destination = (() => {
+    switch (data.relatedEntityType) {
+      case 'program': return `/programs/${data.relatedEntityId}`;
+      case 'subscription': return `/subscriptions/${data.relatedEntityId}`;
+      case 'message': return `/chats/${data.relatedEntityId}`;
+      default: return '/';
+    }
+  })();
+
+  const ref = adminDb.collection('users').doc(userId).collection('notifications').doc();
+  await ref.set({
+    id: ref.id,
+    userId,
+    userRole,
+    ...data,
+    action: { type: 'navigate', destination },
+    isRead: false,
+    createdAt: FieldValue.serverTimestamp(),
+  });
 }
+
+async function createChatRoom(trainerId: string, studentId: string, programId: string) {
+  if (!adminDb) return;
+
+  const welcomeText =
+    'Bem-vindo! Este é o seu canal de comunicação direta com o personal trainer. Qualquer dúvida, é só mandar mensagem!';
+
+  const chatRef = adminDb.collection('chats').doc();
+  await chatRef.set({
+    id: chatRef.id,
+    trainerId,
+    studentId,
+    programId,
+    isActive: true,
+    lastMessage: welcomeText,
+    unreadCountTrainer: 0,
+    unreadCountStudent: 1,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+
+  await chatRef.collection('messages').add({
+    roomId: chatRef.id,
+    senderId: 'system',
+    senderRole: 'system',
+    type: 'text',
+    content: welcomeText,
+    status: 'sent',
+    createdAt: FieldValue.serverTimestamp(),
+  });
+}
+
+// ============================================================
+// PLATFORM SUBSCRIPTION HANDLERS (trainer pays FitToday)
+// ============================================================
+
+async function handlePlatformCheckoutCompleted(session: Stripe.Checkout.Session) {
+  if (!adminDb) return;
+
+  const { trainerId, plan } = session.metadata || {};
+  if (!trainerId || !plan) return;
+
+  const subscriptionId = session.subscription as string;
+  const now = FieldValue.serverTimestamp();
+
+  let currentPeriodEnd: Date | null = null;
+  if (subscriptionId) {
+    const sub = await stripe.subscriptions.retrieve(subscriptionId) as any;
+    currentPeriodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000) : null;
+  }
+
+  await adminDb.collection('platformSubscriptions').doc(trainerId).set({
+    plan,
+    status: 'active',
+    stripeCustomerId: session.customer as string,
+    stripeSubscriptionId: subscriptionId,
+    currentPeriodEnd,
+    cancelAtPeriodEnd: false,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  await adminDb.collection('users').doc(trainerId).update({
+    'subscription.plan': plan,
+    'subscription.status': 'active',
+    updatedAt: now,
+  });
+
+  console.log(`Platform subscription created for trainer ${trainerId}: ${plan}`);
+}
+
+async function handlePlatformSubscriptionUpdated(subscription: Stripe.Subscription) {
+  if (!adminDb) return;
+
+  const { trainerId } = subscription.metadata || {};
+  if (!trainerId) return;
+
+  const sub = subscription as any;
+  let newStatus: 'active' | 'canceled' | 'past_due' | 'trialing' = 'active';
+  if (subscription.status === 'canceled') newStatus = 'canceled';
+  else if (subscription.status === 'past_due' || subscription.status === 'unpaid') newStatus = 'past_due';
+  else if (subscription.status === 'trialing') newStatus = 'trialing';
+
+  const currentPeriodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000) : null;
+  const now = FieldValue.serverTimestamp();
+
+  await adminDb.collection('platformSubscriptions').doc(trainerId).set(
+    { status: newStatus, currentPeriodEnd, cancelAtPeriodEnd: subscription.cancel_at_period_end ?? false, updatedAt: now },
+    { merge: true }
+  );
+
+  await adminDb.collection('users').doc(trainerId).update({
+    'subscription.status': newStatus,
+    updatedAt: now,
+  });
+
+  console.log(`Platform subscription updated for trainer ${trainerId}: ${newStatus}`);
+}
+
+async function handlePlatformSubscriptionDeleted(subscription: Stripe.Subscription) {
+  if (!adminDb) return;
+
+  const { trainerId } = subscription.metadata || {};
+  if (!trainerId) return;
+
+  const now = FieldValue.serverTimestamp();
+
+  await adminDb.collection('platformSubscriptions').doc(trainerId).set(
+    { status: 'canceled', cancelAtPeriodEnd: false, updatedAt: now },
+    { merge: true }
+  );
+
+  await adminDb.collection('users').doc(trainerId).update({
+    'subscription.plan': 'starter',
+    'subscription.status': 'canceled',
+    updatedAt: now,
+  });
+
+  console.log(`Platform subscription deleted for trainer ${trainerId} — downgraded to starter`);
+}
+
+async function handlePlatformInvoicePaid(sub: any) {
+  if (!adminDb) return;
+
+  const trainerId = sub.metadata?.trainerId;
+  if (!trainerId) return;
+
+  const now = FieldValue.serverTimestamp();
+  const currentPeriodEnd = sub.current_period_end ? new Date(sub.current_period_end * 1000) : null;
+
+  await adminDb.collection('platformSubscriptions').doc(trainerId).set(
+    { status: 'active', currentPeriodEnd, updatedAt: now },
+    { merge: true }
+  );
+
+  await adminDb.collection('users').doc(trainerId).update({
+    'subscription.status': 'active',
+    updatedAt: now,
+  });
+
+  console.log(`Platform invoice paid for trainer ${trainerId}`);
+}
+
+async function handlePlatformInvoicePaymentFailed(sub: any) {
+  if (!adminDb) return;
+
+  const trainerId = sub.metadata?.trainerId;
+  if (!trainerId) return;
+
+  const now = FieldValue.serverTimestamp();
+
+  await adminDb.collection('platformSubscriptions').doc(trainerId).set(
+    { status: 'past_due', updatedAt: now },
+    { merge: true }
+  );
+
+  await adminDb.collection('users').doc(trainerId).update({
+    'subscription.status': 'past_due',
+    updatedAt: now,
+  });
+
+  console.error(`Platform invoice payment failed for trainer ${trainerId}`);
+}
+
+// ============================================================
+// PROGRAM PURCHASE HANDLERS (student pays trainer)
+// ============================================================
+
+async function handleProgramCheckoutCompleted(session: Stripe.Checkout.Session) {
+  if (!adminDb) return;
+
+  const { trainerId, programId, studentId } = session.metadata || {};
+  if (!trainerId || !programId || !studentId) return;
+
+  const amountTotal = session.amount_total || 0;
+  const platformFee = calculatePlatformFee(amountTotal);
+  const trainerEarnings = amountTotal - platformFee;
+  const now = FieldValue.serverTimestamp();
+  const periodEnd = calculatePeriodEnd(session);
+
+  const batch = adminDb.batch();
+
+  // Subscription document
+  const subscriptionRef = adminDb.collection('subscriptions').doc();
+  batch.set(subscriptionRef, {
+    id: subscriptionRef.id,
+    studentId,
+    trainerId,
+    programId,
+    status: 'active',
+    startDate: now,
+    currentPeriodStart: now,
+    currentPeriodEnd: periodEnd,
+    stripeSubscriptionId: session.subscription || null,
+    stripeCustomerId: session.customer || null,
+    stripeCheckoutSessionId: session.id,
+    stripePaymentIntentId: session.payment_intent as string || null,
+    pricing: {
+      amount: amountTotal,
+      currency: (session.currency || 'brl').toUpperCase(),
+      interval: session.mode === 'subscription' ? 'monthly' : 'one_time',
+    },
+    invoices: [],
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  // Progress document
+  const progressRef = adminDb.collection('progress').doc();
+  batch.set(progressRef, {
+    id: progressRef.id,
+    studentId,
+    trainerId,
+    programId,
+    subscriptionId: subscriptionRef.id,
+    startedAt: now,
+    currentWeek: 1,
+    currentDay: 1,
+    completionPercentage: 0,
+    status: 'active',
+    completedWorkouts: [],
+    metrics: {
+      totalWorkoutsCompleted: 0,
+      totalTimeSpent: 0,
+      currentStreak: 0,
+      longestStreak: 0,
+      averageSessionDuration: 0,
+    },
+    bodyMetrics: [],
+    updatedAt: now,
+  });
+
+  // Transaction document
+  const transactionRef = adminDb.collection('transactions').doc();
+  batch.set(transactionRef, {
+    id: transactionRef.id,
+    type: session.mode === 'subscription' ? 'subscription_payment' : 'one_time_purchase',
+    studentId,
+    trainerId,
+    programId,
+    subscriptionId: subscriptionRef.id,
+    amount: amountTotal,
+    platformFee,
+    trainerEarnings,
+    currency: (session.currency || 'brl').toUpperCase(),
+    status: 'completed',
+    stripePaymentIntentId: session.payment_intent as string || null,
+    description: `Compra do programa: ${programId}`,
+    createdAt: now,
+    completedAt: now,
+  });
+
+  // Student: grant access
+  batch.update(adminDb.collection('users').doc(studentId), {
+    'purchases.activeSubscriptions': FieldValue.arrayUnion(subscriptionRef.id),
+    'purchases.purchasedPrograms': FieldValue.arrayUnion(programId),
+    [`programs.${programId}`]: { accessGrantedAt: now, subscriptionId: subscriptionRef.id, trainerId },
+    updatedAt: now,
+  });
+
+  // Program stats
+  batch.update(adminDb.collection('programs').doc(programId), {
+    'stats.totalSales': FieldValue.increment(1),
+    'stats.activeStudents': FieldValue.increment(1),
+    updatedAt: now,
+  });
+
+  // Trainer stats
+  batch.update(adminDb.collection('users').doc(trainerId), {
+    'store.totalSales': FieldValue.increment(1),
+    'store.totalStudents': FieldValue.increment(1),
+    'financial.totalEarnings': FieldValue.increment(trainerEarnings / 100),
+    'financial.pendingBalance': FieldValue.increment(trainerEarnings / 100),
+    updatedAt: now,
+  });
+
+  await batch.commit();
+  console.log('Program checkout completed:', subscriptionRef.id);
+
+  // Notifications
+  await Promise.all([
+    sendNotification(trainerId, 'trainer', {
+      type: 'new_subscriber',
+      title: 'Novo Aluno!',
+      body: 'Você tem um novo aluno no seu programa!',
+      relatedEntityType: 'subscription',
+      relatedEntityId: subscriptionRef.id,
+    }),
+    sendNotification(studentId, 'student', {
+      type: 'new_content',
+      title: 'Bem-vindo ao programa!',
+      body: 'Seu treino está pronto para começar!',
+      relatedEntityType: 'program',
+      relatedEntityId: programId,
+    }),
+    createChatRoom(trainerId, studentId, programId),
+  ]);
+}
+
+async function handleProgramInvoicePaid(invoice: Stripe.Invoice, sub: any) {
+  if (!adminDb) return;
+
+  const subscriptionsQuery = await adminDb
+    .collection('subscriptions')
+    .where('stripeSubscriptionId', '==', sub.id)
+    .limit(1)
+    .get();
+
+  if (subscriptionsQuery.empty) return;
+
+  const subDoc = subscriptionsQuery.docs[0];
+  const now = FieldValue.serverTimestamp();
+  const trainerId = sub.metadata?.trainerId;
+  const amountPaid = invoice.amount_paid || 0;
+  const platformFee = calculatePlatformFee(amountPaid);
+  const trainerEarnings = amountPaid - platformFee;
+
+  const updates: Record<string, any> = {
+    status: 'active',
+    currentPeriodStart: sub.current_period_start
+      ? new Date(sub.current_period_start * 1000)
+      : null,
+    currentPeriodEnd: sub.current_period_end
+      ? new Date(sub.current_period_end * 1000)
+      : null,
+    invoices: FieldValue.arrayUnion({
+      id: invoice.id,
+      stripeInvoiceId: invoice.id,
+      amount: invoice.amount_paid,
+      status: 'paid',
+      paidAt: invoice.status_transitions?.paid_at
+        ? new Date(invoice.status_transitions.paid_at * 1000)
+        : null,
+      invoiceURL: invoice.hosted_invoice_url || null,
+      createdAt: new Date(invoice.created * 1000),
+    }),
+    updatedAt: now,
+  };
+
+  await subDoc.ref.update(updates);
+
+  // Create renewal transaction and update trainer earnings
+  if (invoice.billing_reason === 'subscription_cycle' && trainerId) {
+    const transactionRef = adminDb.collection('transactions').doc();
+    await transactionRef.set({
+      id: transactionRef.id,
+      subscriptionId: subDoc.id,
+      trainerId,
+      studentId: subDoc.data().studentId,
+      programId: subDoc.data().programId,
+      type: 'renewal',
+      amount: amountPaid,
+      platformFee,
+      trainerEarnings,
+      currency: (invoice.currency || 'brl').toUpperCase(),
+      status: 'completed',
+      stripeInvoiceId: invoice.id,
+      createdAt: now,
+      completedAt: now,
+    });
+
+    await adminDb.collection('users').doc(trainerId).update({
+      'financial.totalEarnings': FieldValue.increment(trainerEarnings / 100),
+      'financial.pendingBalance': FieldValue.increment(trainerEarnings / 100),
+      updatedAt: now,
+    });
+  }
+
+  console.log('Program invoice paid:', invoice.id);
+}
+
+async function handleProgramSubscriptionUpdated(subscription: Stripe.Subscription) {
+  if (!adminDb) return;
+
+  const subscriptionsQuery = await adminDb
+    .collection('subscriptions')
+    .where('stripeSubscriptionId', '==', subscription.id)
+    .limit(1)
+    .get();
+
+  if (subscriptionsQuery.empty) return;
+
+  const sub = subscription as any;
+  const newStatus =
+    subscription.status === 'active' ? 'active' :
+    subscription.status === 'past_due' ? 'past_due' : 'canceled';
+
+  await subscriptionsQuery.docs[0].ref.update({
+    status: newStatus,
+    currentPeriodStart: sub.current_period_start
+      ? new Date(sub.current_period_start * 1000)
+      : null,
+    currentPeriodEnd: sub.current_period_end
+      ? new Date(sub.current_period_end * 1000)
+      : null,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+
+  console.log('Program subscription updated:', subscription.id, '->', newStatus);
+}
+
+async function handleProgramSubscriptionCanceled(subscription: Stripe.Subscription) {
+  if (!adminDb) return;
+
+  const subscriptionsQuery = await adminDb
+    .collection('subscriptions')
+    .where('stripeSubscriptionId', '==', subscription.id)
+    .limit(1)
+    .get();
+
+  if (subscriptionsQuery.empty) return;
+
+  const subDoc = subscriptionsQuery.docs[0];
+  const subData = subDoc.data();
+  const now = FieldValue.serverTimestamp();
+  const batch = adminDb.batch();
+
+  // Cancel subscription
+  batch.update(subDoc.ref, {
+    status: 'canceled',
+    canceledAt: now,
+    updatedAt: now,
+  });
+
+  // Mark progress as abandoned
+  const progressQuery = await adminDb
+    .collection('progress')
+    .where('subscriptionId', '==', subDoc.id)
+    .limit(1)
+    .get();
+
+  if (!progressQuery.empty) {
+    batch.update(progressQuery.docs[0].ref, { status: 'abandoned', updatedAt: now });
+  }
+
+  // Decrement program active students
+  if (subData.programId) {
+    batch.update(adminDb.collection('programs').doc(subData.programId), {
+      'stats.activeStudents': FieldValue.increment(-1),
+      updatedAt: now,
+    });
+  }
+
+  // Revoke student access
+  if (subData.studentId && subData.programId) {
+    batch.update(adminDb.collection('users').doc(subData.studentId), {
+      [`programs.${subData.programId}.status`]: 'canceled',
+      updatedAt: now,
+    });
+  }
+
+  await batch.commit();
+  console.log('Program subscription canceled:', subscription.id);
+}
+
+// ============================================================
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
 
   if (!signature) {
-    console.error('Missing stripe-signature header');
-    return NextResponse.json(
-      { error: 'Missing stripe-signature header' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 });
   }
 
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
+    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err: any) {
     console.error('Webhook signature verification failed:', err.message);
-    return NextResponse.json(
-      { error: `Webhook Error: ${err.message}` },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
   }
 
-  // Handle the event
   try {
     switch (event.type) {
       case 'account.updated': {
         const account = event.data.object as Stripe.Account;
-        console.log('Account updated:', account.id);
-
-        // Update trainer's Stripe account status in Firestore
         if (adminDb && account.metadata?.trainerId) {
-          const trainerId = account.metadata.trainerId;
-          await adminDb.collection('users').doc(trainerId).update({
+          await adminDb.collection('users').doc(account.metadata.trainerId).update({
             'financial.stripeAccountId': account.id,
             'financial.stripeOnboardingComplete': account.charges_enabled && account.payouts_enabled,
             'financial.stripeChargesEnabled': account.charges_enabled,
             'financial.stripePayoutsEnabled': account.payouts_enabled,
             updatedAt: FieldValue.serverTimestamp(),
           });
-          console.log('Updated trainer Stripe status:', trainerId);
         }
         break;
       }
 
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        console.log('Checkout session completed:', session.id);
-
-        const { trainerId, programId, studentId } = session.metadata || {};
-
-        if (!adminDb) {
-          console.error('Firebase Admin not initialized');
-          break;
-        }
-
-        if (trainerId && programId && studentId) {
-          const amountTotal = session.amount_total || 0;
-          const platformFee = calculatePlatformFee(amountTotal);
-          const trainerEarnings = amountTotal - platformFee;
-          const isSubscription = session.mode === 'subscription';
-          const now = FieldValue.serverTimestamp();
-
-          // Determine subscription type based on mode
-          let subscriptionType: SubscriptionDocument['type'] = 'one_time';
-          if (isSubscription && session.subscription) {
-            // Get subscription to determine interval
-            const subscriptionObj = await stripe.subscriptions.retrieve(session.subscription as string) as any;
-            const interval = subscriptionObj.items?.data?.[0]?.price?.recurring?.interval;
-            if (interval === 'month') subscriptionType = 'monthly';
-            else if (interval === 'year') subscriptionType = 'yearly';
-          }
-
-          // Create subscription document
-          const subscriptionRef = adminDb.collection('subscriptions').doc();
-          const subscriptionDoc: Omit<SubscriptionDocument, 'id' | 'startDate' | 'currentPeriodEnd' | 'createdAt'> & {
-            id: string;
-            startDate: FirebaseFirestore.FieldValue;
-            currentPeriodEnd?: FirebaseFirestore.FieldValue;
-            createdAt: FirebaseFirestore.FieldValue;
-          } = {
-            id: subscriptionRef.id,
-            studentId,
-            trainerId,
-            programId,
-            stripeCheckoutSessionId: session.id,
-            stripePaymentIntentId: session.payment_intent as string || undefined,
-            stripeSubscriptionId: session.subscription as string || undefined,
-            status: 'active',
-            type: subscriptionType,
-            price: amountTotal,
-            platformFee,
-            trainerEarnings,
-            currency: session.currency || 'brl',
-            startDate: now,
-            createdAt: now,
-          };
-
-          await subscriptionRef.set(subscriptionDoc);
-          console.log('Created subscription:', subscriptionRef.id);
-
-          // Create transaction document
-          const transactionRef = adminDb.collection('transactions').doc();
-          const transactionDoc: Omit<TransactionDocument, 'id' | 'createdAt'> & {
-            id: string;
-            createdAt: FirebaseFirestore.FieldValue;
-          } = {
-            id: transactionRef.id,
-            subscriptionId: subscriptionRef.id,
-            trainerId,
-            studentId,
-            programId,
-            type: 'purchase',
-            grossAmount: amountTotal,
-            platformFee,
-            netAmount: trainerEarnings,
-            currency: session.currency || 'brl',
-            status: 'succeeded',
-            stripePaymentIntentId: session.payment_intent as string || undefined,
-            createdAt: now,
-          };
-
-          await transactionRef.set(transactionDoc);
-          console.log('Created transaction:', transactionRef.id);
-
-          // Update trainer's total earnings
-          await adminDb.collection('users').doc(trainerId).update({
-            'financial.totalEarnings': FieldValue.increment(trainerEarnings / 100), // Convert cents to BRL
-            'financial.pendingBalance': FieldValue.increment(trainerEarnings / 100),
-            'stats.totalStudents': FieldValue.increment(1),
-            updatedAt: now,
-          });
-          console.log('Updated trainer earnings:', trainerId);
-
-          // Grant program access to student
-          await adminDb.collection('users').doc(studentId).update({
-            [`programs.${programId}`]: {
-              accessGrantedAt: now,
-              subscriptionId: subscriptionRef.id,
-              trainerId,
-            },
-            updatedAt: now,
-          });
-          console.log('Granted program access to student:', studentId);
+        if (session.metadata?.type === 'platform_subscription') {
+          await handlePlatformCheckoutCompleted(session);
+        } else {
+          await handleProgramCheckoutCompleted(session);
         }
         break;
       }
 
-      // invoice.paid fires when an invoice is marked paid (Stripe's canonical event)
       case 'invoice.paid':
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
-        console.log('Invoice payment succeeded:', invoice.id);
+        const invoiceSubId = (invoice as any).subscription as string | null;
+        if (!invoiceSubId) break;
 
-        const invoiceSubscriptionId = (invoice as any).subscription as string | null;
-        if (!adminDb || !invoiceSubscriptionId) break;
+        const sub = await stripe.subscriptions.retrieve(invoiceSubId) as any;
 
-        // This is a renewal payment for a subscription
-        const subscriptionData = await stripe.subscriptions.retrieve(invoiceSubscriptionId) as any;
-        const trainerId = subscriptionData.metadata?.trainerId;
-        const studentId = subscriptionData.metadata?.studentId;
-        const programId = subscriptionData.metadata?.programId;
-
-        if (trainerId && studentId && programId) {
-          const amountPaid = invoice.amount_paid || 0;
-          const platformFee = calculatePlatformFee(amountPaid);
-          const trainerEarnings = amountPaid - platformFee;
-          const now = FieldValue.serverTimestamp();
-
-          // Find existing subscription document
-          const subscriptionQuery = await adminDb
-            .collection('subscriptions')
-            .where('stripeSubscriptionId', '==', invoiceSubscriptionId)
-            .limit(1)
-            .get();
-
-          let subscriptionId = '';
-          if (!subscriptionQuery.empty) {
-            subscriptionId = subscriptionQuery.docs[0].id;
-
-            // Update subscription period (current_period_end is in seconds)
-            const periodEnd = subscriptionData.current_period_end;
-            await adminDb.collection('subscriptions').doc(subscriptionId).update({
-              currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000) : null,
-              updatedAt: now,
-            });
-          }
-
-          // Create renewal transaction (skip if it's the first payment)
-          if (invoice.billing_reason === 'subscription_cycle') {
-            const transactionRef = adminDb.collection('transactions').doc();
-            await transactionRef.set({
-              id: transactionRef.id,
-              subscriptionId,
-              trainerId,
-              studentId,
-              programId,
-              type: 'renewal',
-              grossAmount: amountPaid,
-              platformFee,
-              netAmount: trainerEarnings,
-              currency: invoice.currency || 'brl',
-              status: 'succeeded',
-              stripeInvoiceId: invoice.id,
-              createdAt: now,
-            });
-            console.log('Created renewal transaction:', transactionRef.id);
-
-            // Update trainer earnings
-            await adminDb.collection('users').doc(trainerId).update({
-              'financial.totalEarnings': FieldValue.increment(trainerEarnings / 100),
-              'financial.pendingBalance': FieldValue.increment(trainerEarnings / 100),
-              updatedAt: now,
-            });
-          }
+        if (sub.metadata?.type === 'platform_subscription') {
+          await handlePlatformInvoicePaid(sub);
+        } else {
+          await handleProgramInvoicePaid(invoice, sub);
         }
         break;
       }
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice;
-        console.error('Invoice payment failed:', invoice.id);
+        const invoiceSubId = (invoice as any).subscription as string | null;
+        if (!invoiceSubId) break;
 
-        const failedInvoiceSubscriptionId = (invoice as any).subscription as string | null;
-        if (!adminDb || !failedInvoiceSubscriptionId) break;
+        const sub = await stripe.subscriptions.retrieve(invoiceSubId) as any;
 
-        // Update subscription status to past_due
-        const subscriptionQuery = await adminDb
-          .collection('subscriptions')
-          .where('stripeSubscriptionId', '==', failedInvoiceSubscriptionId)
-          .limit(1)
-          .get();
+        if (sub.metadata?.type === 'platform_subscription') {
+          await handlePlatformInvoicePaymentFailed(sub);
+        } else {
+          const subscriptionQuery = await adminDb!
+            .collection('subscriptions')
+            .where('stripeSubscriptionId', '==', invoiceSubId)
+            .limit(1)
+            .get();
 
-        if (!subscriptionQuery.empty) {
-          await adminDb.collection('subscriptions').doc(subscriptionQuery.docs[0].id).update({
-            status: 'past_due',
-            updatedAt: FieldValue.serverTimestamp(),
-          });
-          console.log('Updated subscription to past_due:', subscriptionQuery.docs[0].id);
-        }
-        break;
-      }
-
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription;
-        console.log('Subscription updated:', subscription.id, 'status:', subscription.status);
-
-        if (!adminDb) break;
-
-        const subscriptionQuery = await adminDb
-          .collection('subscriptions')
-          .where('stripeSubscriptionId', '==', subscription.id)
-          .limit(1)
-          .get();
-
-        if (!subscriptionQuery.empty) {
-          let newStatus: 'active' | 'canceled' | 'past_due' | 'expired' = 'active';
-          if (subscription.status === 'canceled') newStatus = 'canceled';
-          else if (subscription.status === 'past_due') newStatus = 'past_due';
-          else if (subscription.status === 'unpaid') newStatus = 'past_due';
-
-          const subAny = subscription as any;
-          await subscriptionQuery.docs[0].ref.update({
-            status: newStatus,
-            currentPeriodEnd: subAny.current_period_end
-              ? new Date(subAny.current_period_end * 1000)
-              : null,
-            updatedAt: FieldValue.serverTimestamp(),
-          });
-          console.log('Updated subscription status:', subscription.id, '->', newStatus);
-        }
-        break;
-      }
-
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
-        console.log('Subscription canceled:', subscription.id);
-
-        if (!adminDb) break;
-
-        // Update subscription status to canceled
-        const subscriptionQuery = await adminDb
-          .collection('subscriptions')
-          .where('stripeSubscriptionId', '==', subscription.id)
-          .limit(1)
-          .get();
-
-        if (!subscriptionQuery.empty) {
-          const subDoc = subscriptionQuery.docs[0];
-          await subDoc.ref.update({
-            status: 'canceled',
-            updatedAt: FieldValue.serverTimestamp(),
-          });
-          console.log('Updated subscription to canceled:', subDoc.id);
-
-          // Revoke program access
-          const subData = subDoc.data();
-          if (subData.studentId && subData.programId) {
-            await adminDb.collection('users').doc(subData.studentId).update({
-              [`programs.${subData.programId}.status`]: 'canceled',
+          if (!subscriptionQuery.empty) {
+            await subscriptionQuery.docs[0].ref.update({
+              status: 'past_due',
               updatedAt: FieldValue.serverTimestamp(),
             });
           }
@@ -356,30 +595,31 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      case 'payment_intent.succeeded': {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.log('Payment succeeded:', paymentIntent.id);
-        // Most logic is handled in checkout.session.completed
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription;
+        if (subscription.metadata?.type === 'platform_subscription') {
+          await handlePlatformSubscriptionUpdated(subscription);
+        } else {
+          await handleProgramSubscriptionUpdated(subscription);
+        }
         break;
       }
 
-      case 'payment_intent.payment_failed': {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        console.error('Payment failed:', paymentIntent.id);
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        if (subscription.metadata?.type === 'platform_subscription') {
+          await handlePlatformSubscriptionDeleted(subscription);
+        } else {
+          await handleProgramSubscriptionCanceled(subscription);
+        }
         break;
       }
 
       case 'transfer.created': {
         const transfer = event.data.object as Stripe.Transfer;
-        console.log('Transfer created:', transfer.id, 'to', transfer.destination);
-
-        if (!adminDb) break;
-
-        // Update trainer's available balance when transfer completes
-        const trainerId = transfer.metadata?.trainerId;
-        if (trainerId) {
+        if (adminDb && transfer.metadata?.trainerId) {
           const amountInBRL = transfer.amount / 100;
-          await adminDb.collection('users').doc(trainerId).update({
+          await adminDb.collection('users').doc(transfer.metadata.trainerId).update({
             'financial.pendingBalance': FieldValue.increment(-amountInBRL),
             'financial.availableBalance': FieldValue.increment(amountInBRL),
             updatedAt: FieldValue.serverTimestamp(),
@@ -388,65 +628,53 @@ export async function POST(request: NextRequest) {
         break;
       }
 
-      case 'payout.paid': {
-        const payout = event.data.object as Stripe.Payout;
-        console.log('Payout paid:', payout.id, 'amount:', payout.amount);
+      case 'payout.paid':
+        console.log('Payout paid:', (event.data.object as Stripe.Payout).id);
         break;
-      }
 
-      case 'payout.failed': {
-        const payout = event.data.object as Stripe.Payout;
-        console.error('Payout failed:', payout.id);
+      case 'payout.failed':
+        console.error('Payout failed:', (event.data.object as Stripe.Payout).id);
         break;
-      }
 
       case 'charge.refunded': {
         const charge = event.data.object as Stripe.Charge;
-        console.log('Charge refunded:', charge.id);
+        if (!adminDb || !charge.payment_intent) break;
 
-        if (!adminDb) break;
+        const transactionQuery = await adminDb
+          .collection('transactions')
+          .where('stripePaymentIntentId', '==', charge.payment_intent)
+          .limit(1)
+          .get();
 
-        const paymentIntentId = charge.payment_intent as string;
-        if (paymentIntentId) {
-          // Find the original transaction
-          const transactionQuery = await adminDb
-            .collection('transactions')
-            .where('stripePaymentIntentId', '==', paymentIntentId)
-            .limit(1)
-            .get();
+        if (!transactionQuery.empty) {
+          const originalTx = transactionQuery.docs[0].data();
+          const refundAmount = charge.amount_refunded || 0;
+          const platformFeeRefund = calculatePlatformFee(refundAmount);
+          const trainerRefund = refundAmount - platformFeeRefund;
+          const now = FieldValue.serverTimestamp();
 
-          if (!transactionQuery.empty) {
-            const originalTx = transactionQuery.docs[0].data();
-            const refundAmount = charge.amount_refunded || 0;
-            const platformFeeRefund = calculatePlatformFee(refundAmount);
-            const trainerRefund = refundAmount - platformFeeRefund;
-            const now = FieldValue.serverTimestamp();
+          const refundRef = adminDb.collection('transactions').doc();
+          await refundRef.set({
+            id: refundRef.id,
+            subscriptionId: originalTx.subscriptionId,
+            trainerId: originalTx.trainerId,
+            studentId: originalTx.studentId,
+            programId: originalTx.programId,
+            type: 'refund',
+            amount: -refundAmount,
+            platformFee: -platformFeeRefund,
+            trainerEarnings: -trainerRefund,
+            currency: charge.currency?.toUpperCase() || 'BRL',
+            status: 'completed',
+            stripePaymentIntentId: charge.payment_intent as string,
+            createdAt: now,
+            completedAt: now,
+          });
 
-            // Create refund transaction
-            const refundRef = adminDb.collection('transactions').doc();
-            await refundRef.set({
-              id: refundRef.id,
-              subscriptionId: originalTx.subscriptionId,
-              trainerId: originalTx.trainerId,
-              studentId: originalTx.studentId,
-              programId: originalTx.programId,
-              type: 'refund',
-              grossAmount: -refundAmount,
-              platformFee: -platformFeeRefund,
-              netAmount: -trainerRefund,
-              currency: charge.currency || 'brl',
-              status: 'succeeded',
-              stripePaymentIntentId: paymentIntentId,
-              createdAt: now,
-            });
-
-            // Update trainer earnings
-            await adminDb.collection('users').doc(originalTx.trainerId).update({
-              'financial.totalEarnings': FieldValue.increment(-trainerRefund / 100),
-              updatedAt: now,
-            });
-            console.log('Created refund transaction:', refundRef.id);
-          }
+          await adminDb.collection('users').doc(originalTx.trainerId).update({
+            'financial.totalEarnings': FieldValue.increment(-trainerRefund / 100),
+            updatedAt: now,
+          });
         }
         break;
       }
@@ -458,9 +686,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (error: any) {
     console.error('Error processing webhook:', error);
-    return NextResponse.json(
-      { error: 'Webhook handler failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
 }
