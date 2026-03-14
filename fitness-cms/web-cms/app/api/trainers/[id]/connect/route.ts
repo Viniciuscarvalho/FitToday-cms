@@ -23,7 +23,7 @@ export async function POST(
       );
     }
 
-    if (authResult.role !== 'student') {
+    if (authResult.role !== 'student' && authResult.role !== 'admin') {
       return NextResponse.json(
         { error: 'Only students can connect to a trainer', code: 'FORBIDDEN' },
         { status: 403 }
