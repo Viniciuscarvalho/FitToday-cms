@@ -76,18 +76,60 @@ export async function POST(
         );
       }
 
-      // If previously rejected or cancelled, allow re-request by resetting to pending
+      // If previously rejected or cancelled, delete old doc and create a new one
+      // so that the Firebase Function onCreate trigger fires again (FCM push)
       if (data.status === 'rejected' || data.status === 'cancelled') {
-        await doc.ref.update({
+        let message: string | undefined;
+        try {
+          const body = await request.json();
+          message = body?.message?.trim()?.substring(0, 500) || undefined;
+        } catch {
+          // no body is fine
+        }
+
+        // Delete old doc, create new one to trigger onCreate
+        await doc.ref.delete();
+
+        const newRef = adminDb.collection('trainerStudents').doc();
+        await newRef.set({
+          trainerId,
+          studentId,
           status: 'pending',
+          source: 'app_request',
+          message: message ?? null,
+          createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
           respondedAt: null,
-          cancelledAt: null,
-          cancelledBy: null,
-          cancellationReason: null,
         });
 
-        return NextResponse.json({ id: doc.id, trainerId, studentId, status: 'pending' });
+        // Send in-app notification to trainer
+        const studentDoc = await adminDb.collection('users').doc(studentId).get();
+        const studentData = studentDoc.data();
+        const studentName = studentData?.displayName || 'Um aluno';
+
+        await createNotification({
+          type: 'connection_request',
+          userId: trainerId,
+          userRole: 'trainer',
+          title: 'Nova solicitação de conexão',
+          body: `${studentName} quer se conectar com você.`,
+          actor: {
+            id: studentId,
+            name: studentName,
+            avatar: studentData?.photoURL || undefined,
+          },
+          action: {
+            type: 'navigate',
+            destination: '/cms/connections',
+          },
+          relatedEntityType: 'connection',
+          relatedEntityId: newRef.id,
+        });
+
+        return NextResponse.json(
+          { id: newRef.id, trainerId, studentId, status: 'pending' },
+          { status: 201 }
+        );
       }
 
       // Unknown status — return current state
