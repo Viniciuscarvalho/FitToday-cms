@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,15 +11,12 @@ export async function PATCH(
 ) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const authResult = await verifyAuthRequest(request.headers.get('authorization'));
     if (!authResult.isAuthenticated || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const { id: notificationId } = await params;
@@ -31,20 +29,13 @@ export async function PATCH(
 
     const notifDoc = await notifRef.get();
     if (!notifDoc.exists) {
-      return NextResponse.json(
-        { error: 'Notification not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      return apiError('Notification not found', 404, 'NOT_FOUND');
     }
 
     await notifRef.update({ isRead: true });
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Error marking notification as read:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to mark notification as read' },
-      { status: 500 }
-    );
+    return apiError('Failed to mark notification as read', 500, 'MARK_NOTIFICATION_ERROR', error);
   }
 }

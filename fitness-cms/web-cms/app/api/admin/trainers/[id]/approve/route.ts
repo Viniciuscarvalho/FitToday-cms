@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAdminRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,14 +18,11 @@ export async function POST(
     const verification = await verifyAdminRequest(authHeader);
 
     if (!verification.isAdmin) {
-      return NextResponse.json(
-        { error: verification.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(verification.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Get trainer document
@@ -32,17 +30,17 @@ export async function POST(
     const trainerDoc = await trainerRef.get();
 
     if (!trainerDoc.exists) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 });
+      return apiError('Trainer not found', 404, 'NOT_FOUND');
     }
 
     const trainerData = trainerDoc.data();
 
     if (trainerData?.role !== 'trainer') {
-      return NextResponse.json({ error: 'User is not a trainer' }, { status: 400 });
+      return apiError('User is not a trainer', 400, 'INVALID_REQUEST');
     }
 
     if (trainerData?.status === 'active') {
-      return NextResponse.json({ error: 'Trainer is already active' }, { status: 400 });
+      return apiError('Trainer is already active', 400, 'INVALID_REQUEST');
     }
 
     // Update trainer status to active
@@ -60,10 +58,6 @@ export async function POST(
       status: 'active',
     });
   } catch (error: any) {
-    console.error('Error approving trainer:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to approve trainer' },
-      { status: 500 }
-    );
+    return apiError('Failed to approve trainer', 500, 'APPROVE_TRAINER_ERROR', error);
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyTrainerRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { WorkoutFeedback, WorkoutFeedbackListResponse } from '@/types/workout';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,27 +18,24 @@ export async function GET(
     );
 
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const workoutId = params.id;
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Verify workout exists and belongs to this trainer
     const workoutDoc = await adminDb.collection('workouts').doc(workoutId).get();
     if (!workoutDoc.exists) {
-      return NextResponse.json({ error: 'Workout not found' }, { status: 404 });
+      return apiError('Workout not found', 404, 'NOT_FOUND');
     }
 
     const workoutData = workoutDoc.data();
     if (workoutData?.trainerId !== authResult.uid) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return apiError('Forbidden', 403, 'FORBIDDEN');
     }
 
     // Get feedback documents
@@ -64,11 +62,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error: any) {
-    console.error('Error listing workout feedback:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to list feedback' },
-      { status: 500 }
-    );
+    return apiError('Failed to list feedback', 500, 'LIST_FEEDBACK_ERROR', error);
   }
 }
 
@@ -84,10 +78,7 @@ export async function POST(
     );
 
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const workoutId = params.id;
@@ -96,39 +87,33 @@ export async function POST(
     const { feedbackId, response: trainerResponse } = body;
 
     if (!feedbackId || !trainerResponse) {
-      return NextResponse.json(
-        { error: 'feedbackId and response are required' },
-        { status: 400 }
-      );
+      return apiError('feedbackId and response are required', 400, 'INVALID_REQUEST');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Verify workout exists and belongs to this trainer
     const workoutDoc = await adminDb.collection('workouts').doc(workoutId).get();
     if (!workoutDoc.exists) {
-      return NextResponse.json({ error: 'Workout not found' }, { status: 404 });
+      return apiError('Workout not found', 404, 'NOT_FOUND');
     }
 
     const workoutData = workoutDoc.data();
     if (workoutData?.trainerId !== authResult.uid) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return apiError('Forbidden', 403, 'FORBIDDEN');
     }
 
     // Verify feedback exists and belongs to this workout
     const feedbackDoc = await adminDb.collection('workout_feedback').doc(feedbackId).get();
     if (!feedbackDoc.exists) {
-      return NextResponse.json({ error: 'Feedback not found' }, { status: 404 });
+      return apiError('Feedback not found', 404, 'NOT_FOUND');
     }
 
     const feedbackData = feedbackDoc.data();
     if (feedbackData?.workoutId !== workoutId) {
-      return NextResponse.json(
-        { error: 'Feedback does not belong to this workout' },
-        { status: 400 }
-      );
+      return apiError('Feedback does not belong to this workout', 400, 'INVALID_REQUEST');
     }
 
     // Update feedback with trainer response
@@ -148,10 +133,6 @@ export async function POST(
       respondedAt: updatedData?.respondedAt?.toDate?.()?.toISOString(),
     });
   } catch (error: any) {
-    console.error('Error replying to feedback:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to reply to feedback' },
-      { status: 500 }
-    );
+    return apiError('Failed to reply to feedback', 500, 'REPLY_FEEDBACK_ERROR', error);
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,14 +14,11 @@ export async function GET(request: NextRequest) {
     const equipment = searchParams.get('equipment');
 
     if (!q || !q.trim()) {
-      return NextResponse.json(
-        { error: 'Query parameter "q" is required' },
-        { status: 400 }
-      );
+      return apiError('Query parameter "q" is required', 400, 'INVALID_REQUEST');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Build Firestore query: fetch active exercises, optionally filtered by category/equipment
@@ -73,10 +71,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ exercises, total });
   } catch (error: any) {
-    console.error('Error searching exercises:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to search exercises' },
-      { status: 500 }
-    );
+    return apiError('Failed to search exercises', 500, 'SEARCH_EXERCISES_ERROR', error);
   }
 }

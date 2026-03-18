@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,15 +10,12 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const authResult = await verifyAuthRequest(request.headers.get('authorization'));
     if (!authResult.isAuthenticated || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const { searchParams } = new URL(request.url);
@@ -25,18 +23,12 @@ export async function GET(request: NextRequest) {
     const studentId = searchParams.get('studentId');
 
     if (!trainerId || !studentId) {
-      return NextResponse.json(
-        { error: 'trainerId and studentId are required', code: 'BAD_REQUEST' },
-        { status: 400 }
-      );
+      return apiError('trainerId and studentId are required', 400, 'BAD_REQUEST');
     }
 
     // Only allow the trainer or student in the pair to query
     if (authResult.uid !== trainerId && authResult.uid !== studentId) {
-      return NextResponse.json(
-        { error: 'Forbidden', code: 'FORBIDDEN' },
-        { status: 403 }
-      );
+      return apiError('Forbidden', 403, 'FORBIDDEN');
     }
 
     const snap = await adminDb
@@ -65,10 +57,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Error checking chat room:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to check chat room' },
-      { status: 500 }
-    );
+    return apiError('Failed to check chat room', 500, 'CHECK_CHAT_ROOM_ERROR', error);
   }
 }

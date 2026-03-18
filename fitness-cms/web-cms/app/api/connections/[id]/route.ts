@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { createNotification, NotificationType } from '@/lib/notifications';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,15 +16,12 @@ export async function PATCH(
 ) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const authResult = await verifyAuthRequest(request.headers.get('authorization'));
     if (!authResult.isAuthenticated || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const { id: connectionId } = await params;
@@ -33,10 +31,7 @@ export async function PATCH(
     const action: 'accept' | 'reject' | 'cancel' = body?.action;
 
     if (action !== 'accept' && action !== 'reject' && action !== 'cancel') {
-      return NextResponse.json(
-        { error: 'action must be "accept", "reject", or "cancel"', code: 'BAD_REQUEST' },
-        { status: 400 }
-      );
+      return apiError('action must be "accept", "reject", or "cancel"', 400, 'BAD_REQUEST');
     }
 
     // Fetch the connection doc
@@ -44,7 +39,7 @@ export async function PATCH(
     const connectionDoc = await connectionRef.get();
 
     if (!connectionDoc.exists) {
-      return NextResponse.json({ error: 'Connection request not found', code: 'NOT_FOUND' }, { status: 404 });
+      return apiError('Connection request not found', 404, 'NOT_FOUND');
     }
 
     const connection = connectionDoc.data()!;
@@ -54,14 +49,11 @@ export async function PATCH(
     // Handle cancel action — either party can cancel
     if (action === 'cancel') {
       if (userId !== trainerId && userId !== studentId) {
-        return NextResponse.json({ error: 'Forbidden', code: 'FORBIDDEN' }, { status: 403 });
+        return apiError('Forbidden', 403, 'FORBIDDEN');
       }
 
       if (connection.status === 'cancelled') {
-        return NextResponse.json(
-          { error: 'Connection is already cancelled', code: 'ALREADY_CANCELLED' },
-          { status: 409 }
-        );
+        return apiError('Connection is already cancelled', 409, 'ALREADY_CANCELLED');
       }
 
       const reason = typeof body?.reason === 'string' ? body.reason.trim().substring(0, 500) : null;
@@ -163,21 +155,15 @@ export async function PATCH(
 
     // For accept/reject, only the trainer can respond
     if (authResult.role !== 'trainer') {
-      return NextResponse.json(
-        { error: 'Only trainers can respond to connection requests', code: 'FORBIDDEN' },
-        { status: 403 }
-      );
+      return apiError('Only trainers can respond to connection requests', 403, 'FORBIDDEN');
     }
 
     if (connection.trainerId !== userId) {
-      return NextResponse.json({ error: 'Forbidden', code: 'FORBIDDEN' }, { status: 403 });
+      return apiError('Forbidden', 403, 'FORBIDDEN');
     }
 
     if (connection.status !== 'pending') {
-      return NextResponse.json(
-        { error: 'This request has already been responded to', code: 'ALREADY_RESPONDED' },
-        { status: 409 }
-      );
+      return apiError('This request has already been responded to', 409, 'ALREADY_RESPONDED');
     }
 
     if (action === 'reject') {
@@ -281,11 +267,7 @@ export async function PATCH(
       chatRoomId,
     });
   } catch (error: any) {
-    console.error('Error responding to connection request:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to respond to connection request' },
-      { status: 500 }
-    );
+    return apiError('Failed to respond to connection request', 500, 'CONNECTION_RESPONSE_ERROR', error);
   }
 }
 

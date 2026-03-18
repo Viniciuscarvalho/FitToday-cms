@@ -7,6 +7,24 @@ import { FieldValue } from 'firebase-admin/firestore';
 export const dynamic = 'force-dynamic';
 
 // ============================================================
+// IDEMPOTENCY — prevent duplicate processing on Stripe retries
+// ============================================================
+
+async function isEventAlreadyProcessed(eventId: string): Promise<boolean> {
+  if (!adminDb) return false;
+  const doc = await adminDb.collection('processedWebhookEvents').doc(eventId).get();
+  return doc.exists;
+}
+
+async function markEventAsProcessed(eventId: string, eventType: string): Promise<void> {
+  if (!adminDb) return;
+  await adminDb.collection('processedWebhookEvents').doc(eventId).set({
+    type: eventType,
+    processedAt: FieldValue.serverTimestamp(),
+  });
+}
+
+// ============================================================
 // HELPERS — shared utilities
 // ============================================================
 
@@ -226,6 +244,17 @@ async function handleProgramCheckoutCompleted(session: Stripe.Checkout.Session) 
 
   const { trainerId, programId, studentId } = session.metadata || {};
   if (!trainerId || !programId || !studentId) return;
+
+  // Dedup check: avoid creating duplicate subscription for same checkout session
+  const existingCheck = await adminDb
+    .collection('subscriptions')
+    .where('stripeCheckoutSessionId', '==', session.id)
+    .limit(1)
+    .get();
+  if (!existingCheck.empty) {
+    console.log(`[WEBHOOK] Subscription already exists for checkout session ${session.id}`);
+    return;
+  }
 
   const amountTotal = session.amount_total || 0;
   const platformFee = calculatePlatformFee(amountTotal);
@@ -518,13 +547,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 });
   }
 
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error('[WEBHOOK] STRIPE_WEBHOOK_SECRET is not configured');
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
+  }
+
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err: any) {
     console.error('Webhook signature verification failed:', err.message);
     return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
+  }
+
+  // Idempotency check — skip events already processed (Stripe retries on failure)
+  if (await isEventAlreadyProcessed(event.id)) {
+    console.log(`[WEBHOOK] Duplicate event skipped: ${event.id}`);
+    return NextResponse.json({ received: true, duplicate: true });
   }
 
   try {
@@ -682,6 +723,9 @@ export async function POST(request: NextRequest) {
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
+
+    // Mark event as processed after successful handling
+    await markEventAsProcessed(event.id, event.type);
 
     return NextResponse.json({ received: true });
   } catch (error: any) {

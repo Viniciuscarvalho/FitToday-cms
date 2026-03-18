@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAdminRequest } from '@/lib/firebase-admin';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,14 +43,11 @@ export async function GET(request: NextRequest) {
     const verification = await verifyAdminRequest(authHeader);
 
     if (!verification.isAdmin) {
-      return NextResponse.json(
-        { error: verification.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(verification.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Get trainer counts by status
@@ -171,10 +169,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error: any) {
-    console.error('Error getting platform metrics:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to get metrics' },
-      { status: 500 }
-    );
+    return apiError('Failed to get metrics', 500, 'GET_METRICS_ERROR', error);
   }
 }

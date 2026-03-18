@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuthRequest, generateSignedUrl } from '@/lib/firebase-admin';
 import { Workout, WorkoutListResponse } from '@/types/workout';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,21 +14,15 @@ export async function GET(request: NextRequest) {
     );
 
     if (!authResult.isAuthenticated || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (authResult.role !== 'student') {
-      return NextResponse.json(
-        { error: 'This endpoint is for students only' },
-        { status: 403 }
-      );
+      return apiError('This endpoint is for students only', 403, 'FORBIDDEN');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const { searchParams } = new URL(request.url);
@@ -110,10 +105,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error: any) {
-    console.error('Error listing student workouts:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to list workouts' },
-      { status: 500 }
-    );
+    return apiError('Failed to list workouts', 500, 'LIST_WORKOUTS_ERROR', error);
   }
 }

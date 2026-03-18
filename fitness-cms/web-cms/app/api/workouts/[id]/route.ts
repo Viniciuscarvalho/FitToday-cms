@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, deleteWorkoutPDF, generateSignedUrl, verifyTrainerRequest } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { Workout, WorkoutWithProgress } from '@/types/workout';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,30 +18,27 @@ export async function GET(
     );
 
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const workoutId = params.id;
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Get workout document
     const workoutDoc = await adminDb.collection('workouts').doc(workoutId).get();
 
     if (!workoutDoc.exists) {
-      return NextResponse.json({ error: 'Workout not found' }, { status: 404 });
+      return apiError('Workout not found', 404, 'NOT_FOUND');
     }
 
     const workout = { id: workoutDoc.id, ...workoutDoc.data() } as Workout;
 
     // Verify ownership - trainer can only access their own workouts
     if (workout.trainerId !== authResult.uid) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return apiError('Forbidden', 403, 'FORBIDDEN');
     }
 
     // Regenerate signed URL if needed (URL might have expired)
@@ -80,11 +78,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error: any) {
-    console.error('Error getting workout:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to get workout' },
-      { status: 500 }
-    );
+    return apiError('Failed to get workout', 500, 'GET_WORKOUT_ERROR', error);
   }
 }
 
@@ -100,30 +94,27 @@ export async function PATCH(
     );
 
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const workoutId = params.id;
     const body = await request.json();
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Get workout document to verify it exists
     const workoutDoc = await adminDb.collection('workouts').doc(workoutId).get();
 
     if (!workoutDoc.exists) {
-      return NextResponse.json({ error: 'Workout not found' }, { status: 404 });
+      return apiError('Workout not found', 404, 'NOT_FOUND');
     }
 
     // Verify ownership
     const workoutData = workoutDoc.data();
     if (workoutData?.trainerId !== authResult.uid) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return apiError('Forbidden', 403, 'FORBIDDEN');
     }
 
     // Allowed fields to update
@@ -137,10 +128,7 @@ export async function PATCH(
         if (field === 'startDate' && body[field]) {
           const parsed = new Date(body[field]);
           if (isNaN(parsed.getTime())) {
-            return NextResponse.json(
-              { error: 'Invalid startDate format. Use ISO date (YYYY-MM-DD)' },
-              { status: 400 }
-            );
+            return apiError('Invalid startDate format. Use ISO date (YYYY-MM-DD)', 400, 'INVALID_REQUEST');
           }
           updateData[field] = Timestamp.fromDate(parsed);
         } else {
@@ -181,11 +169,7 @@ export async function PATCH(
 
     return NextResponse.json(updatedWorkout);
   } catch (error: any) {
-    console.error('Error updating workout:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to update workout' },
-      { status: 500 }
-    );
+    return apiError('Failed to update workout', 500, 'UPDATE_WORKOUT_ERROR', error);
   }
 }
 
@@ -201,10 +185,7 @@ export async function DELETE(
     );
 
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const workoutId = params.id;
@@ -212,21 +193,21 @@ export async function DELETE(
     const hardDelete = searchParams.get('hard') === 'true';
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Get workout document
     const workoutDoc = await adminDb.collection('workouts').doc(workoutId).get();
 
     if (!workoutDoc.exists) {
-      return NextResponse.json({ error: 'Workout not found' }, { status: 404 });
+      return apiError('Workout not found', 404, 'NOT_FOUND');
     }
 
     const workout = workoutDoc.data() as Workout;
 
     // Verify ownership
     if (workout.trainerId !== authResult.uid) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return apiError('Forbidden', 403, 'FORBIDDEN');
     }
 
     if (hardDelete) {
@@ -273,10 +254,6 @@ export async function DELETE(
       return NextResponse.json({ message: 'Workout archived' });
     }
   } catch (error: any) {
-    console.error('Error deleting workout:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to delete workout' },
-      { status: 500 }
-    );
+    return apiError('Failed to delete workout', 500, 'DELETE_WORKOUT_ERROR', error);
   }
 }

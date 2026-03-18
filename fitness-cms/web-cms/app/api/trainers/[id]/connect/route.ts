@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { createNotification } from '@/lib/notifications';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,32 +13,23 @@ export async function POST(
 ) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const authResult = await verifyAuthRequest(request.headers.get('authorization'));
     if (!authResult.isAuthenticated || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (authResult.role !== 'student' && authResult.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Only students can connect to a trainer', code: 'FORBIDDEN' },
-        { status: 403 }
-      );
+      return apiError('Only students can connect to a trainer', 403, 'FORBIDDEN');
     }
 
     const { id: trainerId } = await params;
     const studentId = authResult.uid;
 
     if (studentId === trainerId) {
-      return NextResponse.json(
-        { error: 'Cannot connect to yourself', code: 'FORBIDDEN' },
-        { status: 403 }
-      );
+      return apiError('Cannot connect to yourself', 403, 'FORBIDDEN');
     }
 
     // Verify trainer exists and is active
@@ -47,10 +39,7 @@ export async function POST(
       trainerDoc.data()?.role !== 'trainer' ||
       trainerDoc.data()?.status !== 'active'
     ) {
-      return NextResponse.json(
-        { error: 'Trainer not found', code: 'TRAINER_NOT_FOUND' },
-        { status: 404 }
-      );
+      return apiError('Trainer not found', 404, 'TRAINER_NOT_FOUND');
     }
 
     // Check if a connection already exists (any status)
@@ -187,11 +176,7 @@ export async function POST(
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Error creating trainer connection request:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to connect to trainer' },
-      { status: 500 }
-    );
+    return apiError('Failed to connect to trainer', 500, 'CONNECT_TRAINER_ERROR', error);
   }
 }
 
@@ -202,15 +187,12 @@ export async function GET(
 ) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const authResult = await verifyAuthRequest(request.headers.get('authorization'));
     if (!authResult.isAuthenticated || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const { id: trainerId } = await params;
@@ -238,10 +220,6 @@ export async function GET(
       studentId,
     });
   } catch (error: any) {
-    console.error('Error checking trainer connection:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to check connection' },
-      { status: 500 }
-    );
+    return apiError('Failed to check connection', 500, 'CHECK_CONNECTION_ERROR', error);
   }
 }

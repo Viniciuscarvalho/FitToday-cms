@@ -22,7 +22,7 @@ import {
 import { doc, getDoc, setDoc, Firestore, serverTimestamp } from 'firebase/firestore';
 import { PersonalTrainer, AdminUser, UserRole, TrainerStatus } from '@/types';
 import { AUTH_COOKIES, setRoleCookies, clearAuthCookies } from '@/lib/auth-utils';
-import { PLANS } from '@/lib/constants';
+import { createTrainerDefaults } from '@/lib/trainer-defaults';
 
 interface AuthContextType {
   user: User | null;
@@ -194,45 +194,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!auth || !db) throw new Error('Firebase not initialized');
     const result = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(result.user, { displayName: name });
-
-    // Create trainer document with pending status
-    const trainerData: Partial<PersonalTrainer> = {
-      uid: result.user.uid,
-      email: result.user.email || '',
-      displayName: name,
-      photoURL: result.user.photoURL || '',
-      createdAt: serverTimestamp() as any,
-      updatedAt: serverTimestamp() as any,
-      isActive: true,
-      role: 'trainer',
-      status: 'pending',
-      profile: {
-        bio: '',
-        specialties: [],
-        certifications: [],
-        experience: 0,
-      },
-      store: {
-        slug: '',
-        isVerified: false,
-        rating: 0,
-        totalReviews: 0,
-        totalSales: 0,
-        totalStudents: 0,
-      },
-      financial: {
-        totalEarnings: 0,
-        pendingBalance: 0,
-        availableBalance: 0,
-      },
-      subscription: {
-        plan: 'starter',
-        status: 'active',
-        features: PLANS.starter.features,
-      },
-    };
-
-    await setDoc(doc(db, 'users', result.user.uid), trainerData);
+    await setDoc(
+      doc(db, 'users', result.user.uid),
+      createTrainerDefaults(result.user.uid, result.user.email || '', name, result.user.photoURL || '')
+    );
     // onAuthStateChanged handles fetchUserData + cookie setting
   };
 
@@ -244,42 +209,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if user exists, if not create as trainer with pending status
     const userDoc = await getDoc(doc(db, 'users', result.user.uid));
     if (!userDoc.exists()) {
-      const trainerData: Partial<PersonalTrainer> = {
-        uid: result.user.uid,
-        email: result.user.email || '',
-        displayName: result.user.displayName || '',
-        photoURL: result.user.photoURL || '',
-        createdAt: serverTimestamp() as any,
-        updatedAt: serverTimestamp() as any,
-        isActive: true,
-        role: 'trainer',
-        status: 'pending',
-        profile: {
-          bio: '',
-          specialties: [],
-          certifications: [],
-          experience: 0,
-        },
-        store: {
-          slug: '',
-          isVerified: false,
-          rating: 0,
-          totalReviews: 0,
-          totalSales: 0,
-          totalStudents: 0,
-        },
-        financial: {
-          totalEarnings: 0,
-          pendingBalance: 0,
-          availableBalance: 0,
-        },
-        subscription: {
-          plan: 'starter',
-          status: 'active',
-          features: PLANS.starter.features,
-        },
-      };
-      await setDoc(doc(db, 'users', result.user.uid), trainerData);
+      await setDoc(
+        doc(db, 'users', result.user.uid),
+        createTrainerDefaults(
+          result.user.uid,
+          result.user.email || '',
+          result.user.displayName || '',
+          result.user.photoURL || ''
+        )
+      );
     }
     // onAuthStateChanged handles fetchUserData + cookie setting
   };
@@ -295,42 +233,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if user exists, if not create as trainer with pending status
     const userDoc = await getDoc(doc(db, 'users', result.user.uid));
     if (!userDoc.exists()) {
-      const trainerData: Partial<PersonalTrainer> = {
-        uid: result.user.uid,
-        email: result.user.email || '',
-        displayName: result.user.displayName || '',
-        photoURL: result.user.photoURL || '',
-        createdAt: serverTimestamp() as any,
-        updatedAt: serverTimestamp() as any,
-        isActive: true,
-        role: 'trainer',
-        status: 'pending',
-        profile: {
-          bio: '',
-          specialties: [],
-          certifications: [],
-          experience: 0,
-        },
-        store: {
-          slug: '',
-          isVerified: false,
-          rating: 0,
-          totalReviews: 0,
-          totalSales: 0,
-          totalStudents: 0,
-        },
-        financial: {
-          totalEarnings: 0,
-          pendingBalance: 0,
-          availableBalance: 0,
-        },
-        subscription: {
-          plan: 'starter',
-          status: 'active',
-          features: PLANS.starter.features,
-        },
-      };
-      await setDoc(doc(db, 'users', result.user.uid), trainerData);
+      await setDoc(
+        doc(db, 'users', result.user.uid),
+        createTrainerDefaults(
+          result.user.uid,
+          result.user.email || '',
+          result.user.displayName || '',
+          result.user.photoURL || ''
+        )
+      );
     }
     // onAuthStateChanged handles fetchUserData + cookie setting
   };

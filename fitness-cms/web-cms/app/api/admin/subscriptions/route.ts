@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAdminRequest } from '@/lib/firebase-admin';
 import { PLANS } from '@/lib/constants';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,11 +9,11 @@ export async function GET(request: NextRequest) {
   const authResult = await verifyAdminRequest(request.headers.get('Authorization'));
 
   if (!authResult.isAdmin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return apiError('Unauthorized', 401, 'UNAUTHORIZED');
   }
 
   if (!adminDb) {
-    return NextResponse.json({ error: 'Database not available' }, { status: 500 });
+    return apiError('Database not available', 500, 'DB_ERROR');
   }
 
   try {
@@ -52,7 +53,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ trainers, summary });
   } catch (error: any) {
-    console.error('Error fetching admin subscriptions:', error);
-    return NextResponse.json({ error: error.message || 'Failed to fetch subscriptions' }, { status: 500 });
+    return apiError('Failed to fetch subscriptions', 500, 'FETCH_SUBSCRIPTIONS_ERROR', error);
   }
 }

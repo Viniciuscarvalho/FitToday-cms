@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyTrainerRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,27 +19,24 @@ export async function POST(
     );
 
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Get original program
     const programDoc = await adminDb.collection('programs').doc(programId).get();
 
     if (!programDoc.exists) {
-      return NextResponse.json({ error: 'Program not found' }, { status: 404 });
+      return apiError('Program not found', 404, 'NOT_FOUND');
     }
 
     const originalData = programDoc.data()!;
 
     if (originalData.trainerId !== authResult.uid) {
-      return NextResponse.json({ error: 'Not authorized to duplicate this program' }, { status: 403 });
+      return apiError('Not authorized to duplicate this program', 403, 'FORBIDDEN');
     }
 
     // Create duplicate
@@ -71,10 +69,6 @@ export async function POST(
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Error duplicating program:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to duplicate program' },
-      { status: 500 }
-    );
+    return apiError('Failed to duplicate program', 500, 'DUPLICATE_PROGRAM_ERROR', error);
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyTrainerRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,13 +14,13 @@ export async function GET(
     const exerciseId = params.id;
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const exerciseDoc = await adminDb.collection('exercises').doc(exerciseId).get();
 
     if (!exerciseDoc.exists) {
-      return NextResponse.json({ error: 'Exercise not found' }, { status: 404 });
+      return apiError('Exercise not found', 404, 'NOT_FOUND');
     }
 
     const data = exerciseDoc.data()!;
@@ -31,11 +32,7 @@ export async function GET(
       updatedAt: data.updatedAt?.toDate?.()?.toISOString() || null,
     });
   } catch (error: any) {
-    console.error('Error getting exercise:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to get exercise' },
-      { status: 500 }
-    );
+    return apiError('Failed to get exercise', 500, 'GET_EXERCISE_ERROR', error);
   }
 }
 
@@ -53,31 +50,25 @@ export async function PATCH(
     );
 
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Verify exercise exists
     const exerciseDoc = await adminDb.collection('exercises').doc(exerciseId).get();
 
     if (!exerciseDoc.exists) {
-      return NextResponse.json({ error: 'Exercise not found' }, { status: 404 });
+      return apiError('Exercise not found', 404, 'NOT_FOUND');
     }
 
     const existingData = exerciseDoc.data()!;
 
     // Only allow update if trainer owns the exercise or exercise is system-level
     if (existingData.source === 'trainer' && existingData.trainerId !== authResult.uid) {
-      return NextResponse.json(
-        { error: 'Not authorized to edit this exercise' },
-        { status: 403 }
-      );
+      return apiError('Not authorized to edit this exercise', 403, 'FORBIDDEN');
     }
 
     const body = await request.json();
@@ -119,11 +110,7 @@ export async function PATCH(
       updatedAt: updatedData.updatedAt?.toDate?.()?.toISOString() || null,
     });
   } catch (error: any) {
-    console.error('Error updating exercise:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to update exercise' },
-      { status: 500 }
-    );
+    return apiError('Failed to update exercise', 500, 'UPDATE_EXERCISE_ERROR', error);
   }
 }
 
@@ -141,31 +128,25 @@ export async function DELETE(
     );
 
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Verify exercise exists
     const exerciseDoc = await adminDb.collection('exercises').doc(exerciseId).get();
 
     if (!exerciseDoc.exists) {
-      return NextResponse.json({ error: 'Exercise not found' }, { status: 404 });
+      return apiError('Exercise not found', 404, 'NOT_FOUND');
     }
 
     const existingData = exerciseDoc.data()!;
 
     // Only allow soft delete if trainer owns the exercise
     if (existingData.trainerId !== authResult.uid) {
-      return NextResponse.json(
-        { error: 'Not authorized to delete this exercise' },
-        { status: 403 }
-      );
+      return apiError('Not authorized to delete this exercise', 403, 'FORBIDDEN');
     }
 
     await adminDb.collection('exercises').doc(exerciseId).update({
@@ -175,10 +156,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Error deleting exercise:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to delete exercise' },
-      { status: 500 }
-    );
+    return apiError('Failed to delete exercise', 500, 'DELETE_EXERCISE_ERROR', error);
   }
 }

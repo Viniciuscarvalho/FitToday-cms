@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { TrainerReviewListResponse } from '@/types';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +13,7 @@ export async function GET(
 ) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const { id: trainerId } = await params;
@@ -23,10 +24,7 @@ export async function GET(
     // Verify trainer exists and is active
     const trainerDoc = await adminDb.collection('users').doc(trainerId).get();
     if (!trainerDoc.exists || trainerDoc.data()?.role !== 'trainer' || trainerDoc.data()?.status !== 'active') {
-      return NextResponse.json(
-        { error: 'Trainer not found', code: 'TRAINER_NOT_FOUND' },
-        { status: 404 }
-      );
+      return apiError('Trainer not found', 404, 'TRAINER_NOT_FOUND');
     }
 
     const baseQuery = adminDb
@@ -68,11 +66,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error: any) {
-    console.error('Error listing reviews:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to list reviews' },
-      { status: 500 }
-    );
+    return apiError('Failed to list reviews', 500, 'LIST_REVIEWS_ERROR', error);
   }
 }
 
@@ -83,34 +77,25 @@ export async function POST(
 ) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Verify authentication
     const authResult = await verifyAuthRequest(request.headers.get('authorization'));
     if (!authResult.isAuthenticated || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     // Only students can submit reviews
     if (authResult.role !== 'student') {
-      return NextResponse.json(
-        { error: 'Only students can submit reviews', code: 'FORBIDDEN' },
-        { status: 403 }
-      );
+      return apiError('Only students can submit reviews', 403, 'FORBIDDEN');
     }
 
     const { id: trainerId } = await params;
 
     // Prevent self-review
     if (authResult.uid === trainerId) {
-      return NextResponse.json(
-        { error: 'Cannot review yourself', code: 'FORBIDDEN' },
-        { status: 403 }
-      );
+      return apiError('Cannot review yourself', 403, 'FORBIDDEN');
     }
 
     const body = await request.json();
@@ -118,27 +103,18 @@ export async function POST(
     // Validate rating
     const rating = Number(body.rating);
     if (!rating || rating < 1 || rating > 5 || !Number.isInteger(rating)) {
-      return NextResponse.json(
-        { error: 'Rating must be an integer between 1 and 5', code: 'INVALID_RATING' },
-        { status: 400 }
-      );
+      return apiError('Rating must be an integer between 1 and 5', 400, 'INVALID_RATING');
     }
 
     // Validate comment length
     if (body.comment && body.comment.length > 500) {
-      return NextResponse.json(
-        { error: 'Comment must be 500 characters or less', code: 'COMMENT_TOO_LONG' },
-        { status: 400 }
-      );
+      return apiError('Comment must be 500 characters or less', 400, 'COMMENT_TOO_LONG');
     }
 
     // Verify trainer exists and is active
     const trainerDoc = await adminDb.collection('users').doc(trainerId).get();
     if (!trainerDoc.exists || trainerDoc.data()?.role !== 'trainer' || trainerDoc.data()?.status !== 'active') {
-      return NextResponse.json(
-        { error: 'Trainer not found', code: 'TRAINER_NOT_FOUND' },
-        { status: 404 }
-      );
+      return apiError('Trainer not found', 404, 'TRAINER_NOT_FOUND');
     }
 
     // Verify student has/had a relationship with this trainer.
@@ -159,19 +135,13 @@ export async function POST(
     ]);
 
     if (subscriptionRelation.empty && workoutRelation.empty) {
-      return NextResponse.json(
-        { error: 'You must be a student of this trainer to leave a review', code: 'NOT_ENROLLED' },
-        { status: 403 }
-      );
+      return apiError('You must be a student of this trainer to leave a review', 403, 'NOT_ENROLLED');
     }
 
     // Verify student profile exists
     const studentDoc = await adminDb.collection('users').doc(authResult.uid).get();
     if (!studentDoc.exists) {
-      return NextResponse.json(
-        { error: 'Student profile not found', code: 'USER_NOT_FOUND' },
-        { status: 404 }
-      );
+      return apiError('Student profile not found', 404, 'USER_NOT_FOUND');
     }
     const studentData = studentDoc.data()!;
 
@@ -246,10 +216,6 @@ export async function POST(
       { status: isUpdate ? 200 : 201 }
     );
   } catch (error: any) {
-    console.error('Error submitting review:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to submit review' },
-      { status: 500 }
-    );
+    return apiError('Failed to submit review', 500, 'SUBMIT_REVIEW_ERROR', error);
   }
 }

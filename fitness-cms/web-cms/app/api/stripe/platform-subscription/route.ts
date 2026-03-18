@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,13 +10,13 @@ export async function GET(request: NextRequest) {
   const authResult = await verifyAuthRequest(request.headers.get('Authorization'));
 
   if (!authResult.isAuthenticated || authResult.role !== 'trainer') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return apiError('Unauthorized', 401, 'UNAUTHORIZED');
   }
 
   const trainerId = authResult.uid!;
 
   if (!adminDb) {
-    return NextResponse.json({ error: 'Database not available' }, { status: 500 });
+    return apiError('Database not available', 500, 'DB_ERROR');
   }
 
   try {
@@ -34,8 +35,7 @@ export async function GET(request: NextRequest) {
       stripeSubscriptionId: data.stripeSubscriptionId,
     });
   } catch (error: any) {
-    console.error('Error fetching platform subscription:', error);
-    return NextResponse.json({ error: error.message || 'Failed to fetch subscription' }, { status: 500 });
+    return apiError('Failed to fetch subscription', 500, 'FETCH_SUBSCRIPTION_ERROR', error);
   }
 }
 
@@ -43,26 +43,26 @@ export async function DELETE(request: NextRequest) {
   const authResult = await verifyAuthRequest(request.headers.get('Authorization'));
 
   if (!authResult.isAuthenticated || authResult.role !== 'trainer') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return apiError('Unauthorized', 401, 'UNAUTHORIZED');
   }
 
   const trainerId = authResult.uid!;
 
   if (!adminDb) {
-    return NextResponse.json({ error: 'Database not available' }, { status: 500 });
+    return apiError('Database not available', 500, 'DB_ERROR');
   }
 
   try {
     const subDoc = await adminDb.collection('platformSubscriptions').doc(trainerId).get();
 
     if (!subDoc.exists) {
-      return NextResponse.json({ error: 'No active subscription found' }, { status: 404 });
+      return apiError('No active subscription found', 404, 'NOT_FOUND');
     }
 
     const { stripeSubscriptionId } = subDoc.data()!;
 
     if (!stripeSubscriptionId) {
-      return NextResponse.json({ error: 'Subscription ID not found' }, { status: 404 });
+      return apiError('Subscription ID not found', 404, 'NOT_FOUND');
     }
 
     // Cancel at period end (does not cancel immediately)
@@ -77,7 +77,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true, cancelAtPeriodEnd: true });
   } catch (error: any) {
-    console.error('Error canceling platform subscription:', error);
-    return NextResponse.json({ error: error.message || 'Failed to cancel subscription' }, { status: 500 });
+    return apiError('Failed to cancel subscription', 500, 'CANCEL_SUBSCRIPTION_ERROR', error);
   }
 }

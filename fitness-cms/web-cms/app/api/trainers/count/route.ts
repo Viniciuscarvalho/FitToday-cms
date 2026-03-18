@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const countSnapshot = await adminDb
@@ -19,10 +20,6 @@ export async function GET() {
 
     return NextResponse.json({ total: countSnapshot.data().count });
   } catch (error: any) {
-    console.error('Error counting trainers:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to count trainers' },
-      { status: 500 }
-    );
+    return apiError('Failed to count trainers', 500, 'COUNT_TRAINERS_ERROR', error);
   }
 }

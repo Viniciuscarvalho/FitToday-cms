@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,7 @@ export async function POST(request: NextRequest) {
   const authResult = await verifyAuthRequest(request.headers.get('Authorization'));
 
   if (!authResult.isAuthenticated || authResult.role !== 'trainer') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return apiError('Unauthorized', 401, 'UNAUTHORIZED');
   }
 
   const trainerId = authResult.uid!;
@@ -18,12 +19,12 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    return apiError('Invalid request body', 400, 'INVALID_REQUEST');
   }
 
   const { plan } = body;
   if (plan !== 'pro' && plan !== 'elite') {
-    return NextResponse.json({ error: 'Invalid plan. Must be "pro" or "elite"' }, { status: 400 });
+    return apiError('Invalid plan. Must be "pro" or "elite"', 400, 'INVALID_REQUEST');
   }
 
   const priceId =
@@ -33,11 +34,11 @@ export async function POST(request: NextRequest) {
 
   if (!priceId) {
     console.error(`Missing env var for plan: ${plan}`);
-    return NextResponse.json({ error: 'Plan price not configured' }, { status: 500 });
+    return apiError('Plan price not configured', 500, 'CONFIG_ERROR');
   }
 
   if (!adminDb) {
-    return NextResponse.json({ error: 'Database not available' }, { status: 500 });
+    return apiError('Database not available', 500, 'DB_ERROR');
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -87,7 +88,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
-    console.error('Error creating platform checkout session:', error);
-    return NextResponse.json({ error: error.message || 'Failed to create checkout session' }, { status: 500 });
+    return apiError('Failed to create checkout session', 500, 'CREATE_CHECKOUT_ERROR', error);
   }
 }

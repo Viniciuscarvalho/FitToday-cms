@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
 import { FieldValue, Firestore, Timestamp } from 'firebase-admin/firestore';
+import { apiError } from '@/lib/api-errors';
 
 /**
  * Recursively converts Firestore Timestamp objects to ISO date strings
@@ -60,14 +61,11 @@ export async function POST(request: NextRequest) {
     );
 
     if (!authResult.isAuthenticated || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const body = await request.json();
@@ -138,10 +136,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Error registering student:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to register student' },
-      { status: 500 }
-    );
+    return apiError('Failed to register student', 500, 'REGISTER_STUDENT_ERROR', error);
   }
 }

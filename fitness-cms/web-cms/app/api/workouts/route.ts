@@ -3,6 +3,7 @@ import { adminDb, uploadWorkoutPDF, sendWorkoutNotification, verifyTrainerReques
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { Workout, WorkoutProgress, CreateWorkoutResponse, WorkoutListResponse } from '@/types/workout';
 import { isWithinStudentLimit, PLANS, PlanId } from '@/lib/constants';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,10 +20,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const formData = await request.formData();
@@ -41,44 +39,32 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!file) {
-      return NextResponse.json({ error: 'File is required' }, { status: 400 });
+      return apiError('File is required', 400, 'INVALID_REQUEST');
     }
 
     if (!studentId || !title) {
-      return NextResponse.json(
-        { error: 'studentId and title are required' },
-        { status: 400 }
-      );
+      return apiError('studentId and title are required', 400, 'INVALID_REQUEST');
     }
 
     // Validate file type
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { error: 'Only PDF, JPG, and PNG files are allowed' },
-        { status: 400 }
-      );
+      return apiError('Only PDF, JPG, and PNG files are allowed', 400, 'INVALID_REQUEST');
     }
 
     // Validate file size (PDF: 10MB, image: 5MB)
     const maxSize = file.type === 'application/pdf' ? MAX_FILE_SIZE_PDF : MAX_FILE_SIZE_IMAGE;
     if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: `File size exceeds maximum of ${maxSize / (1024 * 1024)}MB` },
-        { status: 400 }
-      );
+      return apiError(`File size exceeds maximum of ${maxSize / (1024 * 1024)}MB`, 400, 'INVALID_REQUEST');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     if (startDate) {
       const parsed = new Date(startDate);
       if (isNaN(parsed.getTime())) {
-        return NextResponse.json(
-          { error: 'Invalid startDate format. Use ISO date (YYYY-MM-DD)' },
-          { status: 400 }
-        );
+        return apiError('Invalid startDate format. Use ISO date (YYYY-MM-DD)', 400, 'INVALID_REQUEST');
       }
     }
 
@@ -200,11 +186,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating workout:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to create workout' },
-      { status: 500 }
-    );
+    return apiError('Failed to create workout', 500, 'CREATE_WORKOUT_ERROR', error);
   }
 }
 
@@ -217,10 +199,7 @@ export async function GET(request: NextRequest) {
     );
 
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const { searchParams } = new URL(request.url);
@@ -232,7 +211,7 @@ export async function GET(request: NextRequest) {
     const trainerId = authResult.uid;
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Build query - always scoped to verified trainer
@@ -302,10 +281,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error: any) {
-    console.error('Error listing workouts:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to list workouts' },
-      { status: 500 }
-    );
+    return apiError('Failed to list workouts', 500, 'LIST_WORKOUTS_ERROR', error);
   }
 }

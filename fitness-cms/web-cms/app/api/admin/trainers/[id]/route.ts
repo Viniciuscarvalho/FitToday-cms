@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAdminRequest } from '@/lib/firebase-admin';
 import { PersonalTrainer } from '@/types';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,27 +18,24 @@ export async function GET(
     const verification = await verifyAdminRequest(authHeader);
 
     if (!verification.isAdmin) {
-      return NextResponse.json(
-        { error: verification.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(verification.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Get trainer document
     const trainerDoc = await adminDb.collection('users').doc(id).get();
 
     if (!trainerDoc.exists) {
-      return NextResponse.json({ error: 'Trainer not found' }, { status: 404 });
+      return apiError('Trainer not found', 404, 'NOT_FOUND');
     }
 
     const trainerData = trainerDoc.data() as PersonalTrainer;
 
     if (trainerData.role !== 'trainer') {
-      return NextResponse.json({ error: 'User is not a trainer' }, { status: 400 });
+      return apiError('User is not a trainer', 400, 'INVALID_REQUEST');
     }
 
     // Get trainer's students count
@@ -77,10 +75,6 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error: any) {
-    console.error('Error getting trainer:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to get trainer' },
-      { status: 500 }
-    );
+    return apiError('Failed to get trainer', 500, 'GET_TRAINER_ERROR', error);
   }
 }

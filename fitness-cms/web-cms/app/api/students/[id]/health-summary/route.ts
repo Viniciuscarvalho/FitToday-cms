@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyTrainerRequest } from '@/lib/firebase-admin';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,15 +63,12 @@ export async function GET(
 ) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const authResult = await verifyTrainerRequest(request.headers.get('authorization'));
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const { id: studentId } = await params;
@@ -78,10 +76,7 @@ export async function GET(
     const period = (searchParams.get('period') || 'week') as Period;
 
     if (!['week', 'month', 'year'].includes(period)) {
-      return NextResponse.json(
-        { error: 'period must be week, month, or year' },
-        { status: 400 }
-      );
+      return apiError('period must be week, month, or year', 400, 'INVALID_REQUEST');
     }
 
     const range = getDateRange(
@@ -213,10 +208,6 @@ export async function GET(
       monthlyBreakdown,
     });
   } catch (error: any) {
-    console.error('Error fetching health summary:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch health summary' },
-      { status: 500 }
-    );
+    return apiError('Failed to fetch health summary', 500, 'FETCH_HEALTH_SUMMARY_ERROR', error);
   }
 }

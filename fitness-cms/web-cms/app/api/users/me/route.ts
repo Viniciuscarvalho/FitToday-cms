@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,34 +9,24 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const authResult = await verifyAuthRequest(request.headers.get('authorization'));
     if (!authResult.isAuthenticated || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const doc = await adminDb.collection('users').doc(authResult.uid).get();
 
     if (!doc.exists) {
-      return NextResponse.json(
-        { error: 'User not found', code: 'USER_NOT_FOUND' },
-        { status: 404 }
-      );
+      return apiError('User not found', 404, 'USER_NOT_FOUND');
     }
 
     const data = doc.data()!;
     return NextResponse.json({ uid: doc.id, ...data });
   } catch (error: any) {
-    console.error('Error fetching user profile:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch user profile' },
-      { status: 500 }
-    );
+    return apiError('Failed to fetch user profile', 500, 'FETCH_USER_ERROR', error);
   }
 }
 
@@ -43,15 +34,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const authResult = await verifyAuthRequest(request.headers.get('authorization'));
     if (!authResult.isAuthenticated || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     let body: { role?: string; displayName?: string; photoURL?: string } = {};
@@ -65,10 +53,7 @@ export async function POST(request: NextRequest) {
 
     // Validate role — only student role is accepted here (trainer onboarding has its own flow)
     if (role && role !== 'student') {
-      return NextResponse.json(
-        { error: 'Invalid role. Only student role can be set via this endpoint.', code: 'INVALID_ROLE' },
-        { status: 400 }
-      );
+      return apiError('Invalid role. Only student role can be set via this endpoint.', 400, 'INVALID_ROLE');
     }
 
     const uid = authResult.uid;
@@ -109,10 +94,6 @@ export async function POST(request: NextRequest) {
     await userRef.set(newProfile);
     return NextResponse.json({ uid, ...newProfile }, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating/updating user profile:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to update user profile' },
-      { status: 500 }
-    );
+    return apiError('Failed to update user profile', 500, 'UPDATE_USER_ERROR', error);
   }
 }

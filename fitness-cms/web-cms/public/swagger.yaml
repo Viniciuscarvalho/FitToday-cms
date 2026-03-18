@@ -2272,6 +2272,12 @@ paths:
           schema:
             type: string
           description: Search across name.pt, name.en, and aliases
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (1-based). Alternative to offset. If both provided, page takes precedence.
         - name: limit
           in: query
           schema:
@@ -2282,6 +2288,7 @@ paths:
           schema:
             type: integer
             default: 0
+          description: Number of items to skip. Ignored when page is provided.
       responses:
         "200":
           description: Exercise list
@@ -2296,6 +2303,12 @@ paths:
                       $ref: "#/components/schemas/Exercise"
                   total:
                     type: integer
+                  page:
+                    type: integer
+                    description: Current page number
+                  limit:
+                    type: integer
+                    description: Items per page
 
     post:
       tags: [Exercises]

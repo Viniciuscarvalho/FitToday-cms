@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,15 +8,12 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const authResult = await verifyAuthRequest(request.headers.get('authorization'));
     if (!authResult.isAuthenticated || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const { searchParams } = new URL(request.url);
@@ -52,11 +50,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ notifications, total: notifications.length });
   } catch (error: any) {
-    console.error('Error fetching notifications:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch notifications' },
-      { status: 500 }
-    );
+    return apiError('Failed to fetch notifications', 500, 'FETCH_NOTIFICATIONS_ERROR', error);
   }
 }
 
@@ -64,23 +58,17 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const authResult = await verifyAuthRequest(request.headers.get('authorization'));
     if (!authResult.isAuthenticated || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const body = await request.json();
     if (body.action !== 'markAllRead') {
-      return NextResponse.json(
-        { error: 'Invalid action. Use { action: "markAllRead" }', code: 'INVALID_ACTION' },
-        { status: 400 }
-      );
+      return apiError('Invalid action. Use { action: "markAllRead" }', 400, 'INVALID_ACTION');
     }
 
     const unreadSnap = await adminDb
@@ -102,10 +90,6 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true, updated: unreadSnap.size });
   } catch (error: any) {
-    console.error('Error marking all notifications as read:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to mark notifications as read' },
-      { status: 500 }
-    );
+    return apiError('Failed to mark notifications as read', 500, 'MARK_NOTIFICATIONS_ERROR', error);
   }
 }

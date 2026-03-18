@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { toPublicProfile } from '@/lib/trainer-utils';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,34 +12,24 @@ export async function GET(
 ) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const { id } = await params;
     const doc = await adminDb.collection('users').doc(id).get();
 
     if (!doc.exists) {
-      return NextResponse.json(
-        { error: 'Trainer not found', code: 'TRAINER_NOT_FOUND' },
-        { status: 404 }
-      );
+      return apiError('Trainer not found', 404, 'TRAINER_NOT_FOUND');
     }
 
     const data = doc.data()!;
 
     if (data.role !== 'trainer' || data.status !== 'active') {
-      return NextResponse.json(
-        { error: 'Trainer not found', code: 'TRAINER_NOT_FOUND' },
-        { status: 404 }
-      );
+      return apiError('Trainer not found', 404, 'TRAINER_NOT_FOUND');
     }
 
     return NextResponse.json(toPublicProfile(doc.id, data));
   } catch (error: any) {
-    console.error('Error fetching trainer:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch trainer' },
-      { status: 500 }
-    );
+    return apiError('Failed to fetch trainer', 500, 'FETCH_TRAINER_ERROR', error);
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,22 +9,16 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const authResult = await verifyAuthRequest(request.headers.get('authorization'));
     if (!authResult.isAuthenticated || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (authResult.role !== 'trainer') {
-      return NextResponse.json(
-        { error: 'Only trainers can view connection requests', code: 'FORBIDDEN' },
-        { status: 403 }
-      );
+      return apiError('Only trainers can view connection requests', 403, 'FORBIDDEN');
     }
 
     const trainerId = authResult.uid;
@@ -76,10 +71,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ connections, total: connections.length });
   } catch (error: any) {
-    console.error('Error fetching connection requests:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch connection requests' },
-      { status: 500 }
-    );
+    return apiError('Failed to fetch connection requests', 500, 'FETCH_CONNECTIONS_ERROR', error);
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyTrainerRequest, uploadProgramCover, deleteProgramCover, uploadProgramPDF, uploadProgramVideo } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,13 +17,13 @@ export async function GET(
     const programId = params.id;
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const programDoc = await adminDb.collection('programs').doc(programId).get();
 
     if (!programDoc.exists) {
-      return NextResponse.json({ error: 'Program not found' }, { status: 404 });
+      return apiError('Program not found', 404, 'NOT_FOUND');
     }
 
     const data = programDoc.data()!;
@@ -35,11 +36,7 @@ export async function GET(
       publishedAt: data.publishedAt?.toDate?.()?.toISOString() || null,
     });
   } catch (error: any) {
-    console.error('Error getting program:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to get program' },
-      { status: 500 }
-    );
+    return apiError('Failed to get program', 500, 'GET_PROGRAM_ERROR', error);
   }
 }
 
@@ -57,27 +54,24 @@ export async function PUT(
     );
 
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Verify ownership
     const programDoc = await adminDb.collection('programs').doc(programId).get();
 
     if (!programDoc.exists) {
-      return NextResponse.json({ error: 'Program not found' }, { status: 404 });
+      return apiError('Program not found', 404, 'NOT_FOUND');
     }
 
     const existingData = programDoc.data()!;
 
     if (existingData.trainerId !== authResult.uid) {
-      return NextResponse.json({ error: 'Not authorized to edit this program' }, { status: 403 });
+      return apiError('Not authorized to edit this program', 403, 'FORBIDDEN');
     }
 
     const contentType = request.headers.get('content-type') || '';
@@ -102,16 +96,10 @@ export async function PUT(
     let coverImageURL = body.coverImageURL;
     if (coverFile) {
       if (!ALLOWED_IMAGE_TYPES.includes(coverFile.type)) {
-        return NextResponse.json(
-          { error: 'Cover image must be JPEG, PNG, or WebP' },
-          { status: 400 }
-        );
+        return apiError('Cover image must be JPEG, PNG, or WebP', 400, 'INVALID_REQUEST');
       }
       if (coverFile.size > MAX_COVER_SIZE) {
-        return NextResponse.json(
-          { error: 'Cover image must be less than 10MB' },
-          { status: 400 }
-        );
+        return apiError('Cover image must be less than 10MB', 400, 'INVALID_REQUEST');
       }
       const buffer = Buffer.from(await coverFile.arrayBuffer());
       const result = await uploadProgramCover(programId, buffer, coverFile.type);
@@ -121,10 +109,10 @@ export async function PUT(
     // Upload workout PDF if provided
     if (pdfFile) {
       if (pdfFile.type !== 'application/pdf') {
-        return NextResponse.json({ error: 'Workout file must be a PDF' }, { status: 400 });
+        return apiError('Workout file must be a PDF', 400, 'INVALID_REQUEST');
       }
       if (pdfFile.size > 10 * 1024 * 1024) {
-        return NextResponse.json({ error: 'PDF must be less than 10MB' }, { status: 400 });
+        return apiError('PDF must be less than 10MB', 400, 'INVALID_REQUEST');
       }
       const buffer = Buffer.from(await pdfFile.arrayBuffer());
       const result = await uploadProgramPDF(programId, buffer, pdfFile.type);
@@ -135,10 +123,10 @@ export async function PUT(
     // Upload preview video file if provided
     if (videoFile) {
       if (!videoFile.type.startsWith('video/')) {
-        return NextResponse.json({ error: 'Preview file must be a video' }, { status: 400 });
+        return apiError('Preview file must be a video', 400, 'INVALID_REQUEST');
       }
       if (videoFile.size > 100 * 1024 * 1024) {
-        return NextResponse.json({ error: 'Video must be less than 100MB' }, { status: 400 });
+        return apiError('Video must be less than 100MB', 400, 'INVALID_REQUEST');
       }
       const buffer = Buffer.from(await videoFile.arrayBuffer());
       const result = await uploadProgramVideo(programId, buffer, videoFile.type);
@@ -182,11 +170,7 @@ export async function PUT(
       updatedAt: new Date().toISOString(),
     });
   } catch (error: any) {
-    console.error('Error updating program:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to update program' },
-      { status: 500 }
-    );
+    return apiError('Failed to update program', 500, 'UPDATE_PROGRAM_ERROR', error);
   }
 }
 
@@ -204,35 +188,29 @@ export async function DELETE(
     );
 
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Verify ownership
     const programDoc = await adminDb.collection('programs').doc(programId).get();
 
     if (!programDoc.exists) {
-      return NextResponse.json({ error: 'Program not found' }, { status: 404 });
+      return apiError('Program not found', 404, 'NOT_FOUND');
     }
 
     const existingData = programDoc.data()!;
 
     if (existingData.trainerId !== authResult.uid) {
-      return NextResponse.json({ error: 'Not authorized to delete this program' }, { status: 403 });
+      return apiError('Not authorized to delete this program', 403, 'FORBIDDEN');
     }
 
     // Check if program has active students
     if (existingData.stats?.activeStudents > 0) {
-      return NextResponse.json(
-        { error: 'Cannot delete a program with active students. Archive it instead.' },
-        { status: 400 }
-      );
+      return apiError('Cannot delete a program with active students. Archive it instead.', 400, 'INVALID_REQUEST');
     }
 
     // Soft delete: archive the program
@@ -244,10 +222,6 @@ export async function DELETE(
 
     return NextResponse.json({ id: programId, status: 'archived' });
   } catch (error: any) {
-    console.error('Error deleting program:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to delete program' },
-      { status: 500 }
-    );
+    return apiError('Failed to delete program', 500, 'DELETE_PROGRAM_ERROR', error);
   }
 }

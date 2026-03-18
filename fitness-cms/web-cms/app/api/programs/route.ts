@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyTrainerRequest, uploadProgramCover, uploadProgramPDF, uploadProgramVideo } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { isWithinProgramLimit, PLANS, PlanId } from '@/lib/constants';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> =
@@ -70,11 +71,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ programs, total: programs.length });
   } catch (error: any) {
-    console.error('Error listing programs:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to list programs' },
-      { status: 500 }
-    );
+    return apiError('Failed to list programs', 500, 'LIST_PROGRAMS_ERROR', error);
   }
 }
 
@@ -87,14 +84,11 @@ export async function POST(request: NextRequest) {
     );
 
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const contentType = request.headers.get('content-type') || '';
@@ -117,11 +111,11 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!body.title?.trim()) {
-      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+      return apiError('Title is required', 400, 'INVALID_REQUEST');
     }
 
     if (!body.description?.trim()) {
-      return NextResponse.json({ error: 'Description is required' }, { status: 400 });
+      return apiError('Description is required', 400, 'INVALID_REQUEST');
     }
 
     // Check program limit based on trainer's plan
@@ -156,16 +150,10 @@ export async function POST(request: NextRequest) {
     let coverImageURL = body.coverImageURL || '';
     if (coverFile) {
       if (!ALLOWED_IMAGE_TYPES.includes(coverFile.type)) {
-        return NextResponse.json(
-          { error: 'Cover image must be JPEG, PNG, or WebP' },
-          { status: 400 }
-        );
+        return apiError('Cover image must be JPEG, PNG, or WebP', 400, 'INVALID_REQUEST');
       }
       if (coverFile.size > MAX_COVER_SIZE) {
-        return NextResponse.json(
-          { error: 'Cover image must be less than 10MB' },
-          { status: 400 }
-        );
+        return apiError('Cover image must be less than 10MB', 400, 'INVALID_REQUEST');
       }
       const buffer = Buffer.from(await coverFile.arrayBuffer());
       const result = await uploadProgramCover(programId, buffer, coverFile.type);
@@ -177,10 +165,10 @@ export async function POST(request: NextRequest) {
     let workoutPdfPath = '';
     if (pdfFile) {
       if (pdfFile.type !== 'application/pdf') {
-        return NextResponse.json({ error: 'Workout file must be a PDF' }, { status: 400 });
+        return apiError('Workout file must be a PDF', 400, 'INVALID_REQUEST');
       }
       if (pdfFile.size > 10 * 1024 * 1024) {
-        return NextResponse.json({ error: 'PDF must be less than 10MB' }, { status: 400 });
+        return apiError('PDF must be less than 10MB', 400, 'INVALID_REQUEST');
       }
       const buffer = Buffer.from(await pdfFile.arrayBuffer());
       const result = await uploadProgramPDF(programId, buffer, pdfFile.type);
@@ -192,10 +180,10 @@ export async function POST(request: NextRequest) {
     let previewVideoURL = body.previewVideoURL || '';
     if (videoFile) {
       if (!videoFile.type.startsWith('video/')) {
-        return NextResponse.json({ error: 'Preview file must be a video' }, { status: 400 });
+        return apiError('Preview file must be a video', 400, 'INVALID_REQUEST');
       }
       if (videoFile.size > 100 * 1024 * 1024) {
-        return NextResponse.json({ error: 'Video must be less than 100MB' }, { status: 400 });
+        return apiError('Video must be less than 100MB', 400, 'INVALID_REQUEST');
       }
       const buffer = Buffer.from(await videoFile.arrayBuffer());
       const result = await uploadProgramVideo(programId, buffer, videoFile.type);
@@ -256,10 +244,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Error creating program:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to create program' },
-      { status: 500 }
-    );
+    return apiError('Failed to create program', 500, 'CREATE_PROGRAM_ERROR', error);
   }
 }

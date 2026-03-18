@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyTrainerRequest } from '@/lib/firebase-admin';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,11 +11,11 @@ export async function GET(
   try {
     const authResult = await verifyTrainerRequest(request.headers.get('authorization'));
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json({ error: authResult.error || 'Unauthorized' }, { status: 401 });
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const { id: studentId } = await params;
@@ -49,10 +50,6 @@ export async function GET(
 
     return NextResponse.json({ workoutData });
   } catch (error: any) {
-    console.error('Error fetching student analytics:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to fetch student analytics' },
-      { status: 500 }
-    );
+    return apiError('Failed to fetch student analytics', 500, 'FETCH_ANALYTICS_ERROR', error);
   }
 }

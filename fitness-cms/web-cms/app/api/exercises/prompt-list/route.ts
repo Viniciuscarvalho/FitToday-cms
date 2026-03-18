@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     // Only fetch active exercises
@@ -68,10 +69,6 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error('Error generating prompt list:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to generate prompt list' },
-      { status: 500 }
-    );
+    return apiError('Failed to generate prompt list', 500, 'PROMPT_LIST_ERROR', error);
   }
 }

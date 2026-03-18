@@ -1,39 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
+import { verifyTrainerRequest, adminDb } from '@/lib/firebase-admin';
+import { apiError } from '@/lib/api-errors';
 
 // Create a product in Stripe for a program
 export async function POST(request: NextRequest) {
+  const authResult = await verifyTrainerRequest(request.headers.get('authorization'));
+  if (!authResult.isTrainer || !authResult.uid) {
+    return apiError('Unauthorized', 401, 'UNAUTHORIZED');
+  }
+
   try {
-    const {
-      programId,
-      name,
-      description,
-      trainerId,
-      trainerStripeAccountId,
-      imageUrl,
-    } = await request.json();
+    const { programId, name, description, trainerId, trainerStripeAccountId, imageUrl } =
+      await request.json();
 
     if (!programId || !name || !trainerId || !trainerStripeAccountId) {
-      return NextResponse.json(
-        { error: 'Missing required fields: programId, name, trainerId, trainerStripeAccountId' },
-        { status: 400 }
+      return apiError(
+        'Missing required fields: programId, name, trainerId, trainerStripeAccountId',
+        400,
+        'MISSING_PARAM'
       );
     }
 
-    // Create product on the connected account
+    // Trainers can only manage their own products
+    if (trainerId !== authResult.uid) {
+      return apiError('Forbidden', 403, 'FORBIDDEN');
+    }
+
+    // Verify the Stripe account belongs to this trainer
+    const trainerDoc = await adminDb!.collection('users').doc(authResult.uid).get();
+    const trainerStripeId = trainerDoc.data()?.financial?.stripeAccountId;
+    if (trainerStripeId !== trainerStripeAccountId) {
+      return apiError('Forbidden', 403, 'FORBIDDEN');
+    }
+
     const product = await stripe.products.create(
       {
         name,
         description: description || undefined,
         images: imageUrl ? [imageUrl] : undefined,
-        metadata: {
-          programId,
-          trainerId,
-        },
+        metadata: { programId, trainerId },
       },
-      {
-        stripeAccount: trainerStripeAccountId,
-      }
+      { stripeAccount: trainerStripeAccountId }
     );
 
     return NextResponse.json({
@@ -42,27 +50,32 @@ export async function POST(request: NextRequest) {
       description: product.description,
       active: product.active,
     });
-  } catch (error: any) {
-    console.error('Error creating product:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to create product' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return apiError('Failed to create product', 500, 'STRIPE_ERROR', error);
   }
 }
 
 // Get a product by ID
 export async function GET(request: NextRequest) {
+  const authResult = await verifyTrainerRequest(request.headers.get('authorization'));
+  if (!authResult.isTrainer || !authResult.uid) {
+    return apiError('Unauthorized', 401, 'UNAUTHORIZED');
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('productId');
     const trainerStripeAccountId = searchParams.get('stripeAccountId');
 
     if (!productId || !trainerStripeAccountId) {
-      return NextResponse.json(
-        { error: 'productId and stripeAccountId are required' },
-        { status: 400 }
-      );
+      return apiError('productId and stripeAccountId are required', 400, 'MISSING_PARAM');
+    }
+
+    // Verify the Stripe account belongs to this trainer
+    const trainerDoc = await adminDb!.collection('users').doc(authResult.uid).get();
+    const trainerStripeId = trainerDoc.data()?.financial?.stripeAccountId;
+    if (trainerStripeId !== trainerStripeAccountId) {
+      return apiError('Forbidden', 403, 'FORBIDDEN');
     }
 
     const product = await stripe.products.retrieve(productId, {
@@ -76,11 +89,7 @@ export async function GET(request: NextRequest) {
       active: product.active,
       metadata: product.metadata,
     });
-  } catch (error: any) {
-    console.error('Error getting product:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to get product' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return apiError('Failed to get product', 500, 'STRIPE_ERROR', error);
   }
 }

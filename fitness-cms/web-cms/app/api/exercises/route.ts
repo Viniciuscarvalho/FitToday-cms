@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyTrainerRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,10 +37,13 @@ export async function GET(request: NextRequest) {
     const trainerId = searchParams.get('trainerId');
     const search = searchParams.get('search');
     const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const pageParam = searchParams.get('page');
+    const offset = pageParam
+      ? (parseInt(pageParam) - 1) * limit
+      : parseInt(searchParams.get('offset') || '0');
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     let query: FirebaseFirestore.Query<FirebaseFirestore.DocumentData> =
@@ -110,13 +114,14 @@ export async function GET(request: NextRequest) {
     // Apply offset and limit after filtering
     exercises = exercises.slice(offset, offset + limit);
 
-    return NextResponse.json({ exercises, total });
+    return NextResponse.json({
+      exercises,
+      total,
+      page: pageParam ? parseInt(pageParam) : Math.floor(offset / limit) + 1,
+      limit,
+    });
   } catch (error: any) {
-    console.error('Error listing exercises:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to list exercises' },
-      { status: 500 }
-    );
+    return apiError('Failed to list exercises', 500, 'LIST_EXERCISES_ERROR', error);
   }
 }
 
@@ -129,33 +134,30 @@ export async function POST(request: NextRequest) {
     );
 
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const body = await request.json();
 
     // Validate required fields
     if (!body.name?.pt?.trim()) {
-      return NextResponse.json({ error: 'name.pt is required' }, { status: 400 });
+      return apiError('name.pt is required', 400, 'INVALID_REQUEST');
     }
 
     if (!body.name?.en?.trim()) {
-      return NextResponse.json({ error: 'name.en is required' }, { status: 400 });
+      return apiError('name.en is required', 400, 'INVALID_REQUEST');
     }
 
     if (!body.category?.trim()) {
-      return NextResponse.json({ error: 'category is required' }, { status: 400 });
+      return apiError('category is required', 400, 'INVALID_REQUEST');
     }
 
     if (!body.equipment?.trim()) {
-      return NextResponse.json({ error: 'equipment is required' }, { status: 400 });
+      return apiError('equipment is required', 400, 'INVALID_REQUEST');
     }
 
     // Generate ID by slugifying name.en
@@ -206,10 +208,6 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Error creating exercise:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to create exercise' },
-      { status: 500 }
-    );
+    return apiError('Failed to create exercise', 500, 'CREATE_EXERCISE_ERROR', error);
   }
 }

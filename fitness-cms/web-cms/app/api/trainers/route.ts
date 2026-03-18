@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
 import { toPublicProfile } from '@/lib/trainer-utils';
 import { PublicTrainerListResponse } from '@/types';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const { searchParams } = new URL(request.url);
@@ -61,10 +62,6 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error: any) {
-    console.error('Error listing trainers:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to list trainers' },
-      { status: 500 }
-    );
+    return apiError('Failed to list trainers', 500, 'LIST_TRAINERS_ERROR', error);
   }
 }

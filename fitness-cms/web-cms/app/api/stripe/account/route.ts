@@ -1,58 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
+import { verifyTrainerRequest, adminDb } from '@/lib/firebase-admin';
+import { apiError } from '@/lib/api-errors';
 
 // Get Stripe account balance and details
 export async function GET(request: NextRequest) {
+  const authResult = await verifyTrainerRequest(request.headers.get('authorization'));
+  if (!authResult.isTrainer || !authResult.uid) {
+    return apiError('Unauthorized', 401, 'UNAUTHORIZED');
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const accountId = searchParams.get('accountId');
 
     if (!accountId) {
-      return NextResponse.json(
-        { error: 'accountId is required' },
-        { status: 400 }
-      );
+      return apiError('accountId is required', 400, 'MISSING_PARAM');
     }
 
-    // Get account details
+    // Ownership check: trainer can only access their own Stripe account
+    const trainerDoc = await adminDb!.collection('users').doc(authResult.uid).get();
+    const trainerStripeAccountId = trainerDoc.data()?.financial?.stripeAccountId;
+    if (trainerStripeAccountId !== accountId) {
+      return apiError('Forbidden', 403, 'FORBIDDEN');
+    }
+
     const account = await stripe.accounts.retrieve(accountId);
+    const balance = await stripe.balance.retrieve({ stripeAccount: accountId });
+    const payouts = await stripe.payouts.list({ limit: 10 }, { stripeAccount: accountId });
+    const charges = await stripe.charges.list({ limit: 20 }, { stripeAccount: accountId });
 
-    // Get balance for the connected account
-    const balance = await stripe.balance.retrieve({
-      stripeAccount: accountId,
-    });
-
-    // Get recent payouts
-    const payouts = await stripe.payouts.list(
-      {
-        limit: 10,
-      },
-      {
-        stripeAccount: accountId,
-      }
-    );
-
-    // Get recent charges/payments
-    const charges = await stripe.charges.list(
-      {
-        limit: 20,
-      },
-      {
-        stripeAccount: accountId,
-      }
-    );
-
-    // Calculate totals
-    const availableBalance = balance.available.reduce(
-      (sum, b) => sum + b.amount,
-      0
-    );
-    const pendingBalance = balance.pending.reduce(
-      (sum, b) => sum + b.amount,
-      0
-    );
-
-    // Get total earnings from successful charges
+    const availableBalance = balance.available.reduce((sum, b) => sum + b.amount, 0);
+    const pendingBalance = balance.pending.reduce((sum, b) => sum + b.amount, 0);
     const totalEarnings = charges.data
       .filter((c) => c.paid && !c.refunded)
       .reduce((sum, c) => sum + c.amount, 0);
@@ -88,37 +67,35 @@ export async function GET(request: NextRequest) {
       })),
       totalEarnings,
     });
-  } catch (error: any) {
-    console.error('Error getting Stripe account details:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to get account details' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return apiError('Failed to get account details', 500, 'STRIPE_ERROR', error);
   }
 }
 
 // Create a login link for Stripe Express dashboard
 export async function POST(request: NextRequest) {
+  const authResult = await verifyTrainerRequest(request.headers.get('authorization'));
+  if (!authResult.isTrainer || !authResult.uid) {
+    return apiError('Unauthorized', 401, 'UNAUTHORIZED');
+  }
+
   try {
     const { accountId } = await request.json();
 
     if (!accountId) {
-      return NextResponse.json(
-        { error: 'accountId is required' },
-        { status: 400 }
-      );
+      return apiError('accountId is required', 400, 'MISSING_PARAM');
+    }
+
+    // Ownership check: trainer can only create login links for their own account
+    const trainerDoc = await adminDb!.collection('users').doc(authResult.uid).get();
+    const trainerStripeAccountId = trainerDoc.data()?.financial?.stripeAccountId;
+    if (trainerStripeAccountId !== accountId) {
+      return apiError('Forbidden', 403, 'FORBIDDEN');
     }
 
     const loginLink = await stripe.accounts.createLoginLink(accountId);
-
-    return NextResponse.json({
-      url: loginLink.url,
-    });
-  } catch (error: any) {
-    console.error('Error creating Stripe login link:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to create login link' },
-      { status: 500 }
-    );
+    return NextResponse.json({ url: loginLink.url });
+  } catch (error) {
+    return apiError('Failed to create login link', 500, 'STRIPE_ERROR', error);
   }
 }

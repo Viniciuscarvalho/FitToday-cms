@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,62 +32,41 @@ export async function POST(
 ) {
   try {
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const authResult = await verifyAuthRequest(request.headers.get('authorization'));
     if (!authResult.isAuthenticated || !authResult.uid) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     const { id: studentId } = await params;
 
     // Verify the authenticated user is the student themselves
     if (authResult.uid !== studentId) {
-      return NextResponse.json(
-        { error: 'Can only submit health data for yourself', code: 'FORBIDDEN' },
-        { status: 403 }
-      );
+      return apiError('Can only submit health data for yourself', 403, 'FORBIDDEN');
     }
 
     const body: HealthDataBody = await request.json();
 
     if (!body.entries || !Array.isArray(body.entries) || body.entries.length === 0) {
-      return NextResponse.json(
-        { error: 'entries array is required and must not be empty', code: 'BAD_REQUEST' },
-        { status: 400 }
-      );
+      return apiError('entries array is required and must not be empty', 400, 'BAD_REQUEST');
     }
 
     if (body.entries.length > 90) {
-      return NextResponse.json(
-        { error: 'Maximum 90 entries per batch', code: 'BAD_REQUEST' },
-        { status: 400 }
-      );
+      return apiError('Maximum 90 entries per batch', 400, 'BAD_REQUEST');
     }
 
     // Validate entries
     for (const entry of body.entries) {
       if (!entry.date || !/^\d{4}-\d{2}-\d{2}$/.test(entry.date)) {
-        return NextResponse.json(
-          { error: `Invalid date format: ${entry.date}. Use YYYY-MM-DD.`, code: 'BAD_REQUEST' },
-          { status: 400 }
-        );
+        return apiError(`Invalid date format: ${entry.date}. Use YYYY-MM-DD.`, 400, 'BAD_REQUEST');
       }
       if (typeof entry.activeCalories !== 'number' || entry.activeCalories < 0) {
-        return NextResponse.json(
-          { error: 'activeCalories must be a non-negative number', code: 'BAD_REQUEST' },
-          { status: 400 }
-        );
+        return apiError('activeCalories must be a non-negative number', 400, 'BAD_REQUEST');
       }
       if (entry.sessions && !Array.isArray(entry.sessions)) {
-        return NextResponse.json(
-          { error: 'sessions must be an array', code: 'BAD_REQUEST' },
-          { status: 400 }
-        );
+        return apiError('sessions must be an array', 400, 'BAD_REQUEST');
       }
     }
 
@@ -145,10 +125,6 @@ export async function POST(
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Error storing health data:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to store health data' },
-      { status: 500 }
-    );
+    return apiError('Failed to store health data', 500, 'STORE_HEALTH_DATA_ERROR', error);
   }
 }

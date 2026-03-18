@@ -1,22 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
+import { verifyTrainerRequest, adminDb } from '@/lib/firebase-admin';
+import { apiError } from '@/lib/api-errors';
 
 // Create a Stripe Connect account for a trainer
 export async function POST(request: NextRequest) {
+  const authResult = await verifyTrainerRequest(request.headers.get('authorization'));
+  if (!authResult.isTrainer || !authResult.uid) {
+    return apiError('Unauthorized', 401, 'UNAUTHORIZED');
+  }
+
   try {
     const { trainerId, email, existingAccountId, returnUrl } = await request.json();
 
     if (!trainerId || !email) {
-      return NextResponse.json(
-        { error: 'trainerId and email are required' },
-        { status: 400 }
-      );
+      return apiError('trainerId and email are required', 400, 'MISSING_PARAM');
+    }
+
+    // Trainers can only create/access their own Stripe account
+    if (trainerId !== authResult.uid) {
+      return apiError('Forbidden', 403, 'FORBIDDEN');
     }
 
     let accountId = existingAccountId;
 
     if (!accountId) {
-      // Create a new Stripe Connect Express account
       const account = await stripe.accounts.create({
         type: 'express',
         country: 'BR',
@@ -26,15 +34,11 @@ export async function POST(request: NextRequest) {
           transfers: { requested: true },
         },
         business_type: 'individual',
-        metadata: {
-          trainerId: trainerId,
-        },
+        metadata: { trainerId },
       });
-
       accountId = account.id;
     }
 
-    // Create an account link for onboarding
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001';
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
@@ -43,37 +47,36 @@ export async function POST(request: NextRequest) {
       type: 'account_onboarding',
     });
 
-    return NextResponse.json({
-      url: accountLink.url,
-      accountId: accountId,
-    });
-  } catch (error: any) {
-    console.error('Error creating Stripe Connect account:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to create Stripe account' },
-      { status: 500 }
-    );
+    return NextResponse.json({ url: accountLink.url, accountId });
+  } catch (error) {
+    return apiError('Failed to create Stripe account', 500, 'STRIPE_ERROR', error);
   }
 }
 
 // Get Stripe Connect account status
 export async function GET(request: NextRequest) {
+  const authResult = await verifyTrainerRequest(request.headers.get('authorization'));
+  if (!authResult.isTrainer || !authResult.uid) {
+    return apiError('Unauthorized', 401, 'UNAUTHORIZED');
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const accountId = searchParams.get('accountId');
 
     if (!accountId) {
-      return NextResponse.json({
-        connected: false,
-        onboardingComplete: false,
-      });
+      return NextResponse.json({ connected: false, onboardingComplete: false });
     }
 
-    // Get the account details from Stripe
-    const account = await stripe.accounts.retrieve(accountId);
+    // Ownership check: trainer can only view their own account status
+    const trainerDoc = await adminDb!.collection('users').doc(authResult.uid).get();
+    const trainerStripeAccountId = trainerDoc.data()?.financial?.stripeAccountId;
+    if (trainerStripeAccountId !== accountId) {
+      return apiError('Forbidden', 403, 'FORBIDDEN');
+    }
 
-    const isOnboardingComplete =
-      account.charges_enabled && account.payouts_enabled;
+    const account = await stripe.accounts.retrieve(accountId);
+    const isOnboardingComplete = account.charges_enabled && account.payouts_enabled;
 
     return NextResponse.json({
       connected: true,
@@ -84,11 +87,7 @@ export async function GET(request: NextRequest) {
       email: account.email,
       detailsSubmitted: account.details_submitted,
     });
-  } catch (error: any) {
-    console.error('Error getting Stripe account status:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to get account status' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return apiError('Failed to get account status', 500, 'STRIPE_ERROR', error);
   }
 }

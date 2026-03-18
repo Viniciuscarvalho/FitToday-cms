@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
+import { verifyTrainerRequest, adminDb } from '@/lib/firebase-admin';
+import { apiError } from '@/lib/api-errors';
 
 type RecurringInterval = 'month' | 'year';
 
@@ -8,7 +10,7 @@ interface CreatePriceBody {
   programId: string;
   trainerId: string;
   trainerStripeAccountId: string;
-  unitAmount: number; // Price in cents
+  unitAmount: number;
   currency?: string;
   recurring?: {
     interval: RecurringInterval;
@@ -18,9 +20,13 @@ interface CreatePriceBody {
 
 // Create a price for a product
 export async function POST(request: NextRequest) {
+  const authResult = await verifyTrainerRequest(request.headers.get('authorization'));
+  if (!authResult.isTrainer || !authResult.uid) {
+    return apiError('Unauthorized', 401, 'UNAUTHORIZED');
+  }
+
   try {
     const body: CreatePriceBody = await request.json();
-
     const {
       productId,
       programId,
@@ -32,24 +38,32 @@ export async function POST(request: NextRequest) {
     } = body;
 
     if (!productId || !programId || !trainerId || !trainerStripeAccountId || !unitAmount) {
-      return NextResponse.json(
-        { error: 'Missing required fields: productId, programId, trainerId, trainerStripeAccountId, unitAmount' },
-        { status: 400 }
+      return apiError(
+        'Missing required fields: productId, programId, trainerId, trainerStripeAccountId, unitAmount',
+        400,
+        'MISSING_PARAM'
       );
     }
 
-    // Create price on the connected account
+    // Trainers can only manage their own prices
+    if (trainerId !== authResult.uid) {
+      return apiError('Forbidden', 403, 'FORBIDDEN');
+    }
+
+    // Verify the Stripe account belongs to this trainer
+    const trainerDoc = await adminDb!.collection('users').doc(authResult.uid).get();
+    const trainerStripeId = trainerDoc.data()?.financial?.stripeAccountId;
+    if (trainerStripeId !== trainerStripeAccountId) {
+      return apiError('Forbidden', 403, 'FORBIDDEN');
+    }
+
     const priceData: Parameters<typeof stripe.prices.create>[0] = {
       product: productId,
       unit_amount: unitAmount,
       currency,
-      metadata: {
-        programId,
-        trainerId,
-      },
+      metadata: { programId, trainerId },
     };
 
-    // Add recurring config if provided
     if (recurring) {
       priceData.recurring = {
         interval: recurring.interval,
@@ -68,44 +82,41 @@ export async function POST(request: NextRequest) {
       currency: price.currency,
       type: price.type,
       recurring: price.recurring
-        ? {
-            interval: price.recurring.interval,
-            intervalCount: price.recurring.interval_count,
-          }
+        ? { interval: price.recurring.interval, intervalCount: price.recurring.interval_count }
         : null,
       active: price.active,
     });
-  } catch (error: any) {
-    console.error('Error creating price:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to create price' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return apiError('Failed to create price', 500, 'STRIPE_ERROR', error);
   }
 }
 
 // List prices for a product
 export async function GET(request: NextRequest) {
+  const authResult = await verifyTrainerRequest(request.headers.get('authorization'));
+  if (!authResult.isTrainer || !authResult.uid) {
+    return apiError('Unauthorized', 401, 'UNAUTHORIZED');
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('productId');
     const trainerStripeAccountId = searchParams.get('stripeAccountId');
 
     if (!productId || !trainerStripeAccountId) {
-      return NextResponse.json(
-        { error: 'productId and stripeAccountId are required' },
-        { status: 400 }
-      );
+      return apiError('productId and stripeAccountId are required', 400, 'MISSING_PARAM');
+    }
+
+    // Verify the Stripe account belongs to this trainer
+    const trainerDoc = await adminDb!.collection('users').doc(authResult.uid).get();
+    const trainerStripeId = trainerDoc.data()?.financial?.stripeAccountId;
+    if (trainerStripeId !== trainerStripeAccountId) {
+      return apiError('Forbidden', 403, 'FORBIDDEN');
     }
 
     const prices = await stripe.prices.list(
-      {
-        product: productId,
-        active: true,
-      },
-      {
-        stripeAccount: trainerStripeAccountId,
-      }
+      { product: productId, active: true },
+      { stripeAccount: trainerStripeAccountId }
     );
 
     return NextResponse.json({
@@ -116,19 +127,12 @@ export async function GET(request: NextRequest) {
         currency: price.currency,
         type: price.type,
         recurring: price.recurring
-          ? {
-              interval: price.recurring.interval,
-              intervalCount: price.recurring.interval_count,
-            }
+          ? { interval: price.recurring.interval, intervalCount: price.recurring.interval_count }
           : null,
         active: price.active,
       })),
     });
-  } catch (error: any) {
-    console.error('Error listing prices:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to list prices' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return apiError('Failed to list prices', 500, 'STRIPE_ERROR', error);
   }
 }

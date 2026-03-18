@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, verifyTrainerRequest, uploadProgressPhoto } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,11 +16,11 @@ export async function GET(
   try {
     const authResult = await verifyTrainerRequest(request.headers.get('authorization'));
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json({ error: authResult.error || 'Unauthorized' }, { status: 401 });
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const { id: studentId } = await params;
@@ -47,11 +48,7 @@ export async function GET(
 
     return NextResponse.json({ entries, total: entries.length });
   } catch (error: any) {
-    console.error('Error listing progress entries:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to list progress entries' },
-      { status: 500 }
-    );
+    return apiError('Failed to list progress entries', 500, 'LIST_PROGRESS_ERROR', error);
   }
 }
 
@@ -63,11 +60,11 @@ export async function POST(
   try {
     const authResult = await verifyTrainerRequest(request.headers.get('authorization'));
     if (!authResult.isTrainer || !authResult.uid) {
-      return NextResponse.json({ error: authResult.error || 'Unauthorized' }, { status: 401 });
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
     }
 
     if (!adminDb) {
-      return NextResponse.json({ error: 'Database not initialized' }, { status: 500 });
+      return apiError('Database not initialized', 500, 'DB_ERROR');
     }
 
     const { id: studentId } = await params;
@@ -84,16 +81,10 @@ export async function POST(
         const file = formData.get(`photo_${position}`) as File | null;
         if (file) {
           if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-            return NextResponse.json(
-              { error: `Photo ${position} must be JPEG, PNG, or WebP` },
-              { status: 400 }
-            );
+            return apiError(`Photo ${position} must be JPEG, PNG, or WebP`, 400, 'INVALID_REQUEST');
           }
           if (file.size > MAX_PHOTO_SIZE) {
-            return NextResponse.json(
-              { error: `Photo ${position} must be less than 10MB` },
-              { status: 400 }
-            );
+            return apiError(`Photo ${position} must be less than 10MB`, 400, 'INVALID_REQUEST');
           }
           photoFiles.push({ position, file });
         }
@@ -157,10 +148,6 @@ export async function POST(
       { status: 201 }
     );
   } catch (error: any) {
-    console.error('Error creating progress entry:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to create progress entry' },
-      { status: 500 }
-    );
+    return apiError('Failed to create progress entry', 500, 'CREATE_PROGRESS_ERROR', error);
   }
 }
