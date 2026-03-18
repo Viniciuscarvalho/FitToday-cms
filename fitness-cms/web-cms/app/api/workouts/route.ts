@@ -133,6 +133,8 @@ export async function POST(request: NextRequest) {
       totalDays: parsedTotalDays,
       startDate: startDate ? Timestamp.fromDate(new Date(startDate)) : undefined,
       status: 'active',
+      progressPercent: 0,
+      feedbackCount: 0,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     };
@@ -245,28 +247,10 @@ export async function GET(request: NextRequest) {
           return null;
         }
 
-        // Get progress for each workout
-        const progressSnapshot = await adminDb!
-          .collection('workout_progress')
-          .where('workoutId', '==', doc.id)
-          .limit(1)
-          .get();
-
-        const progress = progressSnapshot.empty
-          ? undefined
-          : { id: progressSnapshot.docs[0].id, ...progressSnapshot.docs[0].data() };
-
-        // Get feedback count
-        const feedbackSnapshot = await adminDb!
-          .collection('workout_feedback')
-          .where('workoutId', '==', doc.id)
-          .count()
-          .get();
-
         return {
           ...workout,
-          progress,
-          feedbackCount: feedbackSnapshot.data().count,
+          progressPercent: workout.progressPercent ?? 0,
+          feedbackCount: workout.feedbackCount ?? 0,
         };
       })
     );

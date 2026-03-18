@@ -18,7 +18,9 @@ export async function GET() {
       .count()
       .get();
 
-    return NextResponse.json({ total: countSnapshot.data().count });
+    return NextResponse.json({ total: countSnapshot.data().count }, {
+      headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=600' },
+    });
   } catch (error: any) {
     return apiError('Failed to count trainers', 500, 'COUNT_TRAINERS_ERROR', error);
   }

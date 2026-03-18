@@ -3,6 +3,7 @@ import { stripe, calculatePlatformFee } from '@/lib/stripe';
 import { adminDb } from '@/lib/firebase-admin';
 import Stripe from 'stripe';
 import { FieldValue } from 'firebase-admin/firestore';
+import { PLANS, PlanId } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,12 +76,18 @@ async function sendNotification(
 async function createChatRoom(trainerId: string, studentId: string, programId: string) {
   if (!adminDb) return;
 
+  // Deterministic ID — one chat room per trainer/student pair regardless of program
+  const chatId = `chat_${trainerId}_${studentId}`;
+  const chatRef = adminDb.collection('chats').doc(chatId);
+
+  const existing = await chatRef.get();
+  if (existing.exists) return;
+
   const welcomeText =
     'Bem-vindo! Este é o seu canal de comunicação direta com o personal trainer. Qualquer dúvida, é só mandar mensagem!';
 
-  const chatRef = adminDb.collection('chats').doc();
   await chatRef.set({
-    id: chatRef.id,
+    id: chatId,
     trainerId,
     studentId,
     programId,
@@ -93,7 +100,7 @@ async function createChatRoom(trainerId: string, studentId: string, programId: s
   });
 
   await chatRef.collection('messages').add({
-    roomId: chatRef.id,
+    roomId: chatId,
     senderId: 'system',
     senderRole: 'system',
     type: 'text',
@@ -257,7 +264,10 @@ async function handleProgramCheckoutCompleted(session: Stripe.Checkout.Session) 
   }
 
   const amountTotal = session.amount_total || 0;
-  const platformFee = calculatePlatformFee(amountTotal);
+  const trainerDoc = await adminDb.collection('users').doc(trainerId).get();
+  const trainerPlan = (trainerDoc.data()?.subscription?.plan || 'starter') as PlanId;
+  const commissionRate = PLANS[trainerPlan]?.commissionRate ?? PLANS.starter.commissionRate;
+  const platformFee = calculatePlatformFee(amountTotal, commissionRate);
   const trainerEarnings = amountTotal - platformFee;
   const now = FieldValue.serverTimestamp();
   const periodEnd = calculatePeriodEnd(session);
@@ -396,8 +406,17 @@ async function handleProgramInvoicePaid(invoice: Stripe.Invoice, sub: any) {
   const now = FieldValue.serverTimestamp();
   const trainerId = sub.metadata?.trainerId;
   const amountPaid = invoice.amount_paid || 0;
-  const platformFee = calculatePlatformFee(amountPaid);
-  const trainerEarnings = amountPaid - platformFee;
+  let platformFee: number;
+  let trainerEarnings: number;
+  if (trainerId) {
+    const trainerDoc = await adminDb.collection('users').doc(trainerId).get();
+    const trainerPlan = (trainerDoc.data()?.subscription?.plan || 'starter') as PlanId;
+    const commissionRate = PLANS[trainerPlan]?.commissionRate ?? PLANS.starter.commissionRate;
+    platformFee = calculatePlatformFee(amountPaid, commissionRate);
+  } else {
+    platformFee = calculatePlatformFee(amountPaid);
+  }
+  trainerEarnings = amountPaid - platformFee;
 
   const updates: Record<string, any> = {
     status: 'active',

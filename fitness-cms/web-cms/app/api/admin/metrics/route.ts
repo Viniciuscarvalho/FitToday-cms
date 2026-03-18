@@ -88,19 +88,13 @@ export async function GET(request: NextRequest) {
       .count()
       .get();
 
-    // Get program counts
-    const allProgramsSnapshot = await adminDb.collection('programs').get();
-    let publishedPrograms = 0;
-    let draftPrograms = 0;
-
-    allProgramsSnapshot.docs.forEach((doc) => {
-      const data = doc.data();
-      if (data.status === 'published') {
-        publishedPrograms++;
-      } else {
-        draftPrograms++;
-      }
-    });
+    // Get program counts via server-side aggregation (avoids transferring all docs)
+    const [publishedProgramsSnap, draftProgramsSnap] = await Promise.all([
+      adminDb.collection('programs').where('status', '==', 'published').count().get(),
+      adminDb.collection('programs').where('status', '==', 'draft').count().get(),
+    ]);
+    const publishedPrograms = publishedProgramsSnap.data().count;
+    const draftPrograms = draftProgramsSnap.data().count;
 
     // Get workout count
     const workoutsSnapshot = await adminDb.collection('workouts').count().get();
@@ -153,7 +147,7 @@ export async function GET(request: NextRequest) {
         total: studentsSnapshot.data().count,
       },
       programs: {
-        total: allProgramsSnapshot.size,
+        total: publishedPrograms + draftPrograms,
         published: publishedPrograms,
         draft: draftPrograms,
       },

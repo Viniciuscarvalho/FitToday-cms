@@ -59,24 +59,6 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Get progress for each workout
-        const progressSnapshot = await adminDb!
-          .collection('workout_progress')
-          .where('workoutId', '==', doc.id)
-          .limit(1)
-          .get();
-
-        const progress = progressSnapshot.empty
-          ? undefined
-          : { id: progressSnapshot.docs[0].id, ...progressSnapshot.docs[0].data() };
-
-        // Get feedback count
-        const feedbackSnapshot = await adminDb!
-          .collection('workout_feedback')
-          .where('workoutId', '==', doc.id)
-          .count()
-          .get();
-
         return {
           id: workout.id,
           trainerId: workout.trainerId,
@@ -89,8 +71,8 @@ export async function GET(request: NextRequest) {
           startDate: workout.startDate,
           status: workout.status,
           createdAt: workout.createdAt,
-          progress,
-          feedbackCount: feedbackSnapshot.data().count,
+          progressPercent: workout.progressPercent ?? 0,
+          feedbackCount: workout.feedbackCount ?? 0,
         };
       })
     );

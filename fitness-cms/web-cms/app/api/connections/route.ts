@@ -37,37 +37,42 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ connections: [], total: 0 });
     }
 
-    // Enrich with student data
-    const connections = await Promise.all(
-      snap.docs.map(async (doc) => {
-        const data = doc.data();
-        const studentDoc = await adminDb!.collection('users').doc(data.studentId).get();
-        const student = studentDoc.exists ? studentDoc.data() : null;
-
-        return {
-          id: doc.id,
-          trainerId: data.trainerId,
-          studentId: data.studentId,
-          status: data.status,
-          source: data.source,
-          message: data.message ?? null,
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
-          respondedAt: data.respondedAt ?? null,
-          cancelledAt: data.cancelledAt ?? null,
-          cancelledBy: data.cancelledBy ?? null,
-          cancellationReason: data.cancellationReason ?? null,
-          student: student
-            ? {
-                uid: student.uid,
-                displayName: student.displayName || 'Aluno',
-                email: student.email || '',
-                photoURL: student.photoURL || null,
-              }
-            : null,
-        };
-      })
+    // Batch fetch all student docs in one round trip (eliminates N+1)
+    const studentRefs = snap.docs.map((doc) =>
+      adminDb!.collection('users').doc(doc.data().studentId)
     );
+    const studentDocs = await adminDb.getAll(...studentRefs);
+    const studentMap = new Map(
+      studentDocs.map((d) => [d.id, d.exists ? d.data() : null])
+    );
+
+    const connections = snap.docs.map((doc) => {
+      const data = doc.data();
+      const student = studentMap.get(data.studentId) ?? null;
+
+      return {
+        id: doc.id,
+        trainerId: data.trainerId,
+        studentId: data.studentId,
+        status: data.status,
+        source: data.source,
+        message: data.message ?? null,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+        respondedAt: data.respondedAt ?? null,
+        canceledAt: data.canceledAt ?? data.cancelledAt ?? null,
+        canceledBy: data.canceledBy ?? data.cancelledBy ?? null,
+        cancellationReason: data.cancellationReason ?? null,
+        student: student
+          ? {
+              uid: student.uid,
+              displayName: student.displayName || 'Aluno',
+              email: student.email || '',
+              photoURL: student.photoURL || null,
+            }
+          : null,
+      };
+    });
 
     return NextResponse.json({ connections, total: connections.length });
   } catch (error: any) {

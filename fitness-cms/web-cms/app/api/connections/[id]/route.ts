@@ -52,71 +52,77 @@ export async function PATCH(
         return apiError('Forbidden', 403, 'FORBIDDEN');
       }
 
-      if (connection.status === 'cancelled') {
-        return apiError('Connection is already cancelled', 409, 'ALREADY_CANCELLED');
+      if (connection.status === 'canceled') {
+        return apiError('Connection is already canceled', 409, 'ALREADY_CANCELED');
       }
 
       const reason = typeof body?.reason === 'string' ? body.reason.trim().substring(0, 500) : null;
-      const cancelledBy = userId === trainerId ? 'trainer' : 'student';
+      const canceledBy = userId === trainerId ? 'trainer' : 'student';
 
-      const batch = adminDb.batch();
-
-      // 1. Update connection status
-      batch.update(connectionRef, {
-        status: 'cancelled',
-        cancelledAt: FieldValue.serverTimestamp(),
-        cancelledBy,
-        cancellationReason: reason,
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-
-      // 2. If connection was active, clean up related records
       if (connection.status === 'active') {
-        // Deactivate subscription
-        const subsSnap = await adminDb
-          .collection('subscriptions')
-          .where('connectionId', '==', connectionId)
-          .where('status', '==', 'active')
-          .limit(1)
-          .get();
+        // Use transaction for active connections to safely guard the student counter
+        await adminDb.runTransaction(async (tx) => {
+          const trainerRef = adminDb!.collection('users').doc(trainerId);
+          const trainerSnap = await tx.get(trainerRef);
+          const currentCount = trainerSnap.data()?.store?.totalStudents ?? 0;
 
-        if (!subsSnap.empty) {
-          batch.update(subsSnap.docs[0].ref, {
+          const subsSnap = await tx.get(
+            adminDb!.collection('subscriptions')
+              .where('connectionId', '==', connectionId)
+              .where('status', '==', 'active')
+              .limit(1)
+          );
+
+          const chatSnap = await tx.get(
+            adminDb!.collection('chats')
+              .where('trainerId', '==', trainerId)
+              .where('studentId', '==', studentId)
+              .where('isActive', '==', true)
+              .limit(1)
+          );
+
+          tx.update(connectionRef, {
             status: 'canceled',
+            canceledAt: FieldValue.serverTimestamp(),
+            canceledBy,
+            cancellationReason: reason,
             updatedAt: FieldValue.serverTimestamp(),
           });
-        }
 
-        // Remove trainerId from student
-        batch.update(adminDb.collection('users').doc(studentId), {
-          trainerId: null,
-          updatedAt: FieldValue.serverTimestamp(),
-        });
+          if (!subsSnap.empty) {
+            tx.update(subsSnap.docs[0].ref, {
+              status: 'canceled',
+              updatedAt: FieldValue.serverTimestamp(),
+            });
+          }
 
-        // Decrement trainer's student count
-        batch.update(adminDb.collection('users').doc(trainerId), {
-          'store.totalStudents': FieldValue.increment(-1),
-          updatedAt: FieldValue.serverTimestamp(),
-        });
-
-        // Deactivate chat room
-        const chatSnap = await adminDb
-          .collection('chats')
-          .where('trainerId', '==', trainerId)
-          .where('studentId', '==', studentId)
-          .where('isActive', '==', true)
-          .limit(1)
-          .get();
-
-        if (!chatSnap.empty) {
-          batch.update(chatSnap.docs[0].ref, {
-            isActive: false,
+          tx.update(adminDb!.collection('users').doc(studentId), {
+            trainerId: null,
             updatedAt: FieldValue.serverTimestamp(),
           });
-        }
+
+          tx.update(trainerRef, {
+            'store.totalStudents': Math.max(0, currentCount - 1),
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+
+          if (!chatSnap.empty) {
+            tx.update(chatSnap.docs[0].ref, {
+              isActive: false,
+              updatedAt: FieldValue.serverTimestamp(),
+            });
+          }
+        });
+      } else {
+        // Pending/rejected connections: simple single-doc update
+        await connectionRef.update({
+          status: 'canceled',
+          canceledAt: FieldValue.serverTimestamp(),
+          canceledBy,
+          cancellationReason: reason,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
       }
-
-      await batch.commit();
 
       // Notify the other party with actor info
       const notifyUserId = userId === trainerId ? studentId : trainerId;
@@ -147,8 +153,8 @@ export async function PATCH(
 
       return NextResponse.json({
         id: connectionId,
-        status: 'cancelled',
-        cancelledBy,
+        status: 'canceled',
+        canceledBy,
         reason,
       });
     }
@@ -273,22 +279,18 @@ export async function PATCH(
 
 
 async function createChatRoom(trainerId: string, studentId: string) {
-  // Avoid duplicate chat rooms
-  const existing = await adminDb!
-    .collection('chats')
-    .where('trainerId', '==', trainerId)
-    .where('studentId', '==', studentId)
-    .limit(1)
-    .get();
+  // Deterministic ID eliminates the dedup query round-trip
+  const chatId = `chat_${trainerId}_${studentId}`;
+  const chatRef = adminDb!.collection('chats').doc(chatId);
 
-  if (!existing.empty) return existing.docs[0].id;
+  const existing = await chatRef.get();
+  if (existing.exists) return chatId;
 
   const welcomeText =
     'Olá! Conexão estabelecida. Este é o seu canal direto com seu personal. Qualquer dúvida é só mandar mensagem!';
 
-  const chatRef = adminDb!.collection('chats').doc();
   await chatRef.set({
-    id: chatRef.id,
+    id: chatId,
     trainerId,
     studentId,
     programId: null,
@@ -301,7 +303,7 @@ async function createChatRoom(trainerId: string, studentId: string) {
   });
 
   await chatRef.collection('messages').add({
-    roomId: chatRef.id,
+    roomId: chatId,
     senderId: 'system',
     senderRole: 'system',
     type: 'text',
@@ -310,5 +312,5 @@ async function createChatRoom(trainerId: string, studentId: string) {
     createdAt: FieldValue.serverTimestamp(),
   });
 
-  return chatRef.id;
+  return chatId;
 }

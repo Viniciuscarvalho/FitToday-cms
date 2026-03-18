@@ -20,6 +20,8 @@ export interface Workout {
   startDate?: Timestamp;
   status: WorkoutStatus;
   viewedAt?: Timestamp;
+  progressPercent?: number;
+  feedbackCount?: number;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

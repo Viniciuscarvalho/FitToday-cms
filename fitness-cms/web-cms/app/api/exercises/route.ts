@@ -114,12 +114,17 @@ export async function GET(request: NextRequest) {
     // Apply offset and limit after filtering
     exercises = exercises.slice(offset, offset + limit);
 
-    return NextResponse.json({
-      exercises,
-      total,
-      page: pageParam ? parseInt(pageParam) : Math.floor(offset / limit) + 1,
-      limit,
-    });
+    return NextResponse.json(
+      {
+        exercises,
+        total,
+        page: pageParam ? parseInt(pageParam) : Math.floor(offset / limit) + 1,
+        limit,
+      },
+      search
+        ? undefined
+        : { headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=600' } }
+    );
   } catch (error: any) {
     return apiError('Failed to list exercises', 500, 'LIST_EXERCISES_ERROR', error);
   }

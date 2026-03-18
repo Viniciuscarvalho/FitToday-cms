@@ -155,9 +155,18 @@ export async function POST(
 
     const isUpdate = !existingReview.empty;
 
-    // Use transaction for atomic review write + aggregate recalculation
+    const oldRating = isUpdate ? existingReview.docs[0].data().rating : null;
+
+    // Use transaction for atomic review write + incremental aggregate update (O(1) vs O(N))
     const reviewId = await adminDb.runTransaction(async (tx) => {
+      const trainerRef = adminDb!.collection('users').doc(trainerId);
+      const trainerSnap = await tx.get(trainerRef);
+      const currentRatingSum = trainerSnap.data()?.store?.ratingSum ?? 0;
+      const currentTotalReviews = trainerSnap.data()?.store?.totalReviews ?? 0;
+
       let rid: string;
+      let newSum: number;
+      let newTotal: number;
 
       if (isUpdate) {
         rid = existingReview.docs[0].id;
@@ -166,6 +175,9 @@ export async function POST(
           comment: body.comment?.trim() || '',
           updatedAt: FieldValue.serverTimestamp(),
         });
+        // Replace old rating with new one in the running sum
+        newSum = currentRatingSum - (oldRating ?? 0) + rating;
+        newTotal = currentTotalReviews;
       } else {
         const reviewRef = adminDb!.collection('reviews').doc();
         rid = reviewRef.id;
@@ -179,33 +191,18 @@ export async function POST(
           createdAt: FieldValue.serverTimestamp(),
           updatedAt: FieldValue.serverTimestamp(),
         });
+        newSum = currentRatingSum + rating;
+        newTotal = currentTotalReviews + 1;
       }
 
-      // Recalculate aggregate inside the transaction
-      const allReviews = await tx.get(
-        adminDb!.collection('reviews').where('trainerId', '==', trainerId)
-      );
-
-      // Build ratings array accounting for the current write
-      const ratings: number[] = [];
-      for (const doc of allReviews.docs) {
-        if (isUpdate && doc.id === rid) {
-          ratings.push(rating); // use new rating
-        } else {
-          ratings.push(doc.data().rating);
-        }
-      }
-      if (!isUpdate) {
-        ratings.push(rating); // new review not yet in snapshot
-      }
-
-      const avgRating = ratings.length > 0
-        ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10
+      const avgRating = newTotal > 0
+        ? Math.round((newSum / newTotal) * 10) / 10
         : 0;
 
-      tx.update(adminDb!.collection('users').doc(trainerId), {
+      tx.update(trainerRef, {
         'store.rating': avgRating,
-        'store.totalReviews': ratings.length,
+        'store.ratingSum': newSum,
+        'store.totalReviews': newTotal,
       });
 
       return rid;

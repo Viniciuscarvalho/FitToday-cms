@@ -44,7 +44,9 @@ export async function GET(request: NextRequest) {
         total: allTrainers.length,
         hasMore: offset + limit < allTrainers.length,
       };
-      return NextResponse.json(response);
+      return NextResponse.json(response, {
+        headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=600' },
+      });
     }
 
     // Standard path: Firestore handles pagination
@@ -60,7 +62,9 @@ export async function GET(request: NextRequest) {
       hasMore: offset + limit < total,
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, {
+      headers: { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=600' },
+    });
   } catch (error: any) {
     return apiError('Failed to list trainers', 500, 'LIST_TRAINERS_ERROR', error);
   }

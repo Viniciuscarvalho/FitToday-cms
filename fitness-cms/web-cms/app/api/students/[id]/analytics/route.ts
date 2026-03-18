@@ -20,12 +20,27 @@ export async function GET(
 
     const { id: studentId } = await params;
 
-    // Fetch workout completions to get performance data (weight lifted over time)
+    const { searchParams } = new URL(request.url);
+    const endDateParam = searchParams.get('endDate');
+    const startDateParam = searchParams.get('startDate');
+
+    // Default to last 30 days if no date range provided
+    const endDate = endDateParam ? new Date(endDateParam) : new Date();
+    const startDate = startDateParam
+      ? new Date(startDateParam)
+      : new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const { Timestamp } = await import('firebase-admin/firestore');
+
+    // Fetch workout completions within the date range (max 100 records)
     const completionsSnapshot = await adminDb
       .collection('workout_completions')
       .where('trainerId', '==', authResult.uid)
       .where('studentId', '==', studentId)
+      .where('completedAt', '>=', Timestamp.fromDate(startDate))
+      .where('completedAt', '<=', Timestamp.fromDate(endDate))
       .orderBy('completedAt', 'asc')
+      .limit(100)
       .get();
 
     const workoutData = completionsSnapshot.docs.map(doc => {
