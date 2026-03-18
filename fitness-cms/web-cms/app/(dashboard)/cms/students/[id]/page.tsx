@@ -39,6 +39,7 @@ import {
   Legend,
 } from 'recharts';
 import { WorkoutsList } from '@/components/workouts/WorkoutsList';
+import { MetricsBarChart, GroupedBarChart } from '@/components/charts';
 import { useAuth } from '@/providers/AuthProvider';
 import {
   collection,
@@ -134,6 +135,26 @@ interface ProgressEntry {
   };
   notes?: string;
   createdAt: string;
+}
+
+interface HealthSummaryYear {
+  strengthLoad: number;
+  enduranceLoad: number;
+  dailyCalories: number;
+  completionRate: number;
+  monthlyStrength: { label: string; value: number }[];
+}
+
+interface HealthSummaryWeek {
+  weeklyStrengthVsEndurance: { label: string; strength: number; endurance: number }[];
+  weeklyCalories: { label: string; value: number }[];
+}
+
+interface HealthSummary {
+  year: HealthSummaryYear | null;
+  week: HealthSummaryWeek | null;
+  loadingYear: boolean;
+  loadingWeek: boolean;
 }
 
 // ============================================================
@@ -247,6 +268,14 @@ export default function StudentDetailPage() {
   const [subscriptions, setSubscriptions] = useState<SubscriptionData[]>([]);
   const [progress, setProgress] = useState<ProgressData[]>([]);
   const [workoutHistory, setWorkoutHistory] = useState<WorkoutHistoryItem[]>([]);
+
+  // Health summary state
+  const [healthSummary, setHealthSummary] = useState<HealthSummary>({
+    year: null,
+    week: null,
+    loadingYear: false,
+    loadingWeek: false,
+  });
 
   // Progress tab state
   const [progressEntries, setProgressEntries] = useState<ProgressEntry[]>([]);
@@ -408,6 +437,48 @@ export default function StudentDetailPage() {
 
     fetchStudentData();
   }, [studentId, user, router]);
+
+  // Fetch health summary data
+  useEffect(() => {
+    async function fetchHealthSummary() {
+      if (!studentId || !user) return;
+
+      setHealthSummary((prev) => ({ ...prev, loadingYear: true, loadingWeek: true }));
+
+      try {
+        const token = await user.getIdToken();
+
+        const [yearRes, weekRes] = await Promise.allSettled([
+          fetch(`/api/students/${studentId}/health-summary?period=year`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`/api/students/${studentId}/health-summary?period=week`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        let yearData: HealthSummaryYear | null = null;
+        let weekData: HealthSummaryWeek | null = null;
+
+        if (yearRes.status === 'fulfilled' && yearRes.value.ok) {
+          const json = await yearRes.value.json();
+          yearData = json.summary ?? json ?? null;
+        }
+
+        if (weekRes.status === 'fulfilled' && weekRes.value.ok) {
+          const json = await weekRes.value.json();
+          weekData = json.summary ?? json ?? null;
+        }
+
+        setHealthSummary({ year: yearData, week: weekData, loadingYear: false, loadingWeek: false });
+      } catch (err) {
+        console.error('Error fetching health summary:', err);
+        setHealthSummary((prev) => ({ ...prev, loadingYear: false, loadingWeek: false }));
+      }
+    }
+
+    fetchHealthSummary();
+  }, [studentId, user]);
 
   // Fetch progress entries when tab changes to 'progress'
   const fetchProgressEntries = useCallback(async () => {
@@ -651,6 +722,7 @@ export default function StudentDetailPage() {
           totalWorkouts={totalWorkouts}
           totalTime={totalTime}
           maxStreak={maxStreak}
+          healthSummary={healthSummary}
           formatDate={formatDate}
           formatDuration={formatDuration}
           getStatusBadge={getStatusBadge}
@@ -717,6 +789,7 @@ function OverviewTab({
   totalWorkouts,
   totalTime,
   maxStreak,
+  healthSummary,
   formatDate,
   formatDuration,
   getStatusBadge,
@@ -729,10 +802,62 @@ function OverviewTab({
   totalWorkouts: number;
   totalTime: number;
   maxStreak: number;
+  healthSummary: HealthSummary;
   formatDate: (ts: any) => string;
   formatDuration: (m: number) => string;
   getStatusBadge: (s: string) => React.ReactNode;
 }) {
+  // Compute performance insights from health data
+  const insights: { icon: React.ElementType; label: string; value: string; color: string }[] = [];
+  if (healthSummary.year) {
+    const yr = healthSummary.year;
+    if (yr.completionRate >= 80) {
+      insights.push({
+        icon: Award,
+        label: 'Alta consistência',
+        value: `${yr.completionRate}% de conclusão`,
+        color: 'text-green-600',
+      });
+    } else if (yr.completionRate < 60) {
+      insights.push({
+        icon: Activity,
+        label: 'Consistência a melhorar',
+        value: `${yr.completionRate}% de conclusão`,
+        color: 'text-orange-500',
+      });
+    }
+    if (yr.strengthLoad > yr.enduranceLoad * 1.5) {
+      insights.push({
+        icon: Dumbbell,
+        label: 'Foco em força',
+        value: `Carga de força ${yr.strengthLoad.toFixed(0)} kg`,
+        color: 'text-primary-600',
+      });
+    } else if (yr.enduranceLoad > yr.strengthLoad * 1.5) {
+      insights.push({
+        icon: TrendingUp,
+        label: 'Foco em resistência',
+        value: `Carga de resistência ${yr.enduranceLoad.toFixed(0)} u`,
+        color: 'text-blue-600',
+      });
+    } else {
+      insights.push({
+        icon: Target,
+        label: 'Treino equilibrado',
+        value: 'Força e resistência balanceadas',
+        color: 'text-indigo-600',
+      });
+    }
+    if (yr.dailyCalories > 0) {
+      insights.push({
+        icon: Flame,
+        label: 'Meta calórica',
+        value: `${yr.dailyCalories} kcal/dia`,
+        color: 'text-orange-500',
+      });
+    }
+  }
+  const displayedInsights = insights.slice(0, 3);
   return (
     <>
       {/* Stats Cards */}
@@ -779,6 +904,197 @@ function OverviewTab({
               <p className="text-2xl font-bold text-gray-900">{maxStreak}</p>
               <p className="text-sm text-gray-500">Dias seguidos</p>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Health Metrics Section */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <BarChart3 className="h-5 w-5 text-primary-600" />
+          Métricas de Saúde
+        </h2>
+
+        {/* Health Stat Cards */}
+        {(healthSummary.loadingYear || healthSummary.year) && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {healthSummary.loadingYear ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 animate-pulse"
+                >
+                  <div className="h-4 bg-gray-100 rounded w-3/4 mb-3" />
+                  <div className="h-7 bg-gray-100 rounded w-1/2" />
+                </div>
+              ))
+            ) : healthSummary.year ? (
+              <>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary-50 rounded-lg">
+                      <Dumbbell className="h-5 w-5 text-primary-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {healthSummary.year.strengthLoad.toFixed(0)}
+                        <span className="text-sm font-normal text-gray-400 ml-1">kg</span>
+                      </p>
+                      <p className="text-xs text-gray-500">Carga de força</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 rounded-lg">
+                      <Activity className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {healthSummary.year.enduranceLoad.toFixed(0)}
+                        <span className="text-sm font-normal text-gray-400 ml-1">u</span>
+                      </p>
+                      <p className="text-xs text-gray-500">Carga de resistência</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-50 rounded-lg">
+                      <Flame className="h-5 w-5 text-orange-500" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {healthSummary.year.dailyCalories}
+                        <span className="text-sm font-normal text-gray-400 ml-1">kcal</span>
+                      </p>
+                      <p className="text-xs text-gray-500">Calorias diárias</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-50 rounded-lg">
+                      <Target className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900">
+                        {healthSummary.year.completionRate}
+                        <span className="text-sm font-normal text-gray-400 ml-1">%</span>
+                      </p>
+                      <p className="text-xs text-gray-500">Taxa de conclusão</p>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : null}
+          </div>
+        )}
+
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* 12-month Strength Evolution */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+              Evolução de Força (12 meses)
+            </h3>
+            {healthSummary.loadingYear ? (
+              <div className="h-48 bg-gray-50 rounded-lg animate-pulse" />
+            ) : healthSummary.year?.monthlyStrength && healthSummary.year.monthlyStrength.length > 0 ? (
+              <MetricsBarChart
+                data={healthSummary.year.monthlyStrength}
+                color="#0d9488"
+                height={192}
+                formatValue={(v) => `${v.toFixed(0)} kg`}
+              />
+            ) : (
+              <div className="h-48 flex items-center justify-center text-sm text-gray-400">
+                Sem dados disponíveis
+              </div>
+            )}
+          </div>
+
+          {/* Weekly Strength vs Endurance */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+              Força vs Resistência (semana)
+            </h3>
+            {healthSummary.loadingWeek ? (
+              <div className="h-48 bg-gray-50 rounded-lg animate-pulse" />
+            ) : healthSummary.week?.weeklyStrengthVsEndurance &&
+              healthSummary.week.weeklyStrengthVsEndurance.length > 0 ? (
+              <GroupedBarChart
+                data={healthSummary.week.weeklyStrengthVsEndurance}
+                bars={[
+                  { dataKey: 'strength', color: '#0d9488', name: 'Força' },
+                  { dataKey: 'endurance', color: '#6366f1', name: 'Resistência' },
+                ]}
+                height={192}
+              />
+            ) : (
+              <div className="h-48 flex items-center justify-center text-sm text-gray-400">
+                Sem dados disponíveis
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Calories + Insights Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Weekly Calories */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+              Calorias na semana (kcal)
+            </h3>
+            {healthSummary.loadingWeek ? (
+              <div className="h-48 bg-gray-50 rounded-lg animate-pulse" />
+            ) : healthSummary.week?.weeklyCalories && healthSummary.week.weeklyCalories.length > 0 ? (
+              <MetricsBarChart
+                data={healthSummary.week.weeklyCalories}
+                color="#f59e0b"
+                height={192}
+                formatValue={(v) => `${v} kcal`}
+              />
+            ) : (
+              <div className="h-48 flex items-center justify-center text-sm text-gray-400">
+                Sem dados disponíveis
+              </div>
+            )}
+          </div>
+
+          {/* Performance Insights */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">Insights de performance</h3>
+            {healthSummary.loadingYear ? (
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-12 bg-gray-50 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : displayedInsights.length > 0 ? (
+              <div className="space-y-3">
+                {displayedInsights.map((insight, idx) => {
+                  const Icon = insight.icon;
+                  return (
+                    <div
+                      key={idx}
+                      className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
+                    >
+                      <Icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${insight.color}`} />
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">{insight.label}</p>
+                        <p className="text-xs text-gray-500">{insight.value}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="h-48 flex flex-col items-center justify-center gap-2 text-gray-400">
+                <BarChart3 className="h-8 w-8" />
+                <p className="text-sm">Sem insights disponíveis</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,0 +1,3787 @@
+openapi: 3.0.3
+info:
+  title: FitToday CMS API
+  description: |
+    API for the FitToday fitness CMS platform. Connects personal trainers with students
+    through programs, workouts, and real-time communication.
+
+    ## Authentication
+    All protected endpoints require a Firebase Auth token in the Authorization header:
+    ```
+    Authorization: Bearer <firebase-id-token>
+    ```
+
+    ## Roles
+    - **trainer** - Personal trainers who create programs and manage students
+    - **student** - Students who follow programs and track progress
+    - **admin** - Platform administrators
+
+    ## Plans
+    | Plan    | Price (BRL) | Commission | Max Programs | Max Students |
+    |---------|-------------|------------|--------------|--------------|
+    | Starter | Free        | 10%        | 3            | 5            |
+    | Pro     | R$97/mo     | 5%         | Unlimited    | Unlimited    |
+    | Elite   | R$197/mo    | 0%         | Unlimited    | Unlimited    |
+  version: 1.0.0
+  contact:
+    name: FitToday Engineering
+
+servers:
+  - url: https://fittoday.vercel.app
+    description: Production
+  - url: http://localhost:3001
+    description: Local development
+
+tags:
+  - name: Users
+    description: User profile management
+  - name: Trainers
+    description: Trainer discovery and public profiles
+  - name: Students
+    description: Student registration, workouts, progress, and analytics
+  - name: Connections
+    description: Trainer-student connection requests
+  - name: Programs
+    description: Training program CRUD
+  - name: Exercises
+    description: Exercise library management
+  - name: Workouts
+    description: Workout assignment and tracking
+  - name: Chats
+    description: Chat room management
+  - name: Notifications
+    description: In-app notification management
+  - name: Stripe
+    description: Payments, subscriptions, and Stripe Connect
+  - name: Admin
+    description: Platform administration (admin role required)
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID Token
+      description: Firebase Authentication ID token
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+      required:
+        - error
+
+    # ---- Users ----
+    UserProfile:
+      type: object
+      properties:
+        uid:
+          type: string
+        role:
+          type: string
+          enum: [trainer, student, admin]
+        displayName:
+          type: string
+        photoURL:
+          type: string
+        email:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateUserRequest:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [student]
+          description: Only "student" is accepted. Trainer onboarding has its own flow.
+        displayName:
+          type: string
+        photoURL:
+          type: string
+
+    # ---- Trainers ----
+    PublicTrainerProfile:
+      type: object
+      properties:
+        uid:
+          type: string
+        displayName:
+          type: string
+        photoURL:
+          type: string
+        profile:
+          type: object
+          properties:
+            bio:
+              type: string
+            specialties:
+              type: array
+              items:
+                type: string
+            experience:
+              type: integer
+            location:
+              type: object
+              properties:
+                city:
+                  type: string
+                state:
+                  type: string
+        store:
+          type: object
+          properties:
+            rating:
+              type: number
+            totalReviews:
+              type: integer
+            totalStudents:
+              type: integer
+
+    TrainerListResponse:
+      type: object
+      properties:
+        trainers:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicTrainerProfile"
+        total:
+          type: integer
+        hasMore:
+          type: boolean
+
+    TrainerCountResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+
+    # ---- Connections ----
+    ConnectionRequest:
+      type: object
+      properties:
+        id:
+          type: string
+        trainerId:
+          type: string
+        studentId:
+          type: string
+        status:
+          type: string
+          enum: [pending, active, rejected, cancelled]
+        source:
+          type: string
+        message:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        respondedAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+        cancelledBy:
+          type: string
+          nullable: true
+          enum: [trainer, student]
+        cancellationReason:
+          type: string
+          nullable: true
+        student:
+          type: object
+          nullable: true
+          properties:
+            uid:
+              type: string
+            displayName:
+              type: string
+            email:
+              type: string
+            photoURL:
+              type: string
+              nullable: true
+
+    ConnectionStatusResponse:
+      type: object
+      properties:
+        isConnected:
+          type: boolean
+        status:
+          type: string
+          nullable: true
+          enum: [pending, active, rejected, cancelled]
+        connectionId:
+          type: string
+        trainerId:
+          type: string
+        studentId:
+          type: string
+
+    ConnectionActionRequest:
+      type: object
+      required:
+        - action
+      properties:
+        action:
+          type: string
+          enum: [accept, reject, cancel]
+        reason:
+          type: string
+          maxLength: 500
+          description: Optional reason (for cancel action)
+
+    # ---- Reviews ----
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        studentName:
+          type: string
+        studentPhotoURL:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ReviewListResponse:
+      type: object
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/Review"
+        total:
+          type: integer
+        averageRating:
+          type: number
+
+    CreateReviewRequest:
+      type: object
+      required:
+        - rating
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          maxLength: 500
+
+    # ---- Students ----
+    RegisterStudentRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+        email:
+          type: string
+        photoURL:
+          type: string
+        fcmToken:
+          type: string
+          description: Firebase Cloud Messaging token for push notifications
+        trainerId:
+          type: string
+          description: Optional trainer to link with on registration
+
+    StudentWorkout:
+      type: object
+      properties:
+        id:
+          type: string
+        trainerId:
+          type: string
+        studentId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        pdfUrl:
+          type: string
+        durationWeeks:
+          type: integer
+        totalDays:
+          type: integer
+        startDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, archived, completed]
+        createdAt:
+          type: string
+          format: date-time
+        progress:
+          type: object
+          nullable: true
+        feedbackCount:
+          type: integer
+
+    StudentWorkoutListResponse:
+      type: object
+      properties:
+        workouts:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudentWorkout"
+        total:
+          type: integer
+
+    # ---- Progress ----
+    ProgressEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        trainerId:
+          type: string
+        studentId:
+          type: string
+        date:
+          type: string
+          format: date-time
+        measurements:
+          $ref: "#/components/schemas/Measurements"
+        photos:
+          type: object
+          properties:
+            front:
+              type: string
+            side:
+              type: string
+            back:
+              type: string
+        notes:
+          type: string
+        registeredBy:
+          type: string
+          enum: [trainer]
+        createdAt:
+          type: string
+          format: date-time
+
+    Measurements:
+      type: object
+      properties:
+        weight:
+          type: number
+          nullable: true
+        bodyFat:
+          type: number
+          nullable: true
+        muscleMass:
+          type: number
+          nullable: true
+        chest:
+          type: number
+          nullable: true
+        waist:
+          type: number
+          nullable: true
+        hips:
+          type: number
+          nullable: true
+        rightArm:
+          type: number
+          nullable: true
+        leftArm:
+          type: number
+          nullable: true
+        rightThigh:
+          type: number
+          nullable: true
+        leftThigh:
+          type: number
+          nullable: true
+        rightCalf:
+          type: number
+          nullable: true
+        leftCalf:
+          type: number
+          nullable: true
+
+    CreateProgressRequest:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: ISO date (YYYY-MM-DD). Defaults to today.
+        measurements:
+          $ref: "#/components/schemas/Measurements"
+        photos:
+          type: object
+          properties:
+            front:
+              type: string
+            side:
+              type: string
+            back:
+              type: string
+        notes:
+          type: string
+
+    # ---- Analytics ----
+    StudentAnalyticsResponse:
+      type: object
+      properties:
+        workoutData:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date-time
+              workoutName:
+                type: string
+              duration:
+                type: integer
+              intensity:
+                type: string
+                enum: [low, medium, high]
+              exercises:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    weight:
+                      type: number
+                    sets:
+                      type: integer
+                    reps:
+                      type: integer
+
+    # ---- Programs ----
+    Program:
+      type: object
+      properties:
+        id:
+          type: string
+        trainerId:
+          type: string
+        studentId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        coverImageURL:
+          type: string
+        previewVideoURL:
+          type: string
+        workoutPdfUrl:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        duration:
+          type: object
+          properties:
+            weeks:
+              type: integer
+            daysPerWeek:
+              type: integer
+            avgSessionMinutes:
+              type: integer
+        requirements:
+          type: object
+          properties:
+            equipment:
+              type: array
+              items:
+                type: string
+            fitnessLevel:
+              type: string
+            prerequisites:
+              type: string
+        content:
+          type: object
+          properties:
+            totalWorkouts:
+              type: integer
+            totalExercises:
+              type: integer
+            includesNutrition:
+              type: boolean
+            includesSupplements:
+              type: boolean
+            hasVideoGuides:
+              type: boolean
+        stats:
+          type: object
+          properties:
+            totalSales:
+              type: integer
+            activeStudents:
+              type: integer
+            completionRate:
+              type: number
+            averageRating:
+              type: number
+            totalReviews:
+              type: integer
+        weeks:
+          type: array
+          items:
+            type: object
+        status:
+          type: string
+          enum: [draft, published, archived]
+        visibility:
+          type: string
+          enum: [public, private]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    CreateProgramRequest:
+      type: object
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        studentId:
+          type: string
+        coverImageURL:
+          type: string
+        previewVideoURL:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+          default: intermediate
+        duration:
+          type: object
+          properties:
+            weeks:
+              type: integer
+              default: 8
+            daysPerWeek:
+              type: integer
+              default: 4
+            avgSessionMinutes:
+              type: integer
+              default: 60
+        requirements:
+          type: object
+          properties:
+            equipment:
+              type: array
+              items:
+                type: string
+            prerequisites:
+              type: string
+        content:
+          type: object
+          properties:
+            totalWorkouts:
+              type: integer
+            totalExercises:
+              type: integer
+            includesNutrition:
+              type: boolean
+            includesSupplements:
+              type: boolean
+            hasVideoGuides:
+              type: boolean
+        weeks:
+          type: array
+          items:
+            type: object
+        status:
+          type: string
+          enum: [draft, published]
+          default: draft
+        visibility:
+          type: string
+          enum: [public, private]
+          default: public
+
+    # ---- Exercises ----
+    Exercise:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: object
+          properties:
+            en:
+              type: string
+            pt:
+              type: string
+        aliases:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        category:
+          type: string
+        muscleGroups:
+          type: object
+          properties:
+            primary:
+              type: array
+              items:
+                type: string
+            secondary:
+              type: array
+              items:
+                type: string
+        equipment:
+          type: string
+        force:
+          type: string
+          nullable: true
+        level:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        mechanic:
+          type: string
+          nullable: true
+        instructions:
+          type: object
+          properties:
+            en:
+              type: array
+              items:
+                type: string
+            pt:
+              type: array
+              items:
+                type: string
+        media:
+          type: object
+          properties:
+            thumbnailURL:
+              type: string
+            images:
+              type: array
+              items:
+                type: string
+            gifURL:
+              type: string
+              nullable: true
+            videoURL:
+              type: string
+              nullable: true
+        source:
+          type: string
+          enum: [system, trainer]
+        trainerId:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        isApproved:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateExerciseRequest:
+      type: object
+      required:
+        - name
+        - category
+        - equipment
+      properties:
+        name:
+          type: object
+          required:
+            - en
+            - pt
+          properties:
+            en:
+              type: string
+            pt:
+              type: string
+        aliases:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        category:
+          type: string
+        muscleGroups:
+          type: object
+          properties:
+            primary:
+              type: array
+              items:
+                type: string
+            secondary:
+              type: array
+              items:
+                type: string
+        equipment:
+          type: string
+        force:
+          type: string
+        level:
+          type: string
+          enum: [beginner, intermediate, advanced]
+          default: intermediate
+        mechanic:
+          type: string
+        instructions:
+          type: object
+          properties:
+            en:
+              type: array
+              items:
+                type: string
+            pt:
+              type: array
+              items:
+                type: string
+        media:
+          type: object
+          properties:
+            thumbnailURL:
+              type: string
+            images:
+              type: array
+              items:
+                type: string
+            gifURL:
+              type: string
+            videoURL:
+              type: string
+        wgerBaseId:
+          type: integer
+
+    # ---- Workouts ----
+    Workout:
+      type: object
+      properties:
+        id:
+          type: string
+        trainerId:
+          type: string
+        studentId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        pdfUrl:
+          type: string
+        pdfPath:
+          type: string
+        durationWeeks:
+          type: integer
+        totalDays:
+          type: integer
+        startDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, archived, completed]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    WorkoutProgressResponse:
+      type: object
+      properties:
+        workoutId:
+          type: string
+        completedDays:
+          type: array
+          items:
+            type: integer
+        totalDays:
+          type: integer
+        percentComplete:
+          type: integer
+        currentStreak:
+          type: integer
+        longestStreak:
+          type: integer
+        lastActivityAt:
+          type: string
+          format: date-time
+
+    WorkoutFeedback:
+      type: object
+      properties:
+        id:
+          type: string
+        workoutId:
+          type: string
+        studentId:
+          type: string
+        message:
+          type: string
+        trainerResponse:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        respondedAt:
+          type: string
+          format: date-time
+
+    ReplyToFeedbackRequest:
+      type: object
+      required:
+        - feedbackId
+        - response
+      properties:
+        feedbackId:
+          type: string
+        response:
+          type: string
+
+    # ---- Chats ----
+    ChatRoom:
+      type: object
+      properties:
+        id:
+          type: string
+        trainerId:
+          type: string
+        studentId:
+          type: string
+        isActive:
+          type: boolean
+        lastMessage:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # ---- Notifications ----
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        isRead:
+          type: boolean
+        actor:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            avatar:
+              type: string
+        action:
+          type: object
+          properties:
+            type:
+              type: string
+            destination:
+              type: string
+        relatedEntityType:
+          type: string
+        relatedEntityId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    # ---- Stripe ----
+    CheckoutRequest:
+      type: object
+      required:
+        - programId
+        - trainerId
+        - trainerStripeAccountId
+        - studentId
+      properties:
+        programId:
+          type: string
+        programName:
+          type: string
+        programDescription:
+          type: string
+        price:
+          type: integer
+          description: Price in cents (e.g. 9900 for R$99.00). Required for mode=payment.
+        priceId:
+          type: string
+          description: Stripe Price ID. Required for mode=subscription.
+        currency:
+          type: string
+          default: brl
+        mode:
+          type: string
+          enum: [payment, subscription]
+          default: payment
+        trainerId:
+          type: string
+        trainerStripeAccountId:
+          type: string
+        studentId:
+          type: string
+        studentEmail:
+          type: string
+        successUrl:
+          type: string
+        cancelUrl:
+          type: string
+
+    CheckoutResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+        url:
+          type: string
+        mode:
+          type: string
+          enum: [payment, subscription]
+        platformFee:
+          type: integer
+          description: Only for payment mode
+        trainerEarnings:
+          type: integer
+          description: Only for payment mode
+
+    StripeConnectRequest:
+      type: object
+      required:
+        - trainerId
+        - email
+      properties:
+        trainerId:
+          type: string
+        email:
+          type: string
+        existingAccountId:
+          type: string
+        returnUrl:
+          type: string
+
+    StripeAccountStatus:
+      type: object
+      properties:
+        connected:
+          type: boolean
+        onboardingComplete:
+          type: boolean
+        chargesEnabled:
+          type: boolean
+        payoutsEnabled:
+          type: boolean
+        accountId:
+          type: string
+        email:
+          type: string
+        detailsSubmitted:
+          type: boolean
+
+    PlatformCheckoutRequest:
+      type: object
+      required:
+        - plan
+      properties:
+        plan:
+          type: string
+          enum: [pro, elite]
+
+    PlatformSubscriptionResponse:
+      type: object
+      properties:
+        plan:
+          type: string
+          enum: [starter, pro, elite]
+        status:
+          type: string
+          nullable: true
+          enum: [active, canceled, past_due, trialing]
+        currentPeriodEnd:
+          type: string
+          format: date-time
+          nullable: true
+        cancelAtPeriodEnd:
+          type: boolean
+        stripeSubscriptionId:
+          type: string
+
+    # ---- Admin ----
+    AdminTrainerListItem:
+      type: object
+      properties:
+        uid:
+          type: string
+        email:
+          type: string
+        displayName:
+          type: string
+        photoURL:
+          type: string
+        status:
+          type: string
+          enum: [pending, active, suspended, rejected]
+        createdAt:
+          type: string
+          format: date-time
+        statusUpdatedAt:
+          type: string
+          format: date-time
+        profile:
+          type: object
+          properties:
+            bio:
+              type: string
+            specialties:
+              type: array
+              items:
+                type: string
+            experience:
+              type: integer
+        store:
+          type: object
+          properties:
+            totalStudents:
+              type: integer
+            totalSales:
+              type: integer
+
+    AdminTrainerListResponse:
+      type: object
+      properties:
+        trainers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminTrainerListItem"
+        total:
+          type: integer
+        pending:
+          type: integer
+        active:
+          type: integer
+        suspended:
+          type: integer
+
+    PlatformMetrics:
+      type: object
+      properties:
+        trainers:
+          type: object
+          properties:
+            total:
+              type: integer
+            pending:
+              type: integer
+            active:
+              type: integer
+            suspended:
+              type: integer
+            rejected:
+              type: integer
+        students:
+          type: object
+          properties:
+            total:
+              type: integer
+        programs:
+          type: object
+          properties:
+            total:
+              type: integer
+            published:
+              type: integer
+            draft:
+              type: integer
+        workouts:
+          type: object
+          properties:
+            total:
+              type: integer
+        financial:
+          type: object
+          properties:
+            totalRevenue:
+              type: number
+            pendingPayouts:
+              type: number
+        recentActivity:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              description:
+                type: string
+              timestamp:
+                type: string
+                format: date-time
+              userId:
+                type: string
+
+paths:
+  # ================================================================
+  # USERS
+  # ================================================================
+  /api/users/me:
+    get:
+      tags: [Users]
+      summary: Get authenticated user profile
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      tags: [Users]
+      summary: Create or update user profile (post-signup)
+      description: |
+        Called after Firebase signup. Creates a new user profile or updates an existing one.
+        Only the "student" role can be set here; trainer onboarding has its own flow.
+        If the user already exists with a different role, returns existing profile without changes.
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "200":
+          description: Profile already exists (updated or unchanged)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "201":
+          description: New profile created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "400":
+          description: Invalid role
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # ================================================================
+  # TRAINERS
+  # ================================================================
+  /api/trainers:
+    get:
+      tags: [Trainers]
+      summary: List active trainers (public)
+      security: []
+      description: Returns paginated list of active trainers, sorted by rating descending.
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: specialty
+          in: query
+          schema:
+            type: string
+          description: Filter by specialty (array-contains)
+        - name: city
+          in: query
+          schema:
+            type: string
+          description: Filter by city (case-insensitive)
+      responses:
+        "200":
+          description: Trainer list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrainerListResponse"
+
+  /api/trainers/{id}:
+    get:
+      tags: [Trainers]
+      summary: Get trainer public profile
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Trainer profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicTrainerProfile"
+        "404":
+          description: Trainer not found or not active
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/trainers/count:
+    get:
+      tags: [Trainers]
+      summary: Get total active trainer count (public)
+      security: []
+      responses:
+        "200":
+          description: Trainer count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrainerCountResponse"
+
+  /api/trainers/{id}/connect:
+    post:
+      tags: [Trainers]
+      summary: Request connection with trainer
+      description: |
+        Student requests to connect with a trainer. Creates a pending connection request.
+        If a previous connection was rejected/cancelled, deletes the old one and creates a new one
+        (to trigger Firebase onCreate push notification).
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Trainer ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  maxLength: 500
+                  description: Optional message to the trainer
+      responses:
+        "201":
+          description: Connection request created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  trainerId:
+                    type: string
+                  studentId:
+                    type: string
+                  status:
+                    type: string
+                    enum: [pending]
+        "200":
+          description: Already connected or pending
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  status:
+                    type: string
+                  alreadyConnected:
+                    type: boolean
+                  alreadyPending:
+                    type: boolean
+        "401":
+          description: Unauthorized
+        "403":
+          description: Only students/admins can connect
+        "404":
+          description: Trainer not found
+
+    get:
+      tags: [Trainers]
+      summary: Check connection status with trainer
+      description: Returns the connection status between the authenticated student and a trainer.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Trainer ID
+      responses:
+        "200":
+          description: Connection status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConnectionStatusResponse"
+        "401":
+          description: Unauthorized
+
+  /api/trainers/{id}/reviews:
+    get:
+      tags: [Trainers]
+      summary: List trainer reviews (public)
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Review list with average rating
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewListResponse"
+        "404":
+          description: Trainer not found
+
+    post:
+      tags: [Trainers]
+      summary: Submit or update a review
+      description: |
+        Only students who have/had a relationship with the trainer (via subscription or workout)
+        can leave a review. Upserts if the student already has a review.
+        Recalculates the trainer's average rating atomically.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReviewRequest"
+      responses:
+        "201":
+          description: Review created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+        "200":
+          description: Review updated
+        "400":
+          description: Invalid rating or comment too long
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not a student, self-review, or not enrolled
+
+  # ================================================================
+  # STUDENTS
+  # ================================================================
+  /api/students:
+    post:
+      tags: [Students]
+      summary: Register a student
+      description: |
+        Registers a student with their Firebase UID. If the user already exists,
+        updates FCM token and trainerId. Creates a subscription link if trainerId is provided.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterStudentRequest"
+      responses:
+        "201":
+          description: Student created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/UserProfile"
+                  - type: object
+                    properties:
+                      id:
+                        type: string
+                      created:
+                        type: boolean
+                        enum: [true]
+        "200":
+          description: Student already exists (updated)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/UserProfile"
+                  - type: object
+                    properties:
+                      id:
+                        type: string
+                      created:
+                        type: boolean
+                        enum: [false]
+        "401":
+          description: Unauthorized
+
+  /api/students/workouts:
+    get:
+      tags: [Students]
+      summary: List workouts for authenticated student
+      description: Returns all workouts assigned to the authenticated student, with progress and feedback count.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, archived, completed]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Student workout list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentWorkoutListResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not a student
+
+  /api/students/{id}/health-data:
+    post:
+      tags: [Students]
+      summary: Submit batched health metrics from iOS app
+      description: |
+        Student-only. Receives batched health entries (calories, workout sessions with exercise details)
+        from the iOS app. Deduplicates by studentId+date (upsert). Max 90 entries per batch.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Student ID (must match authenticated user)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - entries
+              properties:
+                entries:
+                  type: array
+                  maxItems: 90
+                  items:
+                    type: object
+                    required:
+                      - date
+                      - activeCalories
+                    properties:
+                      date:
+                        type: string
+                        format: date
+                        description: YYYY-MM-DD
+                      activeCalories:
+                        type: number
+                        minimum: 0
+                      sessions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            exerciseName:
+                              type: string
+                            category:
+                              type: string
+                              enum: [strength, resistance, cardio]
+                            sets:
+                              type: integer
+                            reps:
+                              type: integer
+                            weight:
+                              type: number
+                              description: Weight in kg
+                            duration:
+                              type: number
+                              description: Duration in minutes
+                trainerId:
+                  type: string
+                  description: Optional. Resolved from user profile if not provided.
+      responses:
+        "201":
+          description: Health data stored
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  entriesProcessed:
+                    type: integer
+        "400":
+          description: Invalid payload (bad date format, missing entries)
+        "401":
+          description: Unauthorized
+        "403":
+          description: Can only submit health data for yourself
+
+  /api/students/{id}/health-summary:
+    get:
+      tags: [Students]
+      summary: Get aggregated health metrics for CMS display
+      description: |
+        Trainer-only. Returns aggregated strength load, resistance load, calorie averages,
+        session counts, completion rate, and trend percentage. Supports weekly, monthly, and yearly breakdowns.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Student ID
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [week, month, year]
+            default: week
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Aggregated health summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  studentId:
+                    type: string
+                  period:
+                    type: string
+                  dateRange:
+                    type: object
+                    properties:
+                      start:
+                        type: string
+                      end:
+                        type: string
+                  strengthLoadTotal:
+                    type: number
+                  resistanceLoadTotal:
+                    type: number
+                  avgDailyCalories:
+                    type: number
+                  sessionCount:
+                    type: integer
+                  completionRate:
+                    type: integer
+                    description: Percentage of days with sessions
+                  trendPercentage:
+                    type: integer
+                    description: Change vs previous period
+                  daysWithData:
+                    type: integer
+                  weeklyBreakdown:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        day:
+                          type: string
+                        strength:
+                          type: number
+                        resistance:
+                          type: number
+                        calories:
+                          type: number
+                  monthlyBreakdown:
+                    type: array
+                    description: Only returned for period=year
+                    items:
+                      type: object
+                      properties:
+                        month:
+                          type: string
+                        strengthLoad:
+                          type: number
+                        resistanceLoad:
+                          type: number
+                        calories:
+                          type: number
+        "400":
+          description: Invalid period parameter
+        "401":
+          description: Unauthorized (trainer only)
+
+  /api/students/{id}/progress:
+    get:
+      tags: [Students]
+      summary: List progress entries for a student
+      description: Trainer-only. Lists body measurement and photo progress entries.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Student ID
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+      responses:
+        "200":
+          description: Progress entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ProgressEntry"
+                  total:
+                    type: integer
+        "401":
+          description: Unauthorized (trainer only)
+
+    post:
+      tags: [Students]
+      summary: Create a progress entry
+      description: |
+        Trainer-only. Supports multipart/form-data for photo uploads (photo_front, photo_side, photo_back)
+        or JSON with photo URLs. Photos must be JPEG, PNG, or WebP, max 10MB each.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Student ID
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: string
+                  description: JSON string of CreateProgressRequest
+                photo_front:
+                  type: string
+                  format: binary
+                photo_side:
+                  type: string
+                  format: binary
+                photo_back:
+                  type: string
+                  format: binary
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProgressRequest"
+      responses:
+        "201":
+          description: Progress entry created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+        "400":
+          description: Invalid photo type or size
+        "401":
+          description: Unauthorized (trainer only)
+
+  /api/students/{id}/analytics:
+    get:
+      tags: [Students]
+      summary: Get student workout analytics
+      description: Trainer-only. Returns workout completion data with exercises, weights, and intensity.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Student ID
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentAnalyticsResponse"
+        "401":
+          description: Unauthorized (trainer only)
+
+  # ================================================================
+  # CONNECTIONS
+  # ================================================================
+  /api/connections:
+    get:
+      tags: [Connections]
+      summary: List connection requests for trainer
+      description: Trainer-only. Returns connection requests enriched with student info.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, active, rejected, cancelled]
+            default: pending
+      responses:
+        "200":
+          description: Connection list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  connections:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ConnectionRequest"
+                  total:
+                    type: integer
+        "401":
+          description: Unauthorized
+        "403":
+          description: Trainer only
+
+  /api/connections/{id}:
+    patch:
+      tags: [Connections]
+      summary: Respond to a connection request
+      description: |
+        - **accept/reject**: Only the trainer who owns the connection can respond. Connection must be pending.
+        - **cancel**: Either the trainer or student can cancel. If active, cleans up subscription, chat, and student link.
+        Sends notifications to the other party.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConnectionActionRequest"
+      responses:
+        "200":
+          description: Action completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  status:
+                    type: string
+                  subscriptionId:
+                    type: string
+                    description: Only on accept
+                  chatRoomId:
+                    type: string
+                    description: Only on accept
+                  cancelledBy:
+                    type: string
+                    description: Only on cancel
+                  reason:
+                    type: string
+                    description: Only on cancel
+        "400":
+          description: Invalid action
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Connection not found
+        "409":
+          description: Already responded or already cancelled
+
+  # ================================================================
+  # PROGRAMS
+  # ================================================================
+  /api/programs:
+    get:
+      tags: [Programs]
+      summary: List programs
+      security: []
+      description: |
+        If trainerId is provided, lists that trainer's programs (any status).
+        Without trainerId, returns only published+public programs (marketplace).
+      parameters:
+        - name: trainerId
+          in: query
+          schema:
+            type: string
+        - name: studentId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, published, archived]
+        - name: visibility
+          in: query
+          schema:
+            type: string
+            enum: [public, private]
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Program list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  programs:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Program"
+                  total:
+                    type: integer
+
+    post:
+      tags: [Programs]
+      summary: Create a program
+      description: |
+        Trainer-only. Supports multipart/form-data for cover image, PDF, and video uploads.
+        Validates program limit based on trainer's plan (Starter: max 3).
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: string
+                  description: JSON string of CreateProgramRequest
+                cover:
+                  type: string
+                  format: binary
+                  description: Cover image (JPEG/PNG/WebP, max 10MB)
+                pdf:
+                  type: string
+                  format: binary
+                  description: Workout PDF (max 10MB)
+                video:
+                  type: string
+                  format: binary
+                  description: Preview video (max 100MB)
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProgramRequest"
+      responses:
+        "201":
+          description: Program created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  coverImageURL:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+        "400":
+          description: Missing required fields or invalid file
+        "401":
+          description: Unauthorized
+        "403":
+          description: Program limit reached (upgrade plan)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                    enum: [PROGRAM_LIMIT_REACHED]
+
+  /api/programs/{id}:
+    get:
+      tags: [Programs]
+      summary: Get a program
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Program details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Program"
+        "404":
+          description: Program not found
+
+    put:
+      tags: [Programs]
+      summary: Update a program
+      description: Trainer-only. Updates only provided fields. Supports multipart for file uploads.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: string
+                  description: JSON string with fields to update
+                cover:
+                  type: string
+                  format: binary
+                pdf:
+                  type: string
+                  format: binary
+                video:
+                  type: string
+                  format: binary
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProgramRequest"
+      responses:
+        "200":
+          description: Program updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  coverImageURL:
+                    type: string
+                  updatedAt:
+                    type: string
+                    format: date-time
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not the program owner
+        "404":
+          description: Program not found
+
+    delete:
+      tags: [Programs]
+      summary: Archive a program (soft delete)
+      description: |
+        Trainer-only. Sets status to "archived" and visibility to "private".
+        Cannot delete programs with active students.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Program archived
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  status:
+                    type: string
+                    enum: [archived]
+        "400":
+          description: Cannot delete with active students
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not the program owner
+        "404":
+          description: Program not found
+
+  /api/programs/{id}/duplicate:
+    post:
+      tags: [Programs]
+      summary: Duplicate a program
+      description: Trainer-only. Creates a draft copy with "(Copia)" appended to the title, resetting stats.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Program duplicated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  title:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not the program owner
+        "404":
+          description: Program not found
+
+  # ================================================================
+  # EXERCISES
+  # ================================================================
+  /api/exercises:
+    get:
+      tags: [Exercises]
+      summary: List exercises with filters
+      security: []
+      description: Returns exercises sorted by name.pt ascending. In-memory search when "search" param is used.
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: equipment
+          in: query
+          schema:
+            type: string
+        - name: source
+          in: query
+          schema:
+            type: string
+            enum: [system, trainer]
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+        - name: isActive
+          in: query
+          schema:
+            type: string
+            enum: ["true", "false", "all"]
+            default: "true"
+        - name: trainerId
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search across name.pt, name.en, and aliases
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Exercise list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exercises:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Exercise"
+                  total:
+                    type: integer
+
+    post:
+      tags: [Exercises]
+      summary: Create a trainer exercise
+      description: Trainer-only. ID is auto-generated from slugified name.en.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateExerciseRequest"
+      responses:
+        "201":
+          description: Exercise created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+        "400":
+          description: Missing required fields
+        "401":
+          description: Unauthorized
+
+  /api/exercises/{id}:
+    get:
+      tags: [Exercises]
+      summary: Get a single exercise
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Exercise details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Exercise"
+        "404":
+          description: Exercise not found
+
+    patch:
+      tags: [Exercises]
+      summary: Update an exercise
+      description: Trainer-only. Only the exercise owner can update trainer exercises.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateExerciseRequest"
+      responses:
+        "200":
+          description: Updated exercise
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Exercise"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not the exercise owner
+        "404":
+          description: Exercise not found
+
+    delete:
+      tags: [Exercises]
+      summary: Soft delete exercise (set isActive=false)
+      description: Trainer-only. Only the exercise owner can delete.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Exercise deactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not the exercise owner
+        "404":
+          description: Exercise not found
+
+  /api/exercises/search:
+    get:
+      tags: [Exercises]
+      summary: Search exercises
+      security: []
+      description: Full-text search across name.pt, name.en, and aliases. Requires the "q" parameter.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: equipment
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exercises:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Exercise"
+                  total:
+                    type: integer
+        "400":
+          description: Missing query parameter
+
+  /api/exercises/prompt-list:
+    get:
+      tags: [Exercises]
+      summary: Get compact exercise list for AI prompts
+      security: []
+      description: |
+        Returns exercises in plain text format: `id|name_pt|category|equipment` (one per line).
+        Cached for 1 hour. Used by AI to generate workout plans.
+      parameters:
+        - name: equipment
+          in: query
+          schema:
+            type: string
+          description: Comma-separated equipment filter (e.g. "barbell,dumbbell")
+        - name: category
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Compact text list
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  bench-press-abc123|Supino reto|chest|barbell
+                  squat-def456|Agachamento|legs|barbell
+
+  # ================================================================
+  # WORKOUTS
+  # ================================================================
+  /api/workouts:
+    post:
+      tags: [Workouts]
+      summary: Create a workout
+      description: |
+        Trainer-only. Requires a file upload (PDF, JPG, or PNG).
+        Validates student limit based on trainer's plan.
+        Sends push notification to the student.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - studentId
+                - title
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF (max 10MB) or image (JPG/PNG, max 5MB)
+                studentId:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                durationWeeks:
+                  type: integer
+                totalDays:
+                  type: integer
+                  description: Defaults to durationWeeks * 7, or 28
+                startDate:
+                  type: string
+                  format: date
+                  description: ISO date (YYYY-MM-DD)
+      responses:
+        "201":
+          description: Workout created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  pdfUrl:
+                    type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+        "400":
+          description: Missing fields, invalid file type, or file too large
+        "401":
+          description: Unauthorized
+        "403":
+          description: Student limit reached (upgrade plan)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                    enum: [STUDENT_LIMIT_REACHED]
+
+    get:
+      tags: [Workouts]
+      summary: List workouts for trainer
+      description: Trainer-only. Returns workouts with progress and feedback count.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: studentId
+          in: query
+          schema:
+            type: string
+          description: Filter by student
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, archived, completed]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Workout list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  workouts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Workout"
+                  total:
+                    type: integer
+        "401":
+          description: Unauthorized
+
+  /api/workouts/{id}:
+    get:
+      tags: [Workouts]
+      summary: Get workout details
+      description: Trainer-only. Regenerates signed PDF URL if expired.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Workout with progress and feedback count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workout"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not the workout owner
+        "404":
+          description: Workout not found
+
+    patch:
+      tags: [Workouts]
+      summary: Update a workout
+      description: Trainer-only. Allowed fields - title, description, status, durationWeeks, totalDays, startDate.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum: [active, archived, completed]
+                durationWeeks:
+                  type: integer
+                totalDays:
+                  type: integer
+                startDate:
+                  type: string
+                  format: date
+                  description: ISO date (YYYY-MM-DD)
+      responses:
+        "200":
+          description: Updated workout
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workout"
+        "400":
+          description: Invalid startDate format
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not the workout owner
+        "404":
+          description: Workout not found
+
+    delete:
+      tags: [Workouts]
+      summary: Delete a workout
+      description: |
+        Trainer-only. Default is soft delete (archive).
+        Use ?hard=true for permanent deletion (removes PDF, progress, and feedback).
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: hard
+          in: query
+          schema:
+            type: string
+            enum: ["true"]
+          description: Set to "true" for permanent deletion
+      responses:
+        "200":
+          description: Workout deleted/archived
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not the workout owner
+        "404":
+          description: Workout not found
+
+  /api/workouts/{id}/progress:
+    get:
+      tags: [Workouts]
+      summary: Get workout progress
+      description: Trainer-only. Returns day-by-day completion tracking.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Progress data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutProgressResponse"
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not the workout owner
+        "404":
+          description: Workout not found
+
+  /api/workouts/{id}/feedback:
+    get:
+      tags: [Workouts]
+      summary: List feedback for a workout
+      description: Trainer-only. Returns all student feedback with optional trainer responses.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Feedback list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  feedbacks:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WorkoutFeedback"
+                  total:
+                    type: integer
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not the workout owner
+        "404":
+          description: Workout not found
+
+    post:
+      tags: [Workouts]
+      summary: Reply to student feedback
+      description: Trainer-only. Adds a trainer response to an existing feedback entry.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReplyToFeedbackRequest"
+      responses:
+        "200":
+          description: Response added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkoutFeedback"
+        "400":
+          description: Missing feedbackId/response or feedback doesn't belong to workout
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not the workout owner
+        "404":
+          description: Workout or feedback not found
+
+  # ================================================================
+  # CHATS
+  # ================================================================
+  /api/chats:
+    get:
+      tags: [Chats]
+      summary: Check if chat room exists
+      description: Returns the chat room for a trainer-student pair. Only participants can query.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: trainerId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: studentId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Chat room status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exists:
+                    type: boolean
+                  chatRoom:
+                    nullable: true
+                    type: object
+                    description: Chat room object or null if not found
+                    properties:
+                      id:
+                        type: string
+                      trainerId:
+                        type: string
+                      studentId:
+                        type: string
+                      isActive:
+                        type: boolean
+                      lastMessage:
+                        type: string
+                      createdAt:
+                        type: string
+                        format: date-time
+        "400":
+          description: Missing trainerId or studentId
+        "401":
+          description: Unauthorized
+        "403":
+          description: Not a participant
+
+  # ================================================================
+  # NOTIFICATIONS
+  # ================================================================
+  /api/notifications:
+    get:
+      tags: [Notifications]
+      summary: List notifications
+      description: Returns notifications for the authenticated user, sorted by createdAt desc.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: unreadOnly
+          in: query
+          schema:
+            type: string
+            enum: ["true"]
+      responses:
+        "200":
+          description: Notification list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Notification"
+                  total:
+                    type: integer
+        "401":
+          description: Unauthorized
+
+    patch:
+      tags: [Notifications]
+      summary: Mark all notifications as read
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum: [markAllRead]
+      responses:
+        "200":
+          description: Notifications marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  updated:
+                    type: integer
+        "400":
+          description: Invalid action
+        "401":
+          description: Unauthorized
+
+  /api/notifications/{id}:
+    patch:
+      tags: [Notifications]
+      summary: Mark a single notification as read
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Notification marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        "401":
+          description: Unauthorized
+        "404":
+          description: Notification not found
+
+  # ================================================================
+  # STRIPE
+  # ================================================================
+  /api/stripe/checkout:
+    post:
+      tags: [Stripe]
+      summary: Create checkout session for program purchase
+      security: []
+      description: |
+        Creates a Stripe Checkout session for purchasing a trainer's program.
+        Supports both one-time payment (card, boleto, pix) and subscription modes.
+        Platform fee is automatically calculated.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutRequest"
+      responses:
+        "200":
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutResponse"
+        "400":
+          description: Missing required fields
+
+    get:
+      tags: [Stripe]
+      summary: Get checkout session details
+      security: []
+      parameters:
+        - name: sessionId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  status:
+                    type: string
+                  mode:
+                    type: string
+                  paymentStatus:
+                    type: string
+                  amountTotal:
+                    type: integer
+                  currency:
+                    type: string
+                  customerEmail:
+                    type: string
+                  metadata:
+                    type: object
+                  subscription:
+                    type: object
+                    nullable: true
+                    properties:
+                      id:
+                        type: string
+                      status:
+                        type: string
+                      currentPeriodEnd:
+                        type: integer
+        "400":
+          description: Missing sessionId
+
+  /api/stripe/connect:
+    post:
+      tags: [Stripe]
+      summary: Create Stripe Connect account for trainer
+      security: []
+      description: Creates a Stripe Connect Express account and returns the onboarding URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StripeConnectRequest"
+      responses:
+        "200":
+          description: Account created with onboarding URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    description: Stripe onboarding URL
+                  accountId:
+                    type: string
+        "400":
+          description: Missing required fields
+
+    get:
+      tags: [Stripe]
+      summary: Get Stripe Connect account status
+      security: []
+      parameters:
+        - name: accountId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Account status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StripeAccountStatus"
+
+  /api/stripe/account:
+    get:
+      tags: [Stripe]
+      summary: Get Stripe account balance and transactions
+      security: []
+      description: Returns balance, recent payouts, charges, and total earnings for a connected account.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Account details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      email:
+                        type: string
+                      chargesEnabled:
+                        type: boolean
+                      payoutsEnabled:
+                        type: boolean
+                      detailsSubmitted:
+                        type: boolean
+                  balance:
+                    type: object
+                    properties:
+                      available:
+                        type: integer
+                      pending:
+                        type: integer
+                      currency:
+                        type: string
+                  payouts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        amount:
+                          type: integer
+                        status:
+                          type: string
+                        arrivalDate:
+                          type: string
+                          format: date-time
+                        createdAt:
+                          type: string
+                          format: date-time
+                  recentCharges:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        amount:
+                          type: integer
+                        status:
+                          type: string
+                        paid:
+                          type: boolean
+                        refunded:
+                          type: boolean
+                        description:
+                          type: string
+                        createdAt:
+                          type: string
+                          format: date-time
+                  totalEarnings:
+                    type: integer
+        "400":
+          description: Missing accountId
+
+    post:
+      tags: [Stripe]
+      summary: Create Stripe Express dashboard login link
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - accountId
+              properties:
+                accountId:
+                  type: string
+      responses:
+        "200":
+          description: Login link
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+        "400":
+          description: Missing accountId
+
+  /api/stripe/products:
+    post:
+      tags: [Stripe]
+      summary: Create a Stripe product for a program
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - programId
+                - name
+                - trainerId
+                - trainerStripeAccountId
+              properties:
+                programId:
+                  type: string
+                name:
+                  type: string
+                description:
+                  type: string
+                trainerId:
+                  type: string
+                trainerStripeAccountId:
+                  type: string
+                imageUrl:
+                  type: string
+      responses:
+        "200":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productId:
+                    type: string
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  active:
+                    type: boolean
+        "400":
+          description: Missing required fields
+
+    get:
+      tags: [Stripe]
+      summary: Get a Stripe product
+      security: []
+      parameters:
+        - name: productId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: stripeAccountId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productId:
+                    type: string
+                  name:
+                    type: string
+                  description:
+                    type: string
+                  active:
+                    type: boolean
+                  metadata:
+                    type: object
+        "400":
+          description: Missing required params
+
+  /api/stripe/prices:
+    post:
+      tags: [Stripe]
+      summary: Create a price for a product
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - productId
+                - programId
+                - trainerId
+                - trainerStripeAccountId
+                - unitAmount
+              properties:
+                productId:
+                  type: string
+                programId:
+                  type: string
+                trainerId:
+                  type: string
+                trainerStripeAccountId:
+                  type: string
+                unitAmount:
+                  type: integer
+                  description: Price in cents
+                currency:
+                  type: string
+                  default: brl
+                recurring:
+                  type: object
+                  properties:
+                    interval:
+                      type: string
+                      enum: [month, year]
+                    intervalCount:
+                      type: integer
+                      default: 1
+      responses:
+        "200":
+          description: Price created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  priceId:
+                    type: string
+                  productId:
+                    type: string
+                  unitAmount:
+                    type: integer
+                  currency:
+                    type: string
+                  type:
+                    type: string
+                  recurring:
+                    type: object
+                    nullable: true
+                    properties:
+                      interval:
+                        type: string
+                      intervalCount:
+                        type: integer
+                  active:
+                    type: boolean
+        "400":
+          description: Missing required fields
+
+    get:
+      tags: [Stripe]
+      summary: List prices for a product
+      security: []
+      parameters:
+        - name: productId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: stripeAccountId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Price list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        priceId:
+                          type: string
+                        productId:
+                          type: string
+                        unitAmount:
+                          type: integer
+                        currency:
+                          type: string
+                        type:
+                          type: string
+                        recurring:
+                          type: object
+                          nullable: true
+                        active:
+                          type: boolean
+        "400":
+          description: Missing required params
+
+  /api/stripe/platform-checkout:
+    post:
+      tags: [Stripe]
+      summary: Create platform subscription checkout (Pro/Elite)
+      description: |
+        Trainer-only. Creates a Stripe Checkout session for subscribing to a platform plan.
+        Gets or creates a Stripe Customer for the trainer.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlatformCheckoutRequest"
+      responses:
+        "200":
+          description: Checkout URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+        "400":
+          description: Invalid plan
+        "401":
+          description: Unauthorized (trainer only)
+
+  /api/stripe/platform-subscription:
+    get:
+      tags: [Stripe]
+      summary: Get trainer's platform subscription status
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Subscription details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformSubscriptionResponse"
+        "401":
+          description: Unauthorized (trainer only)
+
+    delete:
+      tags: [Stripe]
+      summary: Cancel platform subscription
+      description: Cancels at period end (not immediately). Trainer keeps access until current period expires.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Subscription cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  cancelAtPeriodEnd:
+                    type: boolean
+        "401":
+          description: Unauthorized (trainer only)
+        "404":
+          description: No active subscription
+
+  /api/stripe/webhook:
+    post:
+      tags: [Stripe]
+      summary: Stripe webhook handler
+      security: []
+      description: |
+        Handles Stripe webhook events. Requires stripe-signature header for verification.
+
+        **Handled events:**
+        - `account.updated` - Update trainer's Stripe account status
+        - `checkout.session.completed` - Process program purchase or platform subscription
+        - `invoice.paid` / `invoice.payment_succeeded` - Renew subscriptions
+        - `invoice.payment_failed` - Mark subscriptions as past_due
+        - `customer.subscription.updated` - Sync subscription status
+        - `customer.subscription.deleted` - Cancel subscriptions and revoke access
+        - `transfer.created` - Update trainer balance
+        - `charge.refunded` - Process refunds
+      parameters:
+        - name: stripe-signature
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Webhook processed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+        "400":
+          description: Invalid signature
+
+  # ================================================================
+  # ADMIN
+  # ================================================================
+  /api/admin/trainers:
+    get:
+      tags: [Admin]
+      summary: List all trainers with filters
+      description: Admin-only. Returns all trainers with status counts.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, active, suspended, rejected, all]
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by name or email
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Trainer list with counts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminTrainerListResponse"
+        "401":
+          description: Unauthorized (admin only)
+
+  /api/admin/trainers/{id}:
+    get:
+      tags: [Admin]
+      summary: Get trainer details
+      description: Admin-only. Includes student, program, and workout counts.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Trainer details with stats
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/UserProfile"
+                  - type: object
+                    properties:
+                      stats:
+                        type: object
+                        properties:
+                          studentsCount:
+                            type: integer
+                          programsCount:
+                            type: integer
+                          workoutsCount:
+                            type: integer
+        "400":
+          description: User is not a trainer
+        "401":
+          description: Unauthorized (admin only)
+        "404":
+          description: Trainer not found
+
+  /api/admin/trainers/{id}/approve:
+    post:
+      tags: [Admin]
+      summary: Approve a trainer
+      description: Admin-only. Sets trainer status to "active".
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Trainer approved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  trainerId:
+                    type: string
+                  status:
+                    type: string
+                    enum: [active]
+        "400":
+          description: Not a trainer or already active
+        "401":
+          description: Unauthorized (admin only)
+        "404":
+          description: Trainer not found
+
+  /api/admin/trainers/{id}/reject:
+    post:
+      tags: [Admin]
+      summary: Reject a trainer
+      description: Admin-only. Sets trainer status to "rejected".
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Optional rejection reason
+      responses:
+        "200":
+          description: Trainer rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  trainerId:
+                    type: string
+                  status:
+                    type: string
+                    enum: [rejected]
+                  reason:
+                    type: string
+                    nullable: true
+        "400":
+          description: Not a trainer or already rejected
+        "401":
+          description: Unauthorized (admin only)
+        "404":
+          description: Trainer not found
+
+  /api/admin/trainers/{id}/suspend:
+    post:
+      tags: [Admin]
+      summary: Suspend a trainer
+      description: Admin-only. Sets trainer status to "suspended".
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Optional suspension reason
+      responses:
+        "200":
+          description: Trainer suspended
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  trainerId:
+                    type: string
+                  status:
+                    type: string
+                    enum: [suspended]
+                  reason:
+                    type: string
+                    nullable: true
+        "400":
+          description: Not a trainer or already suspended
+        "401":
+          description: Unauthorized (admin only)
+        "404":
+          description: Trainer not found
+
+  /api/admin/subscriptions:
+    get:
+      tags: [Admin]
+      summary: List all trainer subscriptions
+      description: Admin-only. Returns trainers with their plan info and calculates MRR.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Subscription overview
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trainers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        email:
+                          type: string
+                        plan:
+                          type: string
+                          enum: [starter, pro, elite]
+                        subscriptionStatus:
+                          type: string
+                          nullable: true
+                        createdAt:
+                          type: string
+                          format: date-time
+                          nullable: true
+                  summary:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      starter:
+                        type: integer
+                      pro:
+                        type: integer
+                      elite:
+                        type: integer
+                      pastDue:
+                        type: integer
+                      mrrCents:
+                        type: integer
+                        description: Monthly Recurring Revenue in cents (BRL)
+        "401":
+          description: Unauthorized (admin only)
+
+  /api/admin/metrics:
+    get:
+      tags: [Admin]
+      summary: Get platform metrics
+      description: Admin-only. Returns comprehensive platform metrics including trainer/student/program/workout counts, financial data, and recent activity.
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Platform metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformMetrics"
+        "401":
+          description: Unauthorized (admin only)

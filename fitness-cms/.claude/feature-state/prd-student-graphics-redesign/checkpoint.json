@@ -1,0 +1,13 @@
+{
+  "feature": "prd-student-graphics-redesign",
+  "phase": "0-inputs",
+  "status": "generating-docs",
+  "mode": "full-workflow",
+  "platform": "nodejs",
+  "startedAt": "2026-03-17T22:50:00Z",
+  "tasks": {
+    "prd": "complete",
+    "techspec": "in-progress",
+    "tasks": "in-progress"
+  }
+}
