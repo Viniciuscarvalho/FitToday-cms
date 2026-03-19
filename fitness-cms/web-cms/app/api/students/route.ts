@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ students: [] });
     }
 
-    const studentIds = [...new Set(subsSnapshot.docs.map((d) => d.data().studentId as string))];
+    const studentIds = Array.from(new Set(subsSnapshot.docs.map((d) => d.data().studentId as string)));
     const userDocs = await Promise.all(
       studentIds.map((id) => adminDb!.collection('users').doc(id).get())
     );
