@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
+import { adminDb, verifyAuthRequest, verifyTrainerRequest } from '@/lib/firebase-admin';
 import { FieldValue, Firestore, Timestamp } from 'firebase-admin/firestore';
 import { apiError } from '@/lib/api-errors';
 
@@ -49,6 +49,56 @@ async function ensureSubscriptionLink(
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
+  }
+}
+
+// GET /api/students - List active students for the authenticated trainer
+export async function GET(request: NextRequest) {
+  try {
+    const authResult = await verifyTrainerRequest(
+      request.headers.get('authorization')
+    );
+
+    if (!authResult.isTrainer || !authResult.uid) {
+      return apiError(authResult.error || 'Unauthorized', 401, 'UNAUTHORIZED');
+    }
+
+    if (!adminDb) {
+      return apiError('Database not initialized', 500, 'DB_ERROR');
+    }
+
+    const trainerId = authResult.uid;
+
+    const subsSnapshot = await adminDb
+      .collection('subscriptions')
+      .where('trainerId', '==', trainerId)
+      .where('status', '==', 'active')
+      .get();
+
+    if (subsSnapshot.empty) {
+      return NextResponse.json({ students: [] });
+    }
+
+    const studentIds = [...new Set(subsSnapshot.docs.map((d) => d.data().studentId as string))];
+    const userDocs = await Promise.all(
+      studentIds.map((id) => adminDb!.collection('users').doc(id).get())
+    );
+
+    const students = userDocs
+      .filter((doc) => doc.exists)
+      .map((doc) => {
+        const data = doc.data()!;
+        return {
+          id: doc.id,
+          displayName: data.displayName || '',
+          email: data.email || '',
+          photoURL: data.photoURL || null,
+        };
+      });
+
+    return NextResponse.json({ students });
+  } catch (error: any) {
+    return apiError('Failed to list students', 500, 'LIST_STUDENTS_ERROR', error);
   }
 }
 
