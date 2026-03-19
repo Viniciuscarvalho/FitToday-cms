@@ -488,6 +488,37 @@ export async function uploadProgressPhoto(
 }
 
 /**
+ * Send a push notification to a user by their userId.
+ * Looks up their FCM token from Firestore, sends the push,
+ * and clears the token if it's no longer registered.
+ * Returns true if sent successfully, false if no token or token is stale.
+ */
+export async function sendFCMToUser(
+  userId: string,
+  notification: { title: string; body: string; data?: Record<string, string> }
+): Promise<boolean> {
+  if (!adminDb || !adminMessaging) return false;
+
+  try {
+    const userDoc = await adminDb.collection('users').doc(userId).get();
+    const fcmToken: string | undefined = userDoc.data()?.fcmToken;
+
+    if (!fcmToken) return false;
+
+    await sendPushNotification({ token: fcmToken, ...notification, badge: 1 });
+    return true;
+  } catch (error: any) {
+    if (error.code === 'messaging/registration-token-not-registered') {
+      // Clear stale token so we don't keep trying
+      await adminDb.collection('users').doc(userId).update({ fcmToken: null });
+      return false;
+    }
+    console.error(`FCM push failed for user ${userId}:`, error);
+    return false;
+  }
+}
+
+/**
  * Send workout notification to student
  */
 export async function sendWorkoutNotification(

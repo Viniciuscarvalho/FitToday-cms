@@ -65,9 +65,9 @@ export async function POST(
         );
       }
 
-      // If previously rejected or cancelled, delete old doc and create a new one
+      // If previously rejected or canceled, delete old doc and create a new one
       // so that the Firebase Function onCreate trigger fires again (FCM push)
-      if (data.status === 'rejected' || data.status === 'cancelled') {
+      if (data.status === 'rejected' || data.status === 'canceled') {
         let message: string | undefined;
         try {
           const body = await request.json();

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
+import { adminDb, verifyAuthRequest, sendFCMToUser } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { createNotification, NotificationType } from '@/lib/notifications';
 import { apiError } from '@/lib/api-errors';
@@ -131,14 +131,16 @@ export async function PATCH(
       const actorDoc = await adminDb.collection('users').doc(userId).get();
       const actorData = actorDoc.data();
 
+      const cancelBody = reason
+        ? `A conexão foi cancelada. Motivo: ${reason}`
+        : 'A conexão foi cancelada.';
+
       await createNotification({
         type: 'connection_cancelled',
         userId: notifyUserId,
         userRole: notifyRole as 'trainer' | 'student',
         title: 'Conexão cancelada',
-        body: reason
-          ? `A conexão foi cancelada. Motivo: ${reason}`
-          : 'A conexão foi cancelada.',
+        body: cancelBody,
         actor: {
           id: userId,
           name: actorData?.displayName || 'Usuário',
@@ -150,6 +152,13 @@ export async function PATCH(
         },
         relatedEntityType: 'connection',
         relatedEntityId: connectionId,
+      });
+
+      // FCM push so the other party is notified even if the app is in background/closed
+      await sendFCMToUser(notifyUserId, {
+        title: 'Conexão cancelada',
+        body: `${actorData?.displayName || 'Usuário'} cancelou a conexão.${reason ? ` Motivo: ${reason}` : ''}`,
+        data: { type: 'connection_cancelled', connectionId },
       });
 
       return NextResponse.json({
@@ -198,6 +207,13 @@ export async function PATCH(
         action: { type: 'navigate', destination: '/' },
         relatedEntityType: 'connection',
         relatedEntityId: connectionId,
+      });
+
+      // FCM push so the student is notified even if the app is in background/closed
+      await sendFCMToUser(studentId, {
+        title: 'Solicitação não aceita',
+        body: `${trainerData?.displayName || 'O personal'} não pôde aceitar sua solicitação no momento.`,
+        data: { type: 'connection_rejected', connectionId },
       });
 
       return NextResponse.json({ id: connectionId, status: 'rejected' });
@@ -270,6 +286,13 @@ export async function PATCH(
       action: { type: 'navigate', destination: '/chat' },
       relatedEntityType: 'connection',
       relatedEntityId: connectionId,
+    });
+
+    // FCM push so the student is notified even if the app is in background/closed
+    await sendFCMToUser(studentId, {
+      title: 'Conexão aceita! 🎉',
+      body: `${acceptTrainerData?.displayName || 'Seu personal'} aceitou sua solicitação. Você já pode começar!`,
+      data: { type: 'connection_accepted', connectionId, chatRoomId },
     });
 
     return NextResponse.json({

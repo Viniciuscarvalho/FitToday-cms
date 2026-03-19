@@ -215,14 +215,12 @@ const getStatusBadge = (status: string) => {
   const styles: Record<string, string> = {
     active: 'bg-green-100 text-green-700',
     canceled: 'bg-red-100 text-red-700',
-    cancelled: 'bg-red-100 text-red-700',
     past_due: 'bg-yellow-100 text-yellow-700',
     expired: 'bg-gray-100 text-gray-600',
   };
   const labels: Record<string, string> = {
     active: 'Ativo',
     canceled: 'Cancelado',
-    cancelled: 'Cancelado',
     past_due: 'Pendente',
     expired: 'Expirado',
   };

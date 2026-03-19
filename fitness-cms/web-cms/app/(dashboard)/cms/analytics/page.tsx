@@ -154,9 +154,7 @@ export default function AnalyticsPage() {
       // Student calculations
       const uniqueStudents = new Set(subscriptions.map((s: any) => s.studentId));
       const activeSubs = subscriptions.filter((s: any) => s.status === 'active');
-      const canceledSubs = subscriptions.filter(
-        (s: any) => s.status === 'canceled' || s.status === 'cancelled'
-      );
+      const canceledSubs = subscriptions.filter((s: any) => s.status === 'canceled');
 
       const newStudentsThisMonth = subscriptions.filter((sub: any) => {
         const subDate = sub.createdAt?.toDate?.() || new Date(sub.createdAt);

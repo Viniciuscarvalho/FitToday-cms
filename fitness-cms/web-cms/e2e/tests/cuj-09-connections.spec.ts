@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { loginAsTrainer } from '../helpers/auth.setup';
 import { ConnectionsPage } from '../pages/connections.page';
 
@@ -87,7 +87,7 @@ test.describe('CUJ 9: Connections UI — full flow', () => {
    * Intercept GET /api/connections and return a mocked list.
    */
   async function mockConnectionsList(
-    page: Parameters<typeof test.beforeEach>[0]['page'],
+    page: Page,
     connections: typeof PENDING_CONNECTION[],
   ) {
     await page.route('**/api/connections**', async (route) => {
@@ -108,7 +108,7 @@ test.describe('CUJ 9: Connections UI — full flow', () => {
    * Returns a deferred promise that resolves with the parsed body.
    */
   function capturePatch(
-    page: Parameters<typeof test.beforeEach>[0]['page'],
+    page: Page,
     responseOverride: Record<string, unknown>,
   ) {
     let resolveCaptured!: (body: unknown) => void;

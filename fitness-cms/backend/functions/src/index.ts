@@ -543,8 +543,30 @@ async function sendNotification(
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
-  // TODO: Enviar push notification via FCM
-  // await sendPushNotification(userId, data);
+  // Send FCM push so the user is notified even if the app is in background/closed
+  try {
+    const userDoc = await db.collection('users').doc(userId).get();
+    const fcmToken: string | undefined = userDoc.data()?.fcmToken;
+
+    if (fcmToken) {
+      await admin.messaging().send({
+        token: fcmToken,
+        notification: { title: data.title, body: data.body },
+        data: {
+          type: data.type,
+          ...(data.relatedEntityId ? { relatedEntityId: data.relatedEntityId } : {}),
+          ...(data.relatedEntityType ? { relatedEntityType: data.relatedEntityType } : {}),
+        },
+        apns: { payload: { aps: { badge: 1, sound: 'default' } } },
+      });
+    }
+  } catch (pushError: any) {
+    if (pushError?.code === 'messaging/registration-token-not-registered') {
+      await db.collection('users').doc(userId).update({ fcmToken: null });
+    } else {
+      console.error(`FCM push failed for user ${userId}:`, pushError);
+    }
+  }
 }
 
 function getNotificationDestination(data: NotificationData): string {

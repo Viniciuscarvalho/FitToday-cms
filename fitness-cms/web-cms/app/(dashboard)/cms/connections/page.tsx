@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { UserPlus, Check, X, Clock, Users, MessageCircle, RefreshCw, Ban } from 'lucide-react';
+import { collection, query, where, orderBy, onSnapshot, type Unsubscribe } from 'firebase/firestore';
 import { useAuth } from '@/providers/AuthProvider';
 import { apiRequest } from '@/lib/api-client';
 
@@ -15,14 +16,14 @@ interface Student {
 interface ConnectionRequest {
   id: string;
   studentId: string;
-  status: 'pending' | 'active' | 'rejected' | 'cancelled';
+  status: 'pending' | 'active' | 'rejected' | 'canceled';
   source: string;
   message: string | null;
   createdAt: { _seconds: number } | null;
   student: Student | null;
 }
 
-type TabStatus = 'pending' | 'active' | 'rejected' | 'cancelled';
+type TabStatus = 'pending' | 'active' | 'rejected' | 'canceled';
 
 export default function ConnectionsPage() {
   const { user } = useAuth();
@@ -30,29 +31,65 @@ export default function ConnectionsPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabStatus>('pending');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const unsubscribeRef = useRef<Unsubscribe | null>(null);
 
-  const fetchConnections = useCallback(
-    async (status: TabStatus) => {
-      if (!user) return;
-      setLoading(true);
-      try {
-        const data = await apiRequest<{ connections: ConnectionRequest[] }>(
-          `/api/connections?status=${status}`
-        );
-        setConnections(data.connections ?? []);
-      } catch (err) {
-        console.error('Error fetching connections:', err);
-        setConnections([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [user]
-  );
+  async function fetchFromApi(status: TabStatus) {
+    try {
+      const data = await apiRequest<{ connections: ConnectionRequest[] }>(
+        `/api/connections?status=${status}`
+      );
+      setConnections(data.connections ?? []);
+    } catch (err) {
+      console.error('Error fetching connections:', err);
+      setConnections([]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
+  // Real-time listener: re-fetches from REST API whenever the Firestore
+  // trainerStudents collection changes for the current trainer + tab status.
   useEffect(() => {
-    fetchConnections(tab);
-  }, [tab, fetchConnections]);
+    if (!user) return;
+
+    setLoading(true);
+    setConnections([]);
+
+    // Unsubscribe from previous listener before setting up a new one
+    if (unsubscribeRef.current) {
+      unsubscribeRef.current();
+      unsubscribeRef.current = null;
+    }
+
+    let active = true;
+
+    const setupListener = async () => {
+      const { db } = await import('@/lib/firebase');
+      if (!db || !active) return;
+
+      const q = query(
+        collection(db, 'trainerStudents'),
+        where('trainerId', '==', user.uid),
+        where('status', '==', tab),
+        orderBy('createdAt', 'desc')
+      );
+
+      unsubscribeRef.current = onSnapshot(q, () => {
+        // Refetch enriched data (with student profiles) from the REST API
+        fetchFromApi(tab);
+      });
+    };
+
+    setupListener();
+
+    return () => {
+      active = false;
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
+    };
+  }, [user, tab]);
 
   async function handleAction(connectionId: string, action: 'accept' | 'reject') {
     setActionLoading(connectionId);
@@ -96,7 +133,7 @@ export default function ConnectionsPage() {
     { label: 'Pendentes', value: 'pending', icon: <Clock className="h-4 w-4" /> },
     { label: 'Aceitas', value: 'active', icon: <Check className="h-4 w-4" /> },
     { label: 'Recusadas', value: 'rejected', icon: <X className="h-4 w-4" /> },
-    { label: 'Canceladas', value: 'cancelled', icon: <Ban className="h-4 w-4" /> },
+    { label: 'Canceladas', value: 'canceled', icon: <Ban className="h-4 w-4" /> },
   ];
 
   return (
@@ -110,7 +147,7 @@ export default function ConnectionsPage() {
           </p>
         </div>
         <button
-          onClick={() => fetchConnections(tab)}
+          onClick={() => fetchFromApi(tab)}
           className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
         >
           <RefreshCw className="h-4 w-4" />
@@ -153,7 +190,7 @@ export default function ConnectionsPage() {
               <UserPlus className="h-8 w-8 text-gray-400" />
             ) : tab === 'active' ? (
               <Users className="h-8 w-8 text-gray-400" />
-            ) : tab === 'cancelled' ? (
+            ) : tab === 'canceled' ? (
               <Ban className="h-8 w-8 text-gray-400" />
             ) : (
               <X className="h-8 w-8 text-gray-400" />
@@ -164,7 +201,7 @@ export default function ConnectionsPage() {
               ? 'Nenhuma solicitação pendente'
               : tab === 'active'
               ? 'Nenhuma conexão aceita ainda'
-              : tab === 'cancelled'
+              : tab === 'canceled'
               ? 'Nenhuma conexão cancelada'
               : 'Nenhuma solicitação recusada'}
           </h3>
@@ -173,7 +210,7 @@ export default function ConnectionsPage() {
               ? 'Quando um aluno solicitar conexão pelo app, aparecerá aqui.'
               : tab === 'active'
               ? 'As conexões aceitas aparecem aqui e na lista de Alunos.'
-              : tab === 'cancelled'
+              : tab === 'canceled'
               ? 'Conexões que foram canceladas aparecerão aqui.'
               : 'Solicitações que você recusou aparecerão aqui.'}
           </p>
@@ -276,7 +313,7 @@ export default function ConnectionsPage() {
                 </span>
               )}
 
-              {tab === 'cancelled' && (
+              {tab === 'canceled' && (
                 <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-orange-600 bg-orange-50 rounded-full flex-shrink-0">
                   <Ban className="h-3.5 w-3.5" />
                   Cancelado

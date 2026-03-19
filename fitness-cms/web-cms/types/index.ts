@@ -105,7 +105,7 @@ export interface StudentPlan {
   billingDay: number;
   paymentMethod: 'pix' | 'credit_card' | 'boleto';
   stripeSubscriptionId?: string;
-  status: 'active' | 'past_due' | 'cancelled';
+  status: 'active' | 'past_due' | 'canceled';
 }
 
 export interface AdminUser extends BaseUser {
@@ -470,7 +470,7 @@ export interface AnalyticsSnapshot {
   month: string;
   activeStudents: number;
   newStudents: number;
-  cancelledStudents: number;
+  canceledStudents: number;
   retentionRate: number;
   averageRating: number;
   revenue: number;

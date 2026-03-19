@@ -75,7 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Track if the user has explicitly signed out (vs transient null during rehydration)
   const [hasSignedOut, setHasSignedOut] = useState(false);
 
-  // Helper to manage auth cookie for middleware
+  // Helper to manage auth cookie for middleware routing.
+  // Security design: this cookie is intentionally client-readable (no HttpOnly) because it is
+  // used only for Next.js middleware route decisions (redirect unauthenticated users).
+  // Actual authorization is enforced server-side in every API route via verifyAuthRequest/
+  // verifyTrainerRequest. Spoofing this cookie affects only client-side routing, not data access.
   const setAuthCookie = (token: string | null) => {
     const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
     const secureFlag = isSecure ? '; Secure' : '';

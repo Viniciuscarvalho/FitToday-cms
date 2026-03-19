@@ -4,7 +4,7 @@ import { apiError } from '@/lib/api-errors';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/connections?status=pending|active|rejected|cancelled
+// GET /api/connections?status=pending|active|rejected|canceled
 // Returns connection requests for the authenticated trainer, enriched with student info.
 export async function GET(request: NextRequest) {
   try {
