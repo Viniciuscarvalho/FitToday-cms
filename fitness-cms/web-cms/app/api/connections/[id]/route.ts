@@ -3,6 +3,7 @@ import { adminDb, verifyAuthRequest } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { createNotification, NotificationType } from '@/lib/notifications';
 import { apiError } from '@/lib/api-errors';
+import { createChatRoom } from '@/lib/chat-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -244,7 +245,12 @@ export async function PATCH(
     await batch.commit();
 
     // 5. Create chat room for trainer ↔ student communication (with dedup)
-    const chatRoomId = await createChatRoom(trainerId, studentId);
+    const chatRoomId = await createChatRoom(
+      trainerId,
+      studentId,
+      null,
+      'Olá! Conexão estabelecida. Este é o seu canal direto com seu personal. Qualquer dúvida é só mandar mensagem!'
+    );
 
     // 6. Notify student of acceptance with actor info
     const acceptTrainerDoc = await adminDb.collection('users').doc(trainerId).get();
@@ -275,42 +281,4 @@ export async function PATCH(
   } catch (error: any) {
     return apiError('Failed to respond to connection request', 500, 'CONNECTION_RESPONSE_ERROR', error);
   }
-}
-
-
-async function createChatRoom(trainerId: string, studentId: string) {
-  // Deterministic ID eliminates the dedup query round-trip
-  const chatId = `chat_${trainerId}_${studentId}`;
-  const chatRef = adminDb!.collection('chats').doc(chatId);
-
-  const existing = await chatRef.get();
-  if (existing.exists) return chatId;
-
-  const welcomeText =
-    'Olá! Conexão estabelecida. Este é o seu canal direto com seu personal. Qualquer dúvida é só mandar mensagem!';
-
-  await chatRef.set({
-    id: chatId,
-    trainerId,
-    studentId,
-    programId: null,
-    isActive: true,
-    lastMessage: welcomeText,
-    unreadCountTrainer: 0,
-    unreadCountStudent: 1,
-    createdAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
-  });
-
-  await chatRef.collection('messages').add({
-    roomId: chatId,
-    senderId: 'system',
-    senderRole: 'system',
-    type: 'text',
-    content: welcomeText,
-    status: 'sent',
-    createdAt: FieldValue.serverTimestamp(),
-  });
-
-  return chatId;
 }

@@ -4,6 +4,7 @@ import { adminDb } from '@/lib/firebase-admin';
 import Stripe from 'stripe';
 import { FieldValue } from 'firebase-admin/firestore';
 import { PLANS, PlanId } from '@/lib/constants';
+import { createChatRoom } from '@/lib/chat-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,43 +70,6 @@ async function sendNotification(
     ...data,
     action: { type: 'navigate', destination },
     isRead: false,
-    createdAt: FieldValue.serverTimestamp(),
-  });
-}
-
-async function createChatRoom(trainerId: string, studentId: string, programId: string) {
-  if (!adminDb) return;
-
-  // Deterministic ID — one chat room per trainer/student pair regardless of program
-  const chatId = `chat_${trainerId}_${studentId}`;
-  const chatRef = adminDb.collection('chats').doc(chatId);
-
-  const existing = await chatRef.get();
-  if (existing.exists) return;
-
-  const welcomeText =
-    'Bem-vindo! Este é o seu canal de comunicação direta com o personal trainer. Qualquer dúvida, é só mandar mensagem!';
-
-  await chatRef.set({
-    id: chatId,
-    trainerId,
-    studentId,
-    programId,
-    isActive: true,
-    lastMessage: welcomeText,
-    unreadCountTrainer: 0,
-    unreadCountStudent: 1,
-    createdAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
-  });
-
-  await chatRef.collection('messages').add({
-    roomId: chatId,
-    senderId: 'system',
-    senderRole: 'system',
-    type: 'text',
-    content: welcomeText,
-    status: 'sent',
     createdAt: FieldValue.serverTimestamp(),
   });
 }
@@ -387,7 +351,12 @@ async function handleProgramCheckoutCompleted(session: Stripe.Checkout.Session) 
       relatedEntityType: 'program',
       relatedEntityId: programId,
     }),
-    createChatRoom(trainerId, studentId, programId),
+    createChatRoom(
+      trainerId,
+      studentId,
+      programId,
+      'Bem-vindo! Este é o seu canal de comunicação direta com o personal trainer. Qualquer dúvida, é só mandar mensagem!'
+    ),
   ]);
 }
 

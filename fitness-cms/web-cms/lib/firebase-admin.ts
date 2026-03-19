@@ -4,6 +4,9 @@ import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getStorage, Storage } from 'firebase-admin/storage';
 import { getMessaging, Messaging } from 'firebase-admin/messaging';
 import { UserRole, AdminUser } from '@/types';
+import { validateEnv } from '@/lib/env-validation';
+
+validateEnv();
 
 let adminApp: App | undefined;
 let adminAuth: Auth | undefined;
@@ -35,6 +38,53 @@ if (serviceAccount && getApps().length === 0) {
 export { adminAuth, adminDb, adminStorage, adminMessaging };
 
 // ============================================================
+// PRIVATE TOKEN VERIFICATION HELPER
+// ============================================================
+
+interface TokenVerificationResult {
+  uid: string;
+  userData: FirebaseFirestore.DocumentData;
+}
+
+interface TokenVerificationError {
+  error: string;
+  uid?: string;
+}
+
+/**
+ * Shared helper: validates Bearer header, verifies the ID token, and fetches the user doc.
+ * Returns { uid, userData } on success, or throws a TokenVerificationError-shaped object.
+ */
+async function verifyToken(
+  authHeader: string | null
+): Promise<TokenVerificationResult | TokenVerificationError> {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return { error: 'Missing or invalid authorization header' };
+  }
+
+  if (!adminAuth || !adminDb) {
+    return { error: 'Firebase Admin not initialized' };
+  }
+
+  try {
+    const token = authHeader.split('Bearer ')[1];
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    const uid = decodedToken.uid;
+
+    const userDoc = await adminDb.collection('users').doc(uid).get();
+
+    if (!userDoc.exists) {
+      return { error: 'User not found', uid };
+    }
+
+    const userData = userDoc.data()!;
+    return { uid, userData };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to verify token' };
+  }
+}
+
+// ============================================================
 // ADMIN VERIFICATION UTILITIES
 // ============================================================
 
@@ -52,45 +102,23 @@ export interface AdminVerificationResult {
 export async function verifyAdminRequest(
   authHeader: string | null
 ): Promise<AdminVerificationResult> {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return { isAdmin: false, admin: null, uid: null, error: 'Missing or invalid authorization header' };
+  const result = await verifyToken(authHeader);
+
+  if ('error' in result && !('userData' in result)) {
+    return { isAdmin: false, admin: null, uid: (result as TokenVerificationError).uid ?? null, error: result.error };
   }
 
-  if (!adminAuth || !adminDb) {
-    return { isAdmin: false, admin: null, uid: null, error: 'Firebase Admin not initialized' };
+  const { uid, userData } = result as TokenVerificationResult;
+
+  if (userData?.role !== 'admin') {
+    return { isAdmin: false, admin: null, uid, error: 'User is not an admin' };
   }
 
-  try {
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
-    const uid = decodedToken.uid;
-
-    // Get user document and verify admin role
-    const userDoc = await adminDb.collection('users').doc(uid).get();
-
-    if (!userDoc.exists) {
-      return { isAdmin: false, admin: null, uid, error: 'User not found' };
-    }
-
-    const userData = userDoc.data();
-
-    if (userData?.role !== 'admin') {
-      return { isAdmin: false, admin: null, uid, error: 'User is not an admin' };
-    }
-
-    return {
-      isAdmin: true,
-      admin: { ...userData, uid } as AdminUser,
-      uid,
-    };
-  } catch (error: any) {
-    return {
-      isAdmin: false,
-      admin: null,
-      uid: null,
-      error: error.message || 'Failed to verify token',
-    };
-  }
+  return {
+    isAdmin: true,
+    admin: { ...userData, uid } as AdminUser,
+    uid,
+  };
 }
 
 // ============================================================
@@ -111,35 +139,14 @@ export interface AuthVerificationResult {
 export async function verifyAuthRequest(
   authHeader: string | null
 ): Promise<AuthVerificationResult> {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return { isAuthenticated: false, uid: null, role: null, error: 'Missing or invalid authorization header' };
+  const result = await verifyToken(authHeader);
+
+  if ('error' in result && !('userData' in result)) {
+    return { isAuthenticated: false, uid: (result as TokenVerificationError).uid ?? null, role: null, error: result.error };
   }
 
-  if (!adminAuth || !adminDb) {
-    return { isAuthenticated: false, uid: null, role: null, error: 'Firebase Admin not initialized' };
-  }
-
-  try {
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
-    const uid = decodedToken.uid;
-
-    const userDoc = await adminDb.collection('users').doc(uid).get();
-
-    if (!userDoc.exists) {
-      return { isAuthenticated: false, uid, role: null, error: 'User not found' };
-    }
-
-    const userData = userDoc.data();
-    return { isAuthenticated: true, uid, role: userData?.role || null };
-  } catch (error: any) {
-    return {
-      isAuthenticated: false,
-      uid: null,
-      role: null,
-      error: error.message || 'Failed to verify token',
-    };
-  }
+  const { uid, userData } = result as TokenVerificationResult;
+  return { isAuthenticated: true, uid, role: userData?.role || null };
 }
 
 // ============================================================
@@ -159,39 +166,19 @@ export interface TrainerVerificationResult {
 export async function verifyTrainerRequest(
   authHeader: string | null
 ): Promise<TrainerVerificationResult> {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return { isTrainer: false, uid: null, error: 'Missing or invalid authorization header' };
+  const result = await verifyToken(authHeader);
+
+  if ('error' in result && !('userData' in result)) {
+    return { isTrainer: false, uid: (result as TokenVerificationError).uid ?? null, error: result.error };
   }
 
-  if (!adminAuth || !adminDb) {
-    return { isTrainer: false, uid: null, error: 'Firebase Admin not initialized' };
+  const { uid, userData } = result as TokenVerificationResult;
+
+  if (userData?.role !== 'trainer') {
+    return { isTrainer: false, uid, error: 'User is not a trainer' };
   }
 
-  try {
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
-    const uid = decodedToken.uid;
-
-    const userDoc = await adminDb.collection('users').doc(uid).get();
-
-    if (!userDoc.exists) {
-      return { isTrainer: false, uid, error: 'User not found' };
-    }
-
-    const userData = userDoc.data();
-
-    if (userData?.role !== 'trainer') {
-      return { isTrainer: false, uid, error: 'User is not a trainer' };
-    }
-
-    return { isTrainer: true, uid };
-  } catch (error: any) {
-    return {
-      isTrainer: false,
-      uid: null,
-      error: error.message || 'Failed to verify token',
-    };
-  }
+  return { isTrainer: true, uid };
 }
 
 // ============================================================

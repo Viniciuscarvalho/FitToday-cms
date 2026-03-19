@@ -25,6 +25,10 @@ export async function GET(
 
     const data = exerciseDoc.data()!;
 
+    if (data.isActive === false) {
+      return apiError('Exercise not found', 404, 'NOT_FOUND');
+    }
+
     return NextResponse.json({
       id: exerciseDoc.id,
       ...data,
@@ -65,6 +69,10 @@ export async function PATCH(
     }
 
     const existingData = exerciseDoc.data()!;
+
+    if (existingData.isActive === false) {
+      return apiError('Exercise not found', 404, 'NOT_FOUND');
+    }
 
     // Only allow update if trainer owns the exercise or exercise is system-level
     if (existingData.source === 'trainer' && existingData.trainerId !== authResult.uid) {
