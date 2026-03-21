@@ -31,7 +31,7 @@ export default function NotFound() {
             Ir para o Dashboard
           </Link>
           <Link
-            href="/site"
+            href="/"
             className="w-full sm:w-auto px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors text-center"
           >
             Página Inicial

@@ -309,6 +309,7 @@ export default function SitePage() {
                   src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
                   alt="Trainer Dashboard"
                   fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover opacity-90"
                 />
               </div>
@@ -328,6 +329,7 @@ export default function SitePage() {
                     src="https://images.unsplash.com/photo-1510017803434-a899398421b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
                     alt="Student App Mobile"
                     fill
+                    sizes="320px"
                     className="object-cover opacity-80"
                  />
                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />

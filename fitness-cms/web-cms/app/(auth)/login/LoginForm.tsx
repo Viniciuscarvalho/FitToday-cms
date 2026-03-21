@@ -1,62 +1,64 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Dumbbell, Mail, Lock, User, Loader2 } from 'lucide-react';
+import { Dumbbell, Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 
-const registerSchema = z
-  .object({
-    name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
-    email: z.string().email('Email inválido'),
-    password: z
-      .string()
-      .min(6, 'Senha deve ter pelo menos 6 caracteres')
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        'Senha deve conter maiúscula, minúscula e número'
-      ),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Senhas não conferem',
-    path: ['confirmPassword'],
-  });
+const loginSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'Senha deve ter pelo menos 6 caracteres'),
+});
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function RegisterPage() {
+export default function LoginPage() {
   const router = useRouter();
-  const { signUpAsTrainer, signInWithGoogle, signInWithApple } = useAuth();
+  const { signIn, signInWithGoogle, signInWithApple, user, userRole, trainerStatus, loading } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
 
+  // Redirect when auth state updates with the correct role and cookies are set
+  useEffect(() => {
+    if (!loading && user && userRole) {
+      if (userRole === 'admin') {
+        router.push('/admin');
+      } else if (userRole === 'trainer' && trainerStatus !== 'active') {
+        router.push('/pending-approval');
+      } else {
+        router.push('/cms');
+      }
+    }
+  }, [loading, user, userRole, trainerStatus, router]);
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (data: LoginFormData) => {
     try {
       setIsLoading(true);
       setError(null);
-      await signUpAsTrainer(data.email, data.password, data.name);
-      router.push('/pending-approval');
+      await signIn(data.email, data.password);
+      // useEffect handles redirect when userRole updates
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Erro ao criar conta';
-      if (message.includes('email-already-in-use')) {
-        setError('Este email já está em uso');
+      const message = err instanceof Error ? err.message : 'Erro ao fazer login';
+      if (message.includes('invalid-credential')) {
+        setError('Email ou senha incorretos');
+      } else if (message.includes('too-many-requests')) {
+        setError('Muitas tentativas. Tente novamente mais tarde.');
       } else {
-        setError('Erro ao criar conta. Tente novamente.');
+        setError('Erro ao fazer login. Tente novamente.');
       }
     } finally {
       setIsLoading(false);
@@ -68,10 +70,17 @@ export default function RegisterPage() {
       setIsGoogleLoading(true);
       setError(null);
       await signInWithGoogle();
-      // Redirect based on trainer status (middleware will handle this)
-      router.push('/pending-approval');
-    } catch (err) {
-      setError('Erro ao fazer login com Google');
+      // useEffect handles redirect when userRole updates
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Google sign-in error:', err);
+      if (message.includes('popup-closed-by-user')) {
+        setError('Login cancelado. Tente novamente.');
+      } else if (message.includes('unauthorized-domain')) {
+        setError('Domínio não autorizado no Firebase. Verifique as configurações.');
+      } else {
+        setError(`Erro ao fazer login com Google: ${message}`);
+      }
     } finally {
       setIsGoogleLoading(false);
     }
@@ -82,10 +91,17 @@ export default function RegisterPage() {
       setIsAppleLoading(true);
       setError(null);
       await signInWithApple();
-      // Redirect based on trainer status (middleware will handle this)
-      router.push('/pending-approval');
-    } catch (err) {
-      setError('Erro ao fazer login com Apple');
+      // useEffect handles redirect when userRole updates
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('Apple sign-in error:', err);
+      if (message.includes('popup-closed-by-user')) {
+        setError('Login cancelado. Tente novamente.');
+      } else if (message.includes('unauthorized-domain')) {
+        setError('Domínio não autorizado no Firebase. Verifique as configurações.');
+      } else {
+        setError(`Erro ao fazer login com Apple: ${message}`);
+      }
     } finally {
       setIsAppleLoading(false);
     }
@@ -100,8 +116,8 @@ export default function RegisterPage() {
       </div>
 
       <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Criar sua conta</h1>
-        <p className="text-gray-500">Comece a vender seus programas de treino</p>
+        <h1 className="text-2xl font-bold tracking-tight">Bem-vindo de volta</h1>
+        <p className="text-gray-500">Entre na sua conta para continuar</p>
       </div>
 
       {error && (
@@ -111,22 +127,6 @@ export default function RegisterPage() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Nome completo</label>
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              {...register('name')}
-              placeholder="Seu nome"
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all"
-            />
-          </div>
-          {errors.name && (
-            <p className="text-sm text-red-600">{errors.name.message}</p>
-          )}
-        </div>
-
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-700">Email</label>
           <div className="relative">
@@ -144,7 +144,15 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">Senha</label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-700">Senha</label>
+            <Link
+              href="/forgot-password"
+              className="text-sm text-primary-600 hover:text-primary-700"
+            >
+              Esqueceu a senha?
+            </Link>
+          </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
@@ -159,24 +167,6 @@ export default function RegisterPage() {
           )}
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
-            Confirmar senha
-          </label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              type="password"
-              {...register('confirmPassword')}
-              placeholder="••••••••"
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none transition-all"
-            />
-          </div>
-          {errors.confirmPassword && (
-            <p className="text-sm text-red-600">{errors.confirmPassword.message}</p>
-          )}
-        </div>
-
         <button
           type="submit"
           disabled={isLoading}
@@ -185,10 +175,10 @@ export default function RegisterPage() {
           {isLoading ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
-              Criando conta...
+              Entrando...
             </>
           ) : (
-            'Criar conta'
+            'Entrar'
           )}
         </button>
       </form>
@@ -250,23 +240,12 @@ export default function RegisterPage() {
       </div>
 
       <p className="text-center text-sm text-gray-500">
-        Já tem uma conta?{' '}
+        Não tem uma conta?{' '}
         <Link
-          href="/login"
+          href="/register"
           className="text-primary-600 hover:text-primary-700 font-medium"
         >
-          Fazer login
-        </Link>
-      </p>
-
-      <p className="text-center text-xs text-gray-400">
-        Ao criar uma conta, você concorda com nossos{' '}
-        <Link href="/termos-de-uso" className="underline hover:text-gray-600">
-          Termos de Uso
-        </Link>{' '}
-        e{' '}
-        <Link href="/politica-privacidade" className="underline hover:text-gray-600">
-          Política de Privacidade
+          Criar conta grátis
         </Link>
       </p>
     </div>

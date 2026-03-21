@@ -3,6 +3,7 @@ const nextConfig = {
   async redirects() {
     return [
       { source: '/site', destination: '/', permanent: true },
+      { source: '/dashboard', destination: '/cms', permanent: true },
       { source: '/programs/:path*', destination: '/cms/programs/:path*', permanent: true },
       { source: '/students/:path*', destination: '/cms/students/:path*', permanent: true },
       { source: '/messages', destination: '/cms/messages', permanent: true },
