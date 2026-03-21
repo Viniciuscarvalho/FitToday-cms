@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Dumbbell, Mail, Lock, Loader2 } from 'lucide-react';
+import { Dumbbell, Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 
 const loginSchema = z.object({
@@ -16,7 +16,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+export default function LoginForm() {
   const router = useRouter();
   const { signIn, signInWithGoogle, signInWithApple, user, userRole, trainerStatus, loading } = useAuth();
   const [error, setError] = useState<string | null>(null);
@@ -121,8 +121,9 @@ export default function LoginPage() {
       </div>
 
       {error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100">
-          {error}
+        <div className="flex items-center gap-2.5 p-3 text-sm text-red-700 bg-red-50 rounded-lg border border-red-200">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 

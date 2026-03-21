@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Dumbbell, Mail, Lock, User, Loader2 } from 'lucide-react';
+import { Dumbbell, Mail, Lock, User, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/providers/AuthProvider';
 
 const registerSchema = z
@@ -29,7 +29,7 @@ const registerSchema = z
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-export default function RegisterPage() {
+export default function RegisterForm() {
   const router = useRouter();
   const { signUpAsTrainer, signInWithGoogle, signInWithApple } = useAuth();
   const [error, setError] = useState<string | null>(null);
@@ -108,8 +108,9 @@ export default function RegisterPage() {
       </div>
 
       {error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg border border-red-100">
-          {error}
+        <div className="flex items-center gap-2.5 p-3 text-sm text-red-700 bg-red-50 rounded-lg border border-red-200">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
