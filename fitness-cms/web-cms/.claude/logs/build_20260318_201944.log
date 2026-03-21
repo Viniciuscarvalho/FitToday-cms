@@ -1,0 +1,786 @@
+ ⚠ You are using a non-standard "NODE_ENV" value in your environment. This creates inconsistencies in the project and is strongly advised against. Read more: https://nextjs.org/docs/messages/non-standard-node-env
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/_not-found". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+Error: <Html> should not be imported outside of pages/_document.
+Read more: https://nextjs.org/docs/messages/no-document-import-in-page
+    at eu (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js:16:5484)
+    at S (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/1072.js:6:1253)
+    at renderWithHooks (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5658:16)
+    at renderIndeterminateComponent (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5732:15)
+    at renderElement (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5957:7)
+    at renderNodeDestructiveImpl (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6115:11)
+    at renderNodeDestructive (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6087:14)
+    at finishClassComponent (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5688:3)
+    at renderClassComponent (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5696:3)
+    at renderElement (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5954:7)
+
+Error occurred prerendering page "/404". Read more: https://nextjs.org/docs/messages/prerender-error
+
+Error: <Html> should not be imported outside of pages/_document.
+Read more: https://nextjs.org/docs/messages/no-document-import-in-page
+    at eu (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js:16:5484)
+    at S (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/1072.js:6:1253)
+    at renderWithHooks (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5658:16)
+    at renderIndeterminateComponent (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5732:15)
+    at renderElement (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5957:7)
+    at renderNodeDestructiveImpl (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6115:11)
+    at renderNodeDestructive (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6087:14)
+    at finishClassComponent (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5688:3)
+    at renderClassComponent (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5696:3)
+    at renderElement (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5954:7)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/pending-approval". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/cms/connections". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+Error: <Html> should not be imported outside of pages/_document.
+Read more: https://nextjs.org/docs/messages/no-document-import-in-page
+    at eu (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js:16:5484)
+    at S (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/1072.js:6:1253)
+    at renderWithHooks (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5658:16)
+    at renderIndeterminateComponent (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5732:15)
+    at renderElement (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5957:7)
+    at renderNodeDestructiveImpl (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6115:11)
+    at renderNodeDestructive (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6087:14)
+    at finishClassComponent (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5688:3)
+    at renderClassComponent (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5696:3)
+    at renderElement (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5954:7)
+
+Error occurred prerendering page "/500". Read more: https://nextjs.org/docs/messages/prerender-error
+
+Error: <Html> should not be imported outside of pages/_document.
+Read more: https://nextjs.org/docs/messages/no-document-import-in-page
+    at eu (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/pages.runtime.prod.js:16:5484)
+    at S (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/1072.js:6:1253)
+    at renderWithHooks (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5658:16)
+    at renderIndeterminateComponent (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5732:15)
+    at renderElement (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5957:7)
+    at renderNodeDestructiveImpl (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6115:11)
+    at renderNodeDestructive (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:6087:14)
+    at finishClassComponent (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5688:3)
+    at renderClassComponent (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5696:3)
+    at renderElement (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/react-dom/cjs/react-dom-server.browser.development.js:5954:7)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/forgot-password". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/cms/exercises". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/admin/trainers". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/cms/exercises/new". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/cms/finances". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/cms". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/cms/profile". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/admin/subscriptions". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/cms/programs/new". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/cms/messages". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/register". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/cms/notifications". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/termos-de-uso". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/admin". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/politica-privacidade". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/cms/settings". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/cms/workouts". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/cms/programs". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/login". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+ ⚠ metadata.metadataBase is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/cms/students". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+ ⨯ TypeError: Cannot read properties of null (reading 'useContext')
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+Error occurred prerendering page "/cms/analytics". Read more: https://nextjs.org/docs/messages/prerender-error
+
+TypeError: Cannot read properties of null (reading 'useContext')
+    at t.useContext (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:108898)
+    at m (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:36671)
+    at f (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/.next/server/chunks/5341.js:35:27684)
+    at as (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:6391)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:11242
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+    at ak (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:46552)
+    at av (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:7809)
+    at /Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:12972
+    at aw (/Users/viniciuscarvalho/Documents/FitToday-cms/fitness-cms/web-cms/node_modules/next/dist/compiled/next-server/app-page.runtime.dev.js:35:13009)
+
+> Export encountered errors on following paths:
+	/(admin)/admin/page: /admin
+	/(admin)/admin/subscriptions/page: /admin/subscriptions
+	/(admin)/admin/trainers/page: /admin/trainers
+	/(auth)/forgot-password/page: /forgot-password
+	/(auth)/login/page: /login
+	/(auth)/pending-approval/page: /pending-approval
+	/(auth)/register/page: /register
+	/(dashboard)/cms/analytics/page: /cms/analytics
+	/(dashboard)/cms/connections/page: /cms/connections
+	/(dashboard)/cms/exercises/new/page: /cms/exercises/new
+	/(dashboard)/cms/exercises/page: /cms/exercises
+	/(dashboard)/cms/finances/page: /cms/finances
+	/(dashboard)/cms/messages/page: /cms/messages
+	/(dashboard)/cms/notifications/page: /cms/notifications
+	/(dashboard)/cms/page: /cms
+	/(dashboard)/cms/profile/page: /cms/profile
+	/(dashboard)/cms/programs/new/page: /cms/programs/new
+	/(dashboard)/cms/programs/page: /cms/programs
+	/(dashboard)/cms/settings/page: /cms/settings
+	/(dashboard)/cms/students/page: /cms/students
+	/(dashboard)/cms/workouts/page: /cms/workouts
+	/(public)/page: /
+	/(public)/politica-privacidade/page: /politica-privacidade
+	/(public)/termos-de-uso/page: /termos-de-uso
+	/_error: /404
+	/_error: /500
+	/_not-found
